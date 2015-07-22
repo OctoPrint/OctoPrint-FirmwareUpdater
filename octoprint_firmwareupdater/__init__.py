@@ -10,18 +10,18 @@ from __future__ import absolute_import
 
 import octoprint.plugin
 
-class Firmware_updaterPlugin(octoprint.plugin.TemplatePlugin):
+class FirmwareupdaterPlugin(octoprint.plugin.TemplatePlugin):
 	# TODO Implement me!
 	pass
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "Firmware_updater Plugin"
+__plugin_name__ = "Firmwareupdater Plugin"
 
 def __plugin_load__():
 	global __plugin_implementation__
-	__plugin_implementation__ = Firmware_updaterPlugin()
+	__plugin_implementation__ = FirmwareupdaterPlugin()
 
 	# global __plugin_hooks__
 	# __plugin_hooks__ = {

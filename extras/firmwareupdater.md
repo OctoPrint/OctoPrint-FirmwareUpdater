@@ -1,9 +1,9 @@
 ---
 layout: plugin
 
-id: firmware_updater
-title: OctoPrint-Firmware_updater
-description: Automatic updater of firmwares.
+id: firmwareupdater
+title: OctoPrint-FirmwareUpdater
+description: Automatic Firmware Updater
 author: Nicanor Romero Venier
 license: AGPLv3
 
@@ -52,4 +52,4 @@ compatibility:
 ---
 
 **TODO**: Longer description of your plugin, configuration examples etc. This part will be visible on the page at
-http://plugins.octoprint.org/plugin/firmware_updater/
+http://plugins.octoprint.org/plugin/firmwareupdater/

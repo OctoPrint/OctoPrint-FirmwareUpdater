@@ -1,4 +1,4 @@
-# OctoPrint-Firmware_updater
+# OctoPrint-FirmwareUpdater
 
 **TODO:** Describe what your plugin does.
 
