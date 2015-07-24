@@ -5,21 +5,24 @@ $(function() {
         self.hexFileName = ko.observable();
         self.hexFileURL = ko.observable();
 
+        self.uploadFirmware = $("#settings-firmwareupdater-upload");
         self.flashFirmware = $("#settings-firmwareupdater-start");
 
-        self.flashFirmware.unbind("click");
-        self.flashFirmware.on("click", function() {
-            $.ajax({
-                url: PLUGIN_BASEURL + "firmwareupdater/uploadHexFile",
-                type: "POST",
-                data: {hexFileName: self.hexFileName(),
-                       hexFileURL: self.hexFileURL()}
-            });
+        self.uploadFirmware.fileupload({
+            dataType: "hex",
+            maxNumberOfFiles: 1,
+            autoUpload: false,
+            add: function(e, data) {
+                if (data.files.length == 0) {
+                    return false;
+                }
 
-            data.submit();
-
-        });
-
+                self.flashFirmware.unbind("click");
+                self.flashFirmware.on("click", function() {
+                    data.submit();
+                });
+            }
+        })
     };
 
     OCTOPRINT_VIEWMODELS.push([
