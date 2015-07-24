@@ -21,10 +21,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/uploadHexFile", methods=["POST"])
 	def flash_firmware(self):
-		print "hexFilePath = ", flask.request.form["hexFileName"]
-		print "hexFileURL = ", flask.request.form["hexFileURL"]
 		print "Values = ", flask.request.values
-
 		return flask.make_response("Upload OK.", 200)
 
 __plugin_name__ = "Firmware Updater"

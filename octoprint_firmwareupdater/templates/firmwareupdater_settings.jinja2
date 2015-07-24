@@ -8,7 +8,7 @@
             <div class="input-prepend">
                 <span class="btn fileinput-button">
                     <span>{{ _('Browse...') }}</span>
-                    <input type="file" name="file" data-bind="value: hexFileName">
+                    <input id="settings-cura-import" type="file" name="file" data-url="{{ url_for("plugin.cura.import_cura_profile") }}">
                 </span>
                 <span class="add-on" data-bind="text: hexFileName"></span>
             </div>
@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <button class="btn btn-primary btn-block" data-bind="click: flashFirmware">{{ _('Flash Firmware') }}</button>
+    <button class="btn btn-primary btn-block" id="settings-firmwareupdater-start">{{ _('Flash Firmware') }}</button>
 
 </form>
 
