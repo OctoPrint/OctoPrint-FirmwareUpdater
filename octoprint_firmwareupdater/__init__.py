@@ -8,23 +8,27 @@ from __future__ import absolute_import
 #
 # Take a look at the documentation on what other plugin mixins are available.
 
+import flask
+
 import octoprint.plugin
 
-class FirmwareupdaterPlugin(octoprint.plugin.TemplatePlugin):
-	# TODO Implement me!
-	pass
+class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
+							octoprint.plugin.TemplatePlugin,
+							octoprint.plugin.AssetPlugin):
 
-# If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
-# ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
-# can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
-__plugin_name__ = "Firmwareupdater Plugin"
+	def get_assets(self):
+		return dict(js=["js/firmwareupdater.js"])
+
+	@octoprint.plugin.BlueprintPlugin.route("/uploadHexFile", methods=["POST"])
+	def flash_firmware(self):
+		print "hexFilePath = ", flask.request.form["hexFileName"]
+		print "hexFileURL = ", flask.request.form["hexFileURL"]
+		print "Values = ", flask.request.values
+
+		return flask.make_response("Upload OK.", 200)
+
+__plugin_name__ = "Firmware Updater"
 
 def __plugin_load__():
 	global __plugin_implementation__
 	__plugin_implementation__ = FirmwareupdaterPlugin()
-
-	# global __plugin_hooks__
-	# __plugin_hooks__ = {
-	#    "some.octoprint.hook": __plugin_implementation__.some_hook_handler
-	# }
-

@@ -1,0 +1,30 @@
+<h4>{{ _('Firmware Updater') }}</h4>
+
+<form class="form-horizontal">
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Path to Hex file') }}</label>
+        <div class="controls">
+            <div class="input-prepend">
+                <span class="btn fileinput-button">
+                    <span>{{ _('Browse...') }}</span>
+                    <input type="file" name="file" data-bind="value: hexFileName">
+                </span>
+                <span class="add-on" data-bind="text: hexFileName"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('URL to Hex file') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: hexFileURL">
+        </div>
+    </div>
+
+    <button class="btn btn-primary btn-block" data-bind="click: flashFirmware">{{ _('Flash Firmware') }}</button>
+
+</form>
+
+
+
