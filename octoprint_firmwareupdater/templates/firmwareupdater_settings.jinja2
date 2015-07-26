@@ -1,6 +1,12 @@
-<h4>{{ _('Firmware Updater') }}</h4>
+<div class="pull-right">
+    <button class="btn btn-small" data-bind="click: function() { $root.showPluginSettings(); }" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
+</div>
+
+<h3>{{ _('Firmware Updater') }}</h3>
 
 <form class="form-horizontal">
+
+    <h4>{{ _('Hex File') }}</h4>
 
     <div class="control-group">
         <label class="control-label">{{ _('Path to Hex file') }}</label>
@@ -15,6 +21,8 @@
         </div>
     </div>
 
+    <div class="control-group"><label class="control-text">{{ _('Or') }}</label></div>
+
     <div class="control-group">
         <label class="control-label">{{ _('URL to Hex file') }}</label>
         <div class="controls">
@@ -22,9 +30,43 @@
         </div>
     </div>
 
+    <h4>{{ _('Printer Settings') }}</h4>
+
+    <div class="control-group" title="{{ _('Select the Board installed in your printer') }}">
+        <label class="control-label" for="settings-appearanceColor">{{ _('Printer Board') }}</label>
+        <div class="controls">
+            <select id="settings-printerboard" data-bind="value: printer_board, options: available_printer_boards, optionsText: 'name', optionsValue: 'key'"></select>
+        </div>
+    </div>
+
     <button class="btn btn-primary btn-block" id="settings-firmwareupdater-start">{{ _('Flash Firmware') }}</button>
 
 </form>
 
-
+<div id="settings_plugin_firmwareupdater_configurationdialog" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3>{{ _('Plugin Configuration') }}</h3>
+    </div>
+    <div class="modal-body">
+        <form class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label">{{ _('Path to Avrdude') }}</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: config_path_avrdude">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">{{ _('Path to avrdude.conf') }}</label>
+                <div class="controls">
+                    <input type="text" class="input-block-level" data-bind="value: config_path_avrdudeconfig">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Cancel') }}</button>
+        <button class="btn btn-primary" data-bind="click: savePluginSettings" aria-hidden="true">{{ _('Save') }}</button>
+    </div>
+</div>
 
