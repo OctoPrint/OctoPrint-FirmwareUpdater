@@ -41,8 +41,6 @@ $(function() {
             if (self.hexFileURL()) {
                 alert("Send URL");
             } else if (self.hexFileName()) {
-                alert("Send File");
-                
                 var form = {
                     avrdude_path: self.config_path_avrdude(),
                     selected_port: self.selected_port()

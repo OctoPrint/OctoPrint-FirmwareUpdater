@@ -95,7 +95,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._logger.info(u"Flashing failed with return code {returncode}.".format(returncode=p.returncode))
 
 	def _send_progress_stage_update(self, result):
-		print "Progress stage = ", result
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type="progress_stage", result=result))
 
 	#~~ SettingsPlugin API
