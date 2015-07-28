@@ -3,18 +3,22 @@ $(function() {
         var self = this;
 
         self.settings = parameters[0];
+        self.loginState = parameters[1];
+        self.connection = parameters[2];
 
-        self.hexFileName = ko.observable();
-        self.hexFileURL = ko.observable();
         self.config_path_avrdude = ko.observable();
         self.config_path_avrdudeconfig = ko.observable();
 
-        self.uploadFirmware = $("#settings-firmwareupdater-upload");
+        self.hexFileName = ko.observable(undefined);
+        self.hexFileURL = ko.observable(undefined);
+        self.selected_port = ko.observable(undefined);
+
+        self.selectHexPath = $("#settings-firmwareupdater-selectHexPath");
         self.flashFirmware = $("#settings-firmwareupdater-start");
 
         self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
 
-        self.uploadFirmware.fileupload({
+        self.selectHexPath.fileupload({
             dataType: "hex",
             maxNumberOfFiles: 1,
             autoUpload: false,
@@ -24,9 +28,20 @@ $(function() {
                 }
 
                 self.hexFileName(data.files[0].name);
+                self.hexFileURL(undefined);
 
                 self.flashFirmware.unbind("click");
                 self.flashFirmware.on("click", function() {
+                    if (!self.hexFileName() || !self.config_path_avrdude() || !self.selected_port()) {
+                        return false;
+                    }
+
+                    var form = {
+                        avrdude_path: self.config_path_avrdude(),
+                        selected_port: self.selected_port()
+                    };
+
+                    data.formData = form;
                     data.submit();
                 })
             }
@@ -53,11 +68,15 @@ $(function() {
             self.config_path_avrdude(self.settings.settings.plugins.firmwareupdater.path_avrdude());
             self.config_path_avrdudeconfig(self.settings.settings.plugins.firmwareupdater.path_avrdudeconfig());
         }
+        
+        self.onAfterBinding = function() {
+            self._copyConfig();
+        }
     }
 
     OCTOPRINT_VIEWMODELS.push([
         FirmwareUpdaterViewModel,
-        ["settingsViewModel"],
+        ["settingsViewModel", "loginStateViewModel", "connectionViewModel"],
         document.getElementById("settings_plugin_firmwareupdater")
     ]);
 });

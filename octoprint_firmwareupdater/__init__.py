@@ -34,33 +34,41 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		input_upload_path = input_name + "." + self._settings.global_get(["server", "uploads", "pathSuffix"])
 
 		temp_path = flask.request.values[input_upload_path]
-		dest_path = os.path.join(self._settings._basedir, "plugins", "FirmwareUpdater")
+		hex_filename = flask.request.values[input_upload_name]
+		avrdude_path = flask.request.values["avrdude_path"]
+		selected_port = flask.request.values["selected_port"]
 
-		if not os.path.exists(dest_path):
+		hex_dir = os.path.join(self._settings._basedir, "plugins", "FirmwareUpdater")
+		hex_path = os.path.join(hex_dir, hex_filename)
+
+		if not os.path.exists(avrdude_path):
+			self._logger.exception("Path to avrdude does not exist: {path}".format(path=avrdude_path))
+			return flask.make_response("Error.", 500)  # TODO: Change this
+
+		if not os.path.exists(hex_dir):
 			try:
-				os.mkdir(dest_path, 0775)
-				self._logger.info("Creating directory for FirmwareUpdater plugin at {path}".format(path=dest_path))
+				os.mkdir(hex_dir, 0775)
+				self._logger.info("Creating directory for FirmwareUpdater plugin at {path}".format(path=hex_dir))
 			except Exception as e:
 				self._logger.exception("Error when creating directory for FirmwareUpdater plugin: {error}".format(error=e))
 				return flask.make_response("Error.", 500)  # TODO: Change this
 
 		try:
-			shutil.copyfile(os.path.abspath(temp_path), os.path.join(dest_path, "tempHexFile.hex"))
+			shutil.copyfile(os.path.abspath(temp_path), hex_path)
 		except Exception as e:
 			self._logger.exception("Error when copying uploaded temp hex file: {error}".format(error=e))
 
 		# Create thread to flash firmware
 		import threading
 
-		flash_thread = threading.Thread(target=self._flash_worker, args=(dest_path,))
+		flash_thread = threading.Thread(target=self._flash_worker, args=(avrdude_path, hex_path, selected_port))
 		flash_thread.daemon = False
 		flash_thread.start()
 
 		return flask.make_response("Ok.", 200)
 
-	def _flash_worker(self, hex_path):
-		avrdude_path = "/usr/bin/avrdude"
-		avrdude_args = ["-p m2560", "-c stk500", "-P /dev/ttyUSB0", "-U flash:w:" + hex_path]
+	def _flash_worker(self, avrdude_path, hex_path, selected_port):
+		avrdude_args = ["-p m2560", "-c stk500", "-P", selected_port, "-U flash:w:" + hex_path]
 		avrdude_command = avrdude_path + ' ' + ' '.join(avrdude_args)
 		working_dir = os.path.dirname(avrdude_path)
 
@@ -102,6 +110,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		for key in self.get_settings_defaults():
 			if key in data:
 				self._settings.set([key], data[key])
+
+	# Hooks
 
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/uploadHexFile", 1000 * 1024)]
