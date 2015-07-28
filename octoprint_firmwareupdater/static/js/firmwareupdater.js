@@ -14,7 +14,6 @@ $(function() {
         self.selected_port = ko.observable(undefined);
 
         self.selectHexPath = $("#settings-firmwareupdater-selectHexPath");
-        self.flashFirmware = $("#settings-firmwareupdater-start");
 
         self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
 
@@ -26,26 +25,33 @@ $(function() {
                 if (data.files.length == 0) {
                     return false;
                 }
-
+                self.hexData = data;
                 self.hexFileName(data.files[0].name);
                 self.hexFileURL(undefined);
-
-                self.flashFirmware.unbind("click");
-                self.flashFirmware.on("click", function() {
-                    if (!self.hexFileName() || !self.config_path_avrdude() || !self.selected_port()) {
-                        return false;
-                    }
-
-                    var form = {
-                        avrdude_path: self.config_path_avrdude(),
-                        selected_port: self.selected_port()
-                    };
-
-                    data.formData = form;
-                    data.submit();
-                })
             }
         })
+
+
+        self.startFlash = function() {
+            if (!self.config_path_avrdude() || !self.selected_port()) {
+                return false;
+            }
+
+            // URL has priority
+            if (self.hexFileURL()) {
+                alert("Send URL");
+            } else if (self.hexFileName()) {
+                alert("Send File");
+                
+                var form = {
+                    avrdude_path: self.config_path_avrdude(),
+                    selected_port: self.selected_port()
+                };
+
+                self.hexData.formData = form;
+                self.hexData.submit();
+            }            
+        }
 
         self.showPluginSettings = function() {
             self._copyConfig();
