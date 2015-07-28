@@ -17,6 +17,8 @@ $(function() {
                     return false;
                 }
 
+                self.hexFileName(data.files[0].name);
+
                 self.flashFirmware.unbind("click");
                 self.flashFirmware.on("click", function() {
                     data.submit();
