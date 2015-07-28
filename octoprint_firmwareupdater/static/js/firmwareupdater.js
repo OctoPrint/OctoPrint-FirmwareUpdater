@@ -59,5 +59,5 @@ $(function() {
         FirmwareUpdaterViewModel,
         ["settingsViewModel"],
         document.getElementById("settings_plugin_firmwareupdater")
-    ])
+    ]);
 });
