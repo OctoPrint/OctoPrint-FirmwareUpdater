@@ -30,7 +30,7 @@ $(function() {
                     data.submit();
                 });
             }
-        });
+        })
 
         self.showPluginSettings = function() {
             self._copyConfig();
