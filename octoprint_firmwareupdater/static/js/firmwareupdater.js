@@ -28,14 +28,14 @@ $(function() {
                 self.flashFirmware.unbind("click");
                 self.flashFirmware.on("click", function() {
                     data.submit();
-                });
+                })
             }
         })
 
         self.showPluginSettings = function() {
             self._copyConfig();
             self.configurationDialog.modal();
-        };
+        }
 
         self.savePluginSettings = function() {
             var data = {
@@ -45,20 +45,19 @@ $(function() {
                         path_avrdudeconfig: self.config_path_avrdudeconfig()
                     }
                 }
-            };
-            self.settings.saveData(data, function() { self.configurationDialog.modal("hide"); self._copyConfig(); });
-        };
+            }
+            self.settings.saveData(data, function() { self.configurationDialog.modal("hide"); self._copyConfig() });
+        }
 
         self._copyConfig = function() {
             self.config_path_avrdude(self.settings.settings.plugins.firmwareupdater.path_avrdude());
             self.config_path_avrdudeconfig(self.settings.settings.plugins.firmwareupdater.path_avrdudeconfig());
-        };
-
-    };
+        }
+    }
 
     OCTOPRINT_VIEWMODELS.push([
         FirmwareUpdaterViewModel,
         ["settingsViewModel"],
         document.getElementById("settings_plugin_firmwareupdater")
-    ]);
+    ])
 });
