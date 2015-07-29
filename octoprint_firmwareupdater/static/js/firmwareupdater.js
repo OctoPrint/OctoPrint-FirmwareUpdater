@@ -37,9 +37,19 @@ $(function() {
                 return false;
             }
 
-            // URL has priority
             if (self.hexFileURL()) {
-                alert("Send URL");
+                $.ajax({
+                    url: PLUGIN_BASEURL + "firmwareupdater/flashFirmwareWithURL",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        avrdude_path: self.config_path_avrdude(),
+                        selected_port: self.selected_port(),
+                        hex_url: self.hexFileURL()
+                    }),
+                    contentType: "application/json; charset=UTF-8"
+                })
+
             } else if (self.hexFileName()) {
                 var form = {
                     avrdude_path: self.config_path_avrdude(),

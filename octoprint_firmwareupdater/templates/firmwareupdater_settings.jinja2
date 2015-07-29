@@ -14,7 +14,7 @@
             <div class="input-prepend">
                 <span class="btn fileinput-button">
                     <span>{{ _('Browse...') }}</span>
-                    <input id="settings-firmwareupdater-selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
+                    <input id="settings-firmwareupdater-selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware_with_path") }}">
                 </span>
                 <span class="add-on" data-bind="text: hexFileName"></span>
             </div>
