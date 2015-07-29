@@ -125,18 +125,20 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				continue
 			if "avrdude: writing" in line:
 				self._logger.info(u"Writing memory...")
-				self._send_progress_stage_update("Writing memory...")
+				self._send_progress_stage_update("Writing memory...", "warning")
 			elif "avrdude: verifying ..." in line:
 				self._logger.info(u"Verifying memory...")
-				self._send_progress_stage_update("Verifying memory...")
+				self._send_progress_stage_update("Verifying memory...", "warning")
 
 		if p.returncode == 0:
 			self._logger.info(u"Flashing successful.")
+			self._send_progress_stage_update("Flashing successful", "success")
 		else:
 			self._logger.info(u"Flashing failed with return code {returncode}.".format(returncode=p.returncode))
+			self._send_progress_stage_update("Flashing failed", "error", text="Return code {returncode}".format(returncode=p.returncode))
 
-	def _send_progress_stage_update(self, result):
-		self._plugin_manager.send_plugin_message(self._identifier, dict(type="progress_stage", result=result))
+	def _send_progress_stage_update(self, title, message_type, text=""):
+		self._plugin_manager.send_plugin_message(self._identifier, dict(type=message_type, title=title, text=text))
 
 	#~~ SettingsPlugin API
 
