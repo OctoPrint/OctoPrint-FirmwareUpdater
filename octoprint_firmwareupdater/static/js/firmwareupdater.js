@@ -5,6 +5,7 @@ $(function() {
         self.settings = parameters[0];
         self.loginState = parameters[1];
         self.connection = parameters[2];
+        self.printerState = parameters[3];
 
         self.config_path_avrdude = ko.observable();
         self.config_path_avrdudeconfig = ko.observable();
@@ -39,6 +40,18 @@ $(function() {
         })
 
         self.startFlash = function() {
+            // Check if printer is connected
+
+            if (self.printerState.isOperational()){
+                self._showPopup({
+                    title: gettext("Printer is connected"),
+                    text: "Please disconnect the printer first.",
+                    hide: false,
+                    type: "error"
+                });
+                return false;
+            }
+
             if (!self.config_path_avrdude()) {
                 self._showPopup({
                     title: gettext("Avrdude path not configured"),
@@ -197,7 +210,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         FirmwareUpdaterViewModel,
-        ["settingsViewModel", "loginStateViewModel", "connectionViewModel"],
+        ["settingsViewModel", "loginStateViewModel", "connectionViewModel", "printerStateViewModel"],
         document.getElementById("settings_plugin_firmwareupdater")
     ]);
 });

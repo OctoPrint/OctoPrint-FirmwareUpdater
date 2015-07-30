@@ -109,7 +109,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return flask.make_response("Ok.", 200)
 
 	def _flash_worker(self, avrdude_path, hex_path, selected_port):
-		avrdude_args = ["-p m2560", "-c stk500", "-P", selected_port, "-U flash:w:" + hex_path]
+		avrdude_args = ["-p m2560", "-c stk500v2", "-P", selected_port, "-U flash:w:" + hex_path]
 		avrdude_command = avrdude_path + ' ' + ' '.join(avrdude_args)
 		working_dir = os.path.dirname(avrdude_path)
 
@@ -129,6 +129,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			elif "avrdude: verifying ..." in line:
 				self._logger.info(u"Verifying memory...")
 				self._send_progress_stage_update("Verifying memory...", "warning")
+			elif "timeout communicating with programmer" in line:
+				self._logger.info(u"Flashing failed. Timeout communicating with programmer.")
+				self._send_progress_stage_update("Flashing failed", "error", text="Timeout communicating with programmer")
+				return
 
 		if p.returncode == 0:
 			self._logger.info(u"Flashing successful.")
