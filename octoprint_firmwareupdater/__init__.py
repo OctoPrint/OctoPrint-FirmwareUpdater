@@ -193,6 +193,47 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/flashFirmwareWithPath", 1000 * 1024)]
 
+	def serial_comm_hook(self, comm_instance, port, baudrate, read_timeout, *args, **kwargs):
+		# connect to regular serial port
+		import serial
+
+		print "Connecting to: %s" % port
+		if baudrate == 0:
+			baudrates = baudrateList()
+			serial_obj = serial.Serial(str(port), 115200 if 115200 in baudrates else baudrates[0], timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
+		else:
+			serial_obj = serial.Serial(str(port), baudrate, timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
+		serial_obj.close()
+		serial_obj.parity = serial.PARITY_NONE
+		serial_obj.open()
+
+		# Flush the init messages after connection
+		while serial_obj.readline().strip() != "":
+			pass
+
+		serial_obj.write("M115\n")
+		line = serial_obj.readline()
+		while line.strip() != "":
+			if "MACHINE_TYPE" in line:
+				break
+			line = serial_obj.readline()
+
+		fw_s = "FIRMWARE_NAME:"
+		scu_s = "SOURCE_CODE_URL:"
+		pv_s = "PROTOCOL_VERSION:"
+		mt_s = "MACHINE_TYPE:"
+		ec_s = "EXTRUDER_COUNT:"
+
+		self.printer_info = dict()
+		self.printer_info["fw_name"] = line[line.index(fw_s)+len(fw_s):line.index(scu_s)].strip()
+		self.printer_info["source_code_url"] = line[line.index(scu_s)+len(scu_s):line.index(pv_s)].strip()
+		self.printer_info["fw_version"] = line[line.index(pv_s)+len(pv_s):line.index(mt_s)].strip()
+		self.printer_info["machine_model"] = line[line.index(mt_s)+len(mt_s):line.index(ec_s)].strip()
+		self.printer_info["extruder_count"] = line[line.index(ec_s)+len(ec_s):].strip()
+
+		return serial_obj
+
+
 
 
 __plugin_name__ = "Firmware Updater"
@@ -202,6 +243,8 @@ def __plugin_load__():
 	global __plugin_hooks__
 
 	__plugin_implementation__ = FirmwareupdaterPlugin()
+
 	__plugin_hooks__ = {
-        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
+        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
+        "octoprint.comm.transport.serial.factory": __plugin_implementation__.serial_comm_hook
     }
