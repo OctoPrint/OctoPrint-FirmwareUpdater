@@ -106,6 +106,24 @@ $(function() {
             }            
         }
 
+        self.checkForUpdates = function() {
+
+            self._showPopup({
+                title: gettext("Checking for updates..."),
+                hide: false,
+                type: "warning"
+            });
+
+            $.ajax({
+                url: PLUGIN_BASEURL + "firmwareupdater/checkForUpdates",
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    self.hexFileURL(data.ota.url);
+                }
+            })
+        }
+
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin != "firmwareupdater") {
                 return;

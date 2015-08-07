@@ -144,6 +144,37 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def _send_progress_stage_update(self, title, message_type, text=""):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type=message_type, title=title, text=text))
 
+	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["GET"])
+	def check_for_updates(self):
+
+		import urllib2
+
+		self.ws_baseurl = "http://localhost:8080/api/checkUpdate"
+
+		self.printer_model = "witbox"
+		self.fw_version = "1.2.2"
+		self.language = "en"
+
+		ws_url = "%s/%s/%s/%s" % (self.ws_baseurl, self.printer_model, self.fw_version, self.language)
+
+		try:
+			ws_response = urllib2.urlopen(ws_url).read()
+		except urllib2.URLError:
+			self._send_progress_stage_update("Unable to connect to updates web server", "error")
+			return flask.make_response("Error.", 500)
+
+		import json
+		print ws_response
+
+		ws_response_dict = json.loads(ws_response)
+
+		if ws_response_dict["available"]:
+			self._send_progress_stage_update("Firmware update available", "warning")
+			return flask.make_response(ws_response, 200)
+		else:
+			self._send_progress_stage_update("Firmware is up to date", "success")
+			return flask.make_response("Ok.", 200)
+
 	#~~ SettingsPlugin API
 
 	def get_settings_defaults(self):
