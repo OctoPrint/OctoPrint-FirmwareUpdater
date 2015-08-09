@@ -40,9 +40,7 @@ $(function() {
         })
 
         self.startFlash = function() {
-            // Check if printer is connected
-
-            if (self.printerState.isOperational()){
+            if (self.printerState.isOperational()){ // TODO: Must the printer be not operational or not printing?
                 self._showPopup({
                     title: gettext("Printer is connected"),
                     text: "Please disconnect the printer first.",
@@ -60,6 +58,7 @@ $(function() {
                 });
                 return false;
             }
+
             if (!self.selected_port()) {
                 self._showPopup({
                     title: gettext("Port not selected"),
@@ -107,21 +106,39 @@ $(function() {
         }
 
         self.checkForUpdates = function() {
+            if (self.printerState.isPrinting()){
+                self._showPopup({
+                    title: gettext("Printer is printing"),
+                    text: "Please wait for the print to be done.",
+                    hide: false,
+                    type: "error"
+                });
+                return false;
+            }
 
-            self._showPopup({
-                title: gettext("Checking for updates..."),
-                hide: false,
-                type: "warning"
-            });
+            if (!self.selected_port()) {
+                self._showPopup({
+                    title: gettext("Port not selected"),
+                    hide: false,
+                    type: "error"
+                });
+                return false;
+            }
 
             $.ajax({
                 url: PLUGIN_BASEURL + "firmwareupdater/checkForUpdates",
-                type: "GET",
+                type: "POST",
                 dataType: "json",
+                data: JSON.stringify({
+                    avrdude_path: self.config_path_avrdude(),
+                    selected_port: self.selected_port()
+                }),
+                contentType: "application/json; charset=UTF-8",
                 success: function(data) {
                     self.hexFileURL(data.ota.url);
+                    // Call startFlash ?
                 }
-            })
+            });
         }
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {

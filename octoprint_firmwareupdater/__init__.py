@@ -10,19 +10,42 @@ from __future__ import absolute_import
 
 import flask
 import os
+import urllib
+import urllib2
+import urlparse
+import serial
+import json
 
 import octoprint.plugin
 import octoprint.settings
+import octoprint.printer
+
+from octoprint.events import eventManager, Events
+from octoprint.settings import settings
 
 class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 							octoprint.plugin.TemplatePlugin,
 							octoprint.plugin.AssetPlugin,
-							octoprint.plugin.SettingsPlugin):
+							octoprint.plugin.SettingsPlugin,
+							octoprint.plugin.EventHandlerPlugin,
+							octoprint.plugin.StartupPlugin,
+							octoprint.plugin.ShutdownPlugin):
 
 	#~~ Asset API
 
 	def get_assets(self):
 		return dict(js=["js/firmwareupdater.js"])
+
+	#~~ StartUp API
+
+	def on_after_startup(self):
+		self.update_pending = False
+
+	#~~ Shutdown API
+
+	def on_shutdown(self):
+		if self._printer.is_operational():
+			self._printer.commands("M117\n")
 
 	#~~ BluePrint API
 
@@ -37,20 +60,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		avrdude_path = flask.request.values["avrdude_path"]
 		selected_port = flask.request.values["selected_port"]
 
-		hex_dir = os.path.join(self._settings._basedir, "plugins", "FirmwareUpdater")
-		hex_path = os.path.join(hex_dir, hex_filename)
+		hex_path = os.path.join(get_plugin_data_folder(), hex_filename)
 
 		if not os.path.exists(avrdude_path):
 			self._logger.exception("Path to avrdude does not exist: {path}".format(path=avrdude_path))
-			return flask.make_response("Error.", 500)  # TODO: Change this
-
-		if not os.path.exists(hex_dir):
-			try:
-				os.mkdir(hex_dir, 0775)
-				self._logger.info("Creating directory for FirmwareUpdater plugin at {path}".format(path=hex_dir))
-			except Exception as e:
-				self._logger.exception("Error when creating directory for FirmwareUpdater plugin: {error}".format(error=e))
-				return flask.make_response("Error.", 500)  # TODO: Change this
+			return flask.make_response("Error.", 500)
 
 		import shutil
 		try:
@@ -68,45 +82,41 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithURL", methods=["POST"])
 	def flash_firmware_with_url(self):
+
+		hex_url = flask.request.json['hex_url']
+		self.avrdude_path = flask.request.json['avrdude_path']
+		self.selected_port = flask.request.json['selected_port']
+
+		ret = _flash_firmware_with_url(hex_url)
+
+		if ret:
+			return flask.make_response("Ok.", 200)
+		else:
+			return flask.make_response("Error.", 500)
+
+	def _flash_firmware_with_url(self, hex_url):
+
+		filename = os.path.basename(hex_url)
+		dest_path = os.path.join(self.get_plugin_data_folder(), filename)
+
 		try:
-			hex_url = flask.request.json['hex_url']
-			avrdude_path = flask.request.json['avrdude_path']
-			selected_port = flask.request.json['selected_port']
-		except Exception as e:
-			self._logger.exception("Error when parsing parameters sent to flash with URL: {error}".format(error=e))
-			return flask.make_response("Error.", 500)  # TODO: Change this
-
-		import urlparse
-		hex_filename = os.path.split(urlparse.urlparse(hex_url).path)[-1] # A bit too much?
-		hex_dir = os.path.join(self._settings._basedir, "plugins", "FirmwareUpdater")
-		hex_path = os.path.join(hex_dir, hex_filename)
-
-		if not os.path.exists(hex_dir):
-			try:
-				os.mkdir(hex_dir, 0775) # cross platform compatible?
-				self._logger.info("Creating directory for FirmwareUpdater plugin at {path}".format(path=hex_dir))
-			except Exception as e:
-				self._logger.exception("Error when creating directory for FirmwareUpdater plugin: {error}".format(error=e))
-				return flask.make_response("Error.", 500)  # TODO: Change this
-
-		import urllib
-		try:
-			hex_path, _ = urllib.urlretrieve(hex_url, hex_path)
+			hex_path, _ = urllib.urlretrieve(hex_url, dest_path)
 		except Exception as e:
 			self._logger.exception("Error when retrieving hex file from URL: {error}".format(error=e))
-			return flask.make_response("Error.", 500)  # TODO: Change this
+			return False
 
-		if not os.path.exists(avrdude_path):
-			self._logger.exception("Path to avrdude does not exist: {path}".format(path=avrdude_path))
-			return flask.make_response("Error.", 500)  # TODO: Change this
+		if not self._check_avrdude():
+			return False
+
+		return True # TOERASE
 
 		# Create thread to flash firmware
 		import threading
-		flash_thread = threading.Thread(target=self._flash_worker, args=(avrdude_path, hex_path, selected_port))
+		flash_thread = threading.Thread(target=self._flash_worker, args=(self.avrdude_path, hex_path, self.selected_port))
 		flash_thread.daemon = False
 		flash_thread.start()
 
-		return flask.make_response("Ok.", 200)
+		return True
 
 	def _flash_worker(self, avrdude_path, hex_path, selected_port):
 		avrdude_args = ["-p m2560", "-c stk500v2", "-P", selected_port, "-U flash:w:" + hex_path]
@@ -125,55 +135,48 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				continue
 			if "avrdude: writing" in line:
 				self._logger.info(u"Writing memory...")
-				self._send_progress_stage_update("Writing memory...", "warning")
+				self.send_plugin_message("Writing memory...", "warning")
 			elif "avrdude: verifying ..." in line:
 				self._logger.info(u"Verifying memory...")
-				self._send_progress_stage_update("Verifying memory...", "warning")
+				self.send_plugin_message("Verifying memory...", "warning")
 			elif "timeout communicating with programmer" in line:
 				self._logger.info(u"Flashing failed. Timeout communicating with programmer.")
-				self._send_progress_stage_update("Flashing failed", "error", text="Timeout communicating with programmer")
+				self.send_plugin_message("Flashing failed", "error", text="Timeout communicating with programmer")
 				return
 
 		if p.returncode == 0:
 			self._logger.info(u"Flashing successful.")
-			self._send_progress_stage_update("Flashing successful", "success")
+			self.send_plugin_message("Flashing successful", "success")
 		else:
 			self._logger.info(u"Flashing failed with return code {returncode}.".format(returncode=p.returncode))
-			self._send_progress_stage_update("Flashing failed", "error", text="Return code {returncode}".format(returncode=p.returncode))
+			self.send_plugin_message("Flashing failed", "error", text="Return code {returncode}".format(returncode=p.returncode))
 
-	def _send_progress_stage_update(self, title, message_type, text=""):
-		self._plugin_manager.send_plugin_message(self._identifier, dict(type=message_type, title=title, text=text))
+	def _check_avrdude(self):
+		if not os.path.exists(self.avrdude_path):
+			self._logger.exception("Path to avrdude does not exist: {path}".format(path=self.avrdude_path))
+			return False
+		elif not os.path.isfile(self.avrdude_path):
+			self._logger.exception("Path to avrdude is not a file: {path}".format(path=self.avrdude_path))
+			return False
+		elif not os.access(self.avrdude_path, os.X_OK):
+			self._logger.exception("Path to avrdude is not executable: {path}".format(path=self.avrdude_path))
+			return False
+		else:
+			return True
 
-	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["GET"])
+	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["POST"])
 	def check_for_updates(self):
 
-		import urllib2
+		self.avrdude_path = flask.request.json['avrdude_path']
+		self.selected_port = flask.request.json['selected_port']
 
-		self.ws_baseurl = "http://localhost:8080/api/checkUpdate"
+		self.send_plugin_message("Connecting to printer...", "warning")
 
-		self.printer_model = "witbox"
-		self.fw_version = "1.2.2"
-		self.language = "en"
+		self._printer.connect() # If a connection is already established, that connection will be closed prior to connecting anew with the provided parameters.
 
-		ws_url = "%s/%s/%s/%s" % (self.ws_baseurl, self.printer_model, self.fw_version, self.language)
+		self.update_pending = True
 
-		try:
-			ws_response = urllib2.urlopen(ws_url).read()
-		except urllib2.URLError:
-			self._send_progress_stage_update("Unable to connect to updates web server", "error")
-			return flask.make_response("Error.", 500)
-
-		import json
-		print ws_response
-
-		ws_response_dict = json.loads(ws_response)
-
-		if ws_response_dict["available"]:
-			self._send_progress_stage_update("Firmware update available", "warning")
-			return flask.make_response(ws_response, 200)
-		else:
-			self._send_progress_stage_update("Firmware is up to date", "success")
-			return flask.make_response("Ok.", 200)
+		return flask.make_response("Ok.", 200)
 
 	#~~ SettingsPlugin API
 
@@ -188,33 +191,72 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			if key in data:
 				self._settings.set([key], data[key])
 
-	# Hooks
+	#~~ EventHandler API
+
+	def on_event(self, event, payload):
+		if event == "Connected":
+
+			if not hasattr(self, "printer_info"):
+				self._logger.warn("Connected but no printer_info found.")
+				return
+
+			# Check if new update available
+
+			self.ws_baseurl = "http://localhost:8080/api/checkUpdate/"
+			self.language = "en" # TODO: We should get this from printer_info
+
+			ws_args = "%s/%s/%s" % (self.printer_info["printer_model"], self.printer_info["fw_version"], self.language)
+
+			try:
+				ws_response = urllib2.urlopen(self.ws_baseurl + urllib.quote(ws_args)).read()
+			except urllib2.URLError:
+				self.send_plugin_message("Unable to connect to updates web server", "error")
+				return
+
+			ws_response_dict = json.loads(ws_response)
+			if ws_response_dict["available"]:
+
+				self.send_plugin_message("Firmware update available", "warning")
+
+				if self.update_pending:
+					self._flash_firmware_with_url(ws_response_dict["ota"]["url"])
+					self.update_pending = False
+
+				return
+
+			else:
+				self.send_plugin_message("Firmware is up to date", "success")
+				return
+
+		elif event == "Disconnected":
+			if hasattr(self, "printer_info"):
+				del self.printer_info
+
+	#~~ Hooks
 
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/flashFirmwareWithPath", 1000 * 1024)]
 
 	def serial_comm_hook(self, comm_instance, port, baudrate, read_timeout, *args, **kwargs):
-		# connect to regular serial port
-		import serial
 
-		print "Connecting to: %s" % port
-		if baudrate == 0:
-			baudrates = baudrateList()
-			serial_obj = serial.Serial(str(port), 115200 if 115200 in baudrates else baudrates[0], timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
-		else:
-			serial_obj = serial.Serial(str(port), baudrate, timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
-		serial_obj.close()
-		serial_obj.parity = serial.PARITY_NONE
-		serial_obj.open()
+		serial_obj = self._default(comm_instance, port, baudrate, read_timeout)
+
+		if serial_obj == None:
+			self.send_plugin_message("Unable to connect to printer", "error")
+			self._logger.info("Unable to connect to printer")
+			return
 
 		# Flush the init messages after connection
 		while serial_obj.readline().strip() != "":
 			pass
 
+		self.send_plugin_message("Retrieving current FW version from printer", "warning")
 		serial_obj.write("M115\n")
+
 		line = serial_obj.readline()
-		while line.strip() != "":
+		while line.strip() != "":	# TODO: Improve this
 			if "MACHINE_TYPE" in line:
+				self._logger.info("Got M115 response from printer")
 				break
 			line = serial_obj.readline()
 
@@ -228,12 +270,52 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self.printer_info["fw_name"] = line[line.index(fw_s)+len(fw_s):line.index(scu_s)].strip()
 		self.printer_info["source_code_url"] = line[line.index(scu_s)+len(scu_s):line.index(pv_s)].strip()
 		self.printer_info["fw_version"] = line[line.index(pv_s)+len(pv_s):line.index(mt_s)].strip()
-		self.printer_info["machine_model"] = line[line.index(mt_s)+len(mt_s):line.index(ec_s)].strip()
+		self.printer_info["printer_model"] = line[line.index(mt_s)+len(mt_s):line.index(ec_s)].strip()
 		self.printer_info["extruder_count"] = line[line.index(ec_s)+len(ec_s):].strip()
+
+		# TODO: Decide if this should be done with all printers or just with BQ printers
+		serial_obj.write("M117 " + "Connected via OctoPrint" + "\n") # TODO: Use _() to translate string
 
 		return serial_obj
 
+	def _default(self, comm_instance, port, baudrate, read_timeout):
+		if port is None or port == 'AUTO':
+			# no known port, try auto detection
+			comm_instance._changeState(comm_instance.STATE_DETECT_SERIAL)
+			serial_obj = comm_instance._detectPort(True)
+			if serial_obj is None:
+				comm_instance._errorValue = 'Failed to autodetect serial port, please set it manually.'
+				comm_instance._changeState(comm_instance.STATE_ERROR)
+				eventManager().fire(Events.ERROR, {"error": comm_instance.getErrorString()})
+				self._logger.exception("Error when detecting port: %s" % comm_instance.getErrorString())
+				return None
 
+			port = serial_obj.port
+
+		# connect to regular serial port
+		if baudrate == 0:
+			baudrates = self._baudrateList()
+			serial_obj = serial.Serial(str(port), 115200 if 115200 in baudrates else baudrates[0], timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
+		else:
+			serial_obj = serial.Serial(str(port), baudrate, timeout=read_timeout, writeTimeout=10000, parity=serial.PARITY_ODD)
+		serial_obj.close()
+		serial_obj.parity = serial.PARITY_NONE
+		serial_obj.open()
+
+		return serial_obj
+
+	def _baudrateList(self):
+		ret = [250000, 230400, 115200, 57600, 38400, 19200, 9600]
+		prev = settings().getInt(["serial", "baudrate"])
+		if prev in ret:
+			ret.remove(prev)
+			ret.insert(0, prev)
+		return ret
+
+	#~~ Extra functions
+
+	def send_plugin_message(self, title, message_type, text=""):
+		self._plugin_manager.send_plugin_message(self._identifier, dict(title=title, type=message_type, text=text))
 
 
 __plugin_name__ = "Firmware Updater"
