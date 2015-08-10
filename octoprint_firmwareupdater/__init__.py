@@ -22,6 +22,7 @@ import octoprint.printer
 
 from octoprint.events import eventManager, Events
 from octoprint.settings import settings
+from octoprint.util.avr_isp import stk500v2
 
 class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 							octoprint.plugin.TemplatePlugin,
@@ -87,7 +88,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self.avrdude_path = flask.request.json['avrdude_path']
 		self.selected_port = flask.request.json['selected_port']
 
-		ret = _flash_firmware_with_url(hex_url)
+		ret = self._flash_firmware_with_url(hex_url)
 
 		if ret:
 			return flask.make_response("Ok.", 200)
@@ -169,7 +170,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self.selected_port = flask.request.json['selected_port']
 
 		self.send_plugin_message("Connecting to printer...", "warning")
-		self._logger.info("Connecting to printer at %s to get printer info" % self.selected_port)
 
 		self._printer.connect(port=self.selected_port) # If a connection is already established, that connection will be closed prior to connecting anew with the provided parameters.
 
@@ -209,17 +209,17 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			try:
 				ws_response = urllib2.urlopen(self.ws_baseurl + urllib.quote(ws_args)).read()
 			except urllib2.URLError:
-				self.send_plugin_message("Unable to connect to updates web server", "error")
+				self.send_plugin_message("Unable to connect to update server", "error")
 				return
 
 			ws_response_dict = json.loads(ws_response)
 			if ws_response_dict["available"]:
 
-				self.send_plugin_message("Firmware update available", "warning")
-
 				if self.update_pending:
 					self._flash_firmware_with_url(ws_response_dict["ota"]["url"])
 					self.update_pending = False
+				else:
+					self.send_plugin_message("Firmware update available", "warning")
 
 				return
 
@@ -287,6 +287,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			comm_instance._changeState(comm_instance.STATE_DETECT_SERIAL)
 			serial_obj = comm_instance._detectPort(True)
 			if serial_obj is None:
+				self._logger.warn("Failed to auto detect port")
+				self._logger.info("Retrying to auto detect port...")
+				serial_obj = comm_instance._detectPort(True)
+			if serial_obj is None:
 				comm_instance._errorValue = 'Failed to autodetect serial port, please set it manually.'
 				comm_instance._changeState(comm_instance.STATE_ERROR)
 				eventManager().fire(Events.ERROR, {"error": comm_instance.getErrorString()})
@@ -295,6 +299,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 			port = serial_obj.port
 
+		self._logger.info("Connecting to: %s" % port)
+		#comm_instance._changeState(comm_instance.STATE_CONNECTING)
 		# connect to regular serial port
 		if baudrate == 0:
 			baudrates = self._baudrateList()
