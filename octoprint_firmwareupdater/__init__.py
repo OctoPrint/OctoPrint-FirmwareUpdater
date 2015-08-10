@@ -117,7 +117,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return True
 
 	def _flash_worker(self, avrdude_path, hex_path, selected_port):
-		avrdude_args = ["-p m2560", "-c stk500v2", "-P", selected_port, "-U flash:w:" + hex_path + ":i -D"]
+		avrdude_args = ["-p m2560", "-c wiring", "-P", selected_port, "-U flash:w:" + hex_path + ":i -D"]
 		avrdude_command = avrdude_path + ' ' + ' '.join(avrdude_args)
 		working_dir = os.path.dirname(avrdude_path)
 
