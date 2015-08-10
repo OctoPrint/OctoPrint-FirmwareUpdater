@@ -60,7 +60,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		avrdude_path = flask.request.values["avrdude_path"]
 		selected_port = flask.request.values["selected_port"]
 
-		hex_path = os.path.join(get_plugin_data_folder(), hex_filename)
+		hex_path = os.path.join(self.get_plugin_data_folder(), hex_filename)
 
 		if not os.path.exists(avrdude_path):
 			self._logger.exception("Path to avrdude does not exist: {path}".format(path=avrdude_path))
@@ -108,8 +108,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		if not self._check_avrdude():
 			return False
 
-		return True # TOERASE
-
 		# Create thread to flash firmware
 		import threading
 		flash_thread = threading.Thread(target=self._flash_worker, args=(self.avrdude_path, hex_path, self.selected_port))
@@ -119,7 +117,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return True
 
 	def _flash_worker(self, avrdude_path, hex_path, selected_port):
-		avrdude_args = ["-p m2560", "-c stk500v2", "-P", selected_port, "-U flash:w:" + hex_path]
+		avrdude_args = ["-p m2560", "-c stk500v2", "-P", selected_port, "-U flash:w:" + hex_path + ":i -D"]
 		avrdude_command = avrdude_path + ' ' + ' '.join(avrdude_args)
 		working_dir = os.path.dirname(avrdude_path)
 
@@ -171,8 +169,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self.selected_port = flask.request.json['selected_port']
 
 		self.send_plugin_message("Connecting to printer...", "warning")
+		self._logger.info("Connecting to printer at %s to get printer info" % self.selected_port)
 
-		self._printer.connect() # If a connection is already established, that connection will be closed prior to connecting anew with the provided parameters.
+		self._printer.connect(port=self.selected_port) # If a connection is already established, that connection will be closed prior to connecting anew with the provided parameters.
 
 		self.update_pending = True
 
@@ -251,27 +250,31 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			pass
 
 		self.send_plugin_message("Retrieving current FW version from printer", "warning")
+		self._logger.info("Retrieving current FW version from printer")
 		serial_obj.write("M115\n")
 
 		line = serial_obj.readline()
 		while line.strip() != "":	# TODO: Improve this
 			if "MACHINE_TYPE" in line:
-				self._logger.info("Got M115 response from printer")
 				break
 			line = serial_obj.readline()
 
-		fw_s = "FIRMWARE_NAME:"
+		fwn_s = "FIRMWARE_NAME:"
+		fwv_s = "FIRMWARE_VERSION:"
 		scu_s = "SOURCE_CODE_URL:"
 		pv_s = "PROTOCOL_VERSION:"
 		mt_s = "MACHINE_TYPE:"
 		ec_s = "EXTRUDER_COUNT:"
 
 		self.printer_info = dict()
-		self.printer_info["fw_name"] = line[line.index(fw_s)+len(fw_s):line.index(scu_s)].strip()
+		self.printer_info["fw_name"] = line[line.index(fwn_s)+len(fwn_s):line.index(fwv_s)].strip()
+		self.printer_info["fw_version"] = line[line.index(fwv_s)+len(fwv_s):line.index(scu_s)].strip()
 		self.printer_info["source_code_url"] = line[line.index(scu_s)+len(scu_s):line.index(pv_s)].strip()
-		self.printer_info["fw_version"] = line[line.index(pv_s)+len(pv_s):line.index(mt_s)].strip()
+		self.printer_info["protocol_version"] = line[line.index(pv_s)+len(pv_s):line.index(mt_s)].strip()
 		self.printer_info["printer_model"] = line[line.index(mt_s)+len(mt_s):line.index(ec_s)].strip()
 		self.printer_info["extruder_count"] = line[line.index(ec_s)+len(ec_s):].strip()
+
+		self._logger.info("Current printer: %s (FW version: %s)" % (self.printer_info["printer_model"], self.printer_info["fw_version"]))
 
 		# TODO: Decide if this should be done with all printers or just with BQ printers
 		serial_obj.write("M117 " + "Connected via OctoPrint" + "\n") # TODO: Use _() to translate string

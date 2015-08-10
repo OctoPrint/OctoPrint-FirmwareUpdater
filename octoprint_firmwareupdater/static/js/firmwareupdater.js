@@ -40,10 +40,10 @@ $(function() {
         })
 
         self.startFlash = function() {
-            if (self.printerState.isOperational()){ // TODO: Must the printer be not operational or not printing?
+            if (self.printerState.isPrinting()){ // TODO: Must the printer be not operational or not printing?
                 self._showPopup({
-                    title: gettext("Printer is connected"),
-                    text: "Please disconnect the printer first.",
+                    title: gettext("Printer is printing"),
+                    text: "Please wait for the print to be done.",
                     hide: false,
                     type: "error"
                 });
