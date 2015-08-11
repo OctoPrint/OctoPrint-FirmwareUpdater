@@ -21,6 +21,8 @@ $(function() {
             return self.pathBroken() || self.pathOk();
         });
 
+        self.updateAvailable = ko.observable(false);
+
         self.selectHexPath = $("#settings-firmwareupdater-selectHexPath");
 
         self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
@@ -45,7 +47,8 @@ $(function() {
                     title: gettext("Printer is printing"),
                     text: "Please wait for the print to be done.",
                     hide: false,
-                    type: "error"
+                    type: "error",
+                    replace: true
                 });
                 return false;
             }
@@ -54,7 +57,8 @@ $(function() {
                 self._showPopup({
                     title: gettext("Avrdude path not configured"),
                     hide: false,
-                    type: "error"
+                    type: "error",
+                    replace: true
                 });
                 return false;
             }
@@ -63,7 +67,8 @@ $(function() {
                 self._showPopup({
                     title: gettext("Port not selected"),
                     hide: false,
-                    type: "error"
+                    type: "error",
+                    replace: true
                 });
                 return false;
             }
@@ -71,15 +76,17 @@ $(function() {
                 self._showPopup({
                     title: gettext("Hex file not selected"),
                     hide: false,
-                    type: "error"
+                    type: "error",
+                    replace: true
                 });
                 return false;
             }
 
             self._showPopup({
-                title: gettext("Starting to flash firmware"),
+                title: gettext("Printer will be disconnected"),
                 hide: false,
-                type: "warning"
+                type: "warning",
+                replace: false
             });
 
             if (self.hexFileURL()) {
@@ -111,7 +118,36 @@ $(function() {
                     title: gettext("Printer is printing"),
                     text: "Please wait for the print to be done.",
                     hide: false,
-                    type: "error"
+                    type: "error",
+                    replace: true
+                });
+                return;
+            }
+
+            $.ajax({
+                url: PLUGIN_BASEURL + "firmwareupdater/checkForUpdates",
+                type: "GET"
+            });
+        }
+
+        self.flashUpdate = function() {
+            if (self.printerState.isPrinting()){
+                self._showPopup({
+                    title: gettext("Printer is printing"),
+                    text: "Please wait for the print to be done.",
+                    hide: false,
+                    type: "error",
+                    replace: true
+                });
+                return;
+            }
+
+            if (!self.config_path_avrdude()) {
+                self._showPopup({
+                    title: gettext("Avrdude path not configured"),
+                    hide: false,
+                    type: "error",
+                    replace: true
                 });
                 return false;
             }
@@ -120,24 +156,21 @@ $(function() {
                 self._showPopup({
                     title: gettext("Port not selected"),
                     hide: false,
-                    type: "error"
+                    type: "error",
+                    replace: true
                 });
                 return false;
             }
 
             $.ajax({
-                url: PLUGIN_BASEURL + "firmwareupdater/checkForUpdates",
+                url: PLUGIN_BASEURL + "firmwareupdater/flashUpdate",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
                     avrdude_path: self.config_path_avrdude(),
                     selected_port: self.selected_port()
                 }),
-                contentType: "application/json; charset=UTF-8",
-                success: function(data) {
-                    self.hexFileURL(data.ota.url);
-                    // Call startFlash ?
-                }
+                contentType: "application/json; charset=UTF-8"
             });
         }
 
@@ -145,12 +178,21 @@ $(function() {
             if (plugin != "firmwareupdater") {
                 return;
             }
-            self._showPopup({
-                title: gettext(data.title),
-                text: data.text,
-                hide: false,
-                type: data.type
-            });
+            if (data.type == "update_available") {
+                if (data.value) {
+                    self.updateAvailable(true);
+                } else {
+                    self.updateAvailable(false);
+                }
+            } else {
+                self._showPopup({
+                    title: gettext(data.title),
+                    text: data.text,
+                    hide: false,
+                    type: data.type,
+                    replace: true
+                });
+            }
         }
 
         self.showPluginSettings = function() {
@@ -217,7 +259,9 @@ $(function() {
         // Status Messages
 
         self._showPopup = function(options, eventListeners) {
-            self._closePopup();
+            if (options.replace){
+                self._closePopup();
+            }
             self.popup = new PNotify(options);
 
             if (eventListeners) {

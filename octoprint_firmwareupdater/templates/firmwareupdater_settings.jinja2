@@ -9,7 +9,7 @@
     <h4>{{ _('Hex File') }}</h4>
 
     <div class="control-group">
-        <label class="control-label">{{ _('Path to Hex file') }}</label>
+        <label class="control-label">{{ _('... from File') }}</label>
         <div class="controls">
             <div class="input-prepend">
                 <span class="btn fileinput-button">
@@ -21,7 +21,7 @@
         </div>
     </div>
     <div class="control-group">
-        <label class="control-label">{{ _('URL to Hex file') }}</label>
+        <label class="control-label">{{ _('... from URL') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: hexFileURL">
         </div>
@@ -36,9 +36,11 @@
         </div>
     </div>
 
-    <button class="btn btn-block" data-bind="click: checkForUpdates">{{ _('Check for updates') }}</button>
+    <button class="btn btn-block" data-bind="click: startFlash">{{ _('Flash Firmware') }}</button>
 
-    <button class="btn btn-primary btn-block" data-bind="click: startFlash">{{ _('Flash Firmware') }}</button>
+    <button id="b_check_for_updates" class="btn btn-block" data-bind="click: checkForUpdates, visible: !updateAvailable()">{{ _('Check for updates') }}</button>
+
+    <button id="b_update_firmware" class="btn btn-primary btn-block" data-bind="click: flashUpdate, visible: updateAvailable()">{{ _('Update Firmware') }}</button>
 
 </form>
 
