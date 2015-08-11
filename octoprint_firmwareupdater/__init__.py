@@ -178,9 +178,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			if hasattr(self, "update_info"):
 				del self.printer_info
 
-			# TODO: Decide if this should be done with all printers or just with BQ printers
-			self._printer.commands("M117 " + "Connected via OctoPrint" + "\n") # TODO: Use _() to translate string
-
 			self.callback = octoprint.printer.PrinterCallback()
 			self.default_on_printer_add_message = self.callback.on_printer_add_message
 			self.callback.on_printer_add_message = self.on_printer_add_message
@@ -267,6 +264,22 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/flashFirmwareWithPath", 1000 * 1024)]
 
+	def serial_connection_message(self, comm_instance, script_type, script_name, *args, **kwargs):
+		if not script_type == "gcode":
+			return None
+
+		if script_name == "afterPrinterConnected":
+			prefix = None
+			postfix = "M117 " + "Connected via OctoPrint" + "\n" # TODO: Translate this
+			return prefix, postfix
+		elif script_name == "beforePrinterDisconnected":
+			prefix = None
+			postfix = "M117\n"
+			return prefix, postfix
+		else:
+			return None
+
+
 	#~~ SettingsPlugin API
 
 	def get_settings_defaults(self):
@@ -300,5 +313,6 @@ def __plugin_load__():
 	__plugin_implementation__ = FirmwareupdaterPlugin()
 
 	__plugin_hooks__ = {
-        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
+        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
+        "octoprint.comm.protocol.scripts":__plugin_implementation__.serial_connection_message
     }
