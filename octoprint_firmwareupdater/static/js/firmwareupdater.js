@@ -7,12 +7,12 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
 
-        self.config_path_avrdude = ko.observable();
-        self.config_path_avrdudeconfig = ko.observable();
+        self.configPathAvrdude = ko.observable();
+        self.configPathAvrdudeConfig = ko.observable();
 
         self.hexFileName = ko.observable(undefined);
         self.hexFileURL = ko.observable(undefined);
-        self.selected_port = ko.observable(undefined);
+        self.selectedPort = ko.observable(undefined);
 
         self.pathBroken = ko.observable(false);
         self.pathOk = ko.observable(false);
@@ -53,7 +53,7 @@ $(function() {
                 return false;
             }
 
-            if (!self.config_path_avrdude()) {
+            if (!self.configPathAvrdude()) {
                 self._showPopup({
                     title: gettext("Avrdude path not configured"),
                     hide: false,
@@ -63,7 +63,7 @@ $(function() {
                 return false;
             }
 
-            if (!self.selected_port()) {
+            if (!self.selectedPort()) {
                 self._showPopup({
                     title: gettext("Port not selected"),
                     hide: false,
@@ -95,16 +95,16 @@ $(function() {
                     type: "POST",
                     dataType: "json",
                     data: JSON.stringify({
-                        avrdude_path: self.config_path_avrdude(),
-                        selected_port: self.selected_port(),
+                        avrdude_path: self.configPathAvrdude(),
+                        selectedPort: self.selectedPort(),
                         hex_url: self.hexFileURL()
                     }),
                     contentType: "application/json; charset=UTF-8"
                 })
             } else if (self.hexFileName()) {
                 var form = {
-                    avrdude_path: self.config_path_avrdude(),
-                    selected_port: self.selected_port()
+                    avrdude_path: self.configPathAvrdude(),
+                    selectedPort: self.selectedPort()
                 };
 
                 self.hexData.formData = form;
@@ -142,7 +142,7 @@ $(function() {
                 return;
             }
 
-            if (!self.config_path_avrdude()) {
+            if (!self.configPathAvrdude()) {
                 self._showPopup({
                     title: gettext("Avrdude path not configured"),
                     hide: false,
@@ -152,7 +152,7 @@ $(function() {
                 return false;
             }
 
-            if (!self.selected_port()) {
+            if (!self.selectedPort()) {
                 self._showPopup({
                     title: gettext("Port not selected"),
                     hide: false,
@@ -167,8 +167,8 @@ $(function() {
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
-                    avrdude_path: self.config_path_avrdude(),
-                    selected_port: self.selected_port()
+                    avrdude_path: self.configPathAvrdude(),
+                    selectedPort: self.selectedPort()
                 }),
                 contentType: "application/json; charset=UTF-8"
             });
@@ -203,8 +203,8 @@ $(function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
-                        path_avrdude: self.config_path_avrdude(),
-                        path_avrdudeconfig: self.config_path_avrdudeconfig()
+                        path_avrdude: self.configPathAvrdude(),
+                        path_avrdudeconfig: self.configPathAvrdudeConfig()
                     }
                 }
             }
@@ -218,8 +218,8 @@ $(function() {
         }
 
         self._copyConfig = function() {
-            self.config_path_avrdude(self.settings.settings.plugins.firmwareupdater.path_avrdude());
-            self.config_path_avrdudeconfig(self.settings.settings.plugins.firmwareupdater.path_avrdudeconfig());
+            self.configPathAvrdude(self.settings.settings.plugins.firmwareupdater.path_avrdude());
+            self.configPathAvrdudeConfig(self.settings.settings.plugins.firmwareupdater.path_avrdudeconfig());
         }
 
         self.testAvrdudePath = function() {
@@ -229,7 +229,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     command: "path",
-                    path: self.config_path_avrdude(),
+                    path: self.configPathAvrdude(),
                     check_type: "file",
                     check_access: "x"
                 }),
