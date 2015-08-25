@@ -111,7 +111,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		avrdude_path = self._settings.get(["avrdude_path"])
 		working_dir = os.path.dirname(avrdude_path)
 		hex_path = hex_file.name
-		avrdude_command = [avrdude_path, "-p", "m2560", "-c", "wiring", "-P", selected_port, "-U", "flash:w:" + hex_path + ":i", "-D"]
+		avrdude_command = [avrdude_path, "-v", "-p", "m2560", "-c", "wiring", "-P", selected_port, "-U", "flash:w:" + hex_path + ":i", "-D"]
 
 		import sarge
 		self._logger.info(u"Running %r in %s" % (' '.join(avrdude_command), working_dir))
