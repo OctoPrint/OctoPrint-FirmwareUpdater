@@ -1,6 +1,9 @@
-# OctoPrint-FirmwareUpdater
+# OctoPrint Firmware Updater
 
-**TODO:** Describe what your plugin does.
+This plugin can be used to flash the firmware of your printer by selecting a file or an URL.
+
+It can also manage automatic new firmware checks by connecting to the printer to get it's current FW version
+and consult a web service for the latest one. 
 
 ## Setup
 
@@ -9,9 +12,6 @@ or manually using this URL:
 
     https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/archive/master.zip
 
-**TODO:** Describe how to install your plugin, if more needs to be done than just installing it via pip or through
-the plugin manager.
-
 ## Configuration
 
-**TODO:** Describe your plugin's configuration options (if any).
+In order to be able to flash the firmware, avrdude is needed. The path to avrdude can be set in the plugin's configuration dialog.
