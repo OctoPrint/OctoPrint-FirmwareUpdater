@@ -152,42 +152,26 @@ $(function() {
 
         self.flashUpdate = function() {
             if (self.printerState.isPrinting()){
-                self._showPopup({
-                    title: gettext("Printer is printing"),
-                    text: "Please wait for the print to be done.",
-                    type: "error",
-                    hide: false },
-                    true
-                );
+                self.warningMessage(gettext("Printer is printing. Please wait for the print to be finished."));
+                self.showWarning(true);
                 return false;
             }
 
             if (!self.settings.settings.plugins.firmwareupdater.avrdude_path()) {
-                self._showPopup({
-                    title: gettext("Avrdude path not configured"),
-                    type: "error",
-                    hide: false },
-                    true
-                );
+                self.warningMessage(gettext("Avrdude path not configured"));
+                self.showWarning(true);
                 return false;
             }
 
             if (!self.selectedPort()) {
-                self._showPopup({
-                    title: gettext("Port not selected"),
-                    type: "error",
-                    hide: false },
-                    true
-                );
+                self.warningMessage(gettext("Port not selected"));
+                self.showWarning(true);
                 return false;
             }
 
-            self._showPopup({
-                title: gettext("Printer will be disconnected"),
-                type: "info",
-                hide: false },
-                false
-            );
+            self.showWarning(false);
+            self.infoMessage("Printer will be disconnected.")
+            //self.showInfo(true);
 
             $.ajax({
                 url: PLUGIN_BASEURL + "firmwareupdater/flashUpdate",
@@ -282,19 +266,15 @@ $(function() {
             if (self.printerState.isPrinting()){
                 return false;
             }
-
             if (!self.settings.settings.plugins.firmwareupdater.avrdude_path()) {
                 return false;
             }
-
             if (!self.selectedPort()) {
                 return false;
             }
-
             if (!self.hexFileName()) {
                 return false;
             }
-
             return true;
         }
 
@@ -302,22 +282,40 @@ $(function() {
             if (self.printerState.isPrinting()){
                 return false;
             }
-
             if (!self.settings.settings.plugins.firmwareupdater.avrdude_path()) {
                 return false;
             }
-
             if (!self.selectedPort()) {
                 return false;
             }
-
             if (!self.hexFileURL()) {
                 return false;
             }
-
             return true;
         }
 
+        self.isReadyToCheck = function() {
+            if (self.printerState.isPrinting()){
+                return false;
+            }
+            if (!self.selectedPort()) {
+                return false;
+            }
+            return true;
+        }
+
+        self.isReadyToUpdate= function() {
+            if (self.printerState.isPrinting()){
+                return false;
+            }
+            if (!self.settings.settings.plugins.firmwareupdater.avrdude_path()) {
+                return false;
+            }
+            if (!self.selectedPort()) {
+                return false;
+            }
+            return true;
+        }
 
         // Popup Messages
 
@@ -339,6 +337,6 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push([
         FirmwareUpdaterViewModel,
         ["settingsViewModel", "loginStateViewModel", "connectionViewModel", "printerStateViewModel"],
-        document.getElementById("settings_plugin_firmwareupdater")
+        [document.getElementById("settings_plugin_firmwareupdater"), document.getElementById("sidebar_plugin_firmwareupdater")]
     ]);
 });

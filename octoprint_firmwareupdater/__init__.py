@@ -19,6 +19,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 							octoprint.plugin.SettingsPlugin,
 							octoprint.plugin.EventHandlerPlugin):
 
+	#~~ Template API
+
+	def get_template_configs(self):
+		return [dict(type="sidebar",
+					div="sidebar_plugin_firmwareupdater",
+					name="Firmware Updater",
+					custom_bindings=True,
+					icon="bolt")]
+
 	#~~ BluePrint API
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithPath", methods=["POST"])
