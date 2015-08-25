@@ -15,16 +15,20 @@
         <label class="control-label">{{ _('... from File') }}</label>
         <div class="controls controls-row">
             <div class="span8">
-                <div class="input-prepend">
-                    <span class="btn fileinput-button">
-                        <span>{{ _('Browse...') }}</span>
-                        <input id="settings_firmwareupdater_selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware_with_path") }}">
+                <div class="input-group controls-row">
+                    <span class="span3">
+                        <span class="btn input-group-btn fileinput-button">
+                            <span>{{ _('Browse...') }}</span>
+                            <input id="settings_firmwareupdater_selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware_with_path") }}">
+                        </span>
                     </span>
-                    <input class="input-block-level" type="text" data-bind="value: hexFileName" disabled>
+                    <span class="span9">
+                        <input class="input input-block-level" type="text" data-bind="value: hexFileName" disabled>
+                    </span>
                 </div>
             </div>
             <div class="span4">
-                <button class="btn btn-block btn-primary-gray" data-bind="click: startFlashFromFile, css: {disabled: !isReadyToFlashFromFile()}">{{ _('Flash from File') }}</button>
+                <button class="btn btn-primary btn-block" data-bind="click: startFlashFromFile, css: {disabled: !isReadyToFlashFromFile()}">{{ _('Flash from File') }}</button>
             </div>
         </div>
     </div>
@@ -36,7 +40,7 @@
                 <input class="input-block-level" type="text" data-bind="value: hexFileURL">
             </div>
             <div class="span4">
-                <button class="btn btn-block btn-primary-gray" data-bind="click: startFlashFromURL, css: {disabled: !isReadyToFlashFromURL()}">{{ _('Flash from URL') }}</button>
+                <button class="btn btn-primary btn-block" data-bind="click: startFlashFromURL, css: {disabled: !isReadyToFlashFromURL()}">{{ _('Flash from URL') }}</button>
             </div>
         </div>
     </div>
@@ -51,11 +55,6 @@
     </div>
 
     <hr>
-    <div class="progress">
-        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="statusPercentage" aria-valuemin="0" aria-valuemax="100">
-            <span class="sr-only" data-bind="text: statusString"></span>
-        </div>
-    </div>
 
     <button id="b_check_for_updates" class="btn btn-block" data-bind="click: checkForUpdates, visible: !updateAvailable()">{{ _('Check for updates') }}</button>
     <button id="b_update_firmware" class="btn btn-block btn-success" data-bind="click: flashUpdate, visible: updateAvailable()">{{ _('Update Firmware') }}</button>

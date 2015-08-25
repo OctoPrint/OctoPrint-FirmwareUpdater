@@ -19,17 +19,35 @@
   filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
 }
 
+.btn-primary-gray:active,
+.btn-primary-gray.active {
+  background-color: #003399 \9;
+}
+
 .btn-primary-gray:hover,
 .btn-primary-gray:active,
-.btn-primary-gray.active,
-.btn-primary-gray.disabled,
-.btn-primary-gray[disabled] {
+.btn-primary-gray.active {
+  color: #ffffff;
+  background-color: #0044cc;
+  *background-color: #003bb3;
+}
+
+.btn-primary-gray:disabled,
+.btn-primary-gray.disabled {
   color: #333;
   background-color: #fff;
   border-color: #ccc;
 }
 
-.btn-primary-gray:active,
-.btn-primary-gray.active {
-  background-color: #003399 \9;
+.btn-primary-gray.disabled:hover,
+.btn-primary-gray[disabled]:hover,
+fieldset[disabled] .btn-primary-gray:hover,
+.btn-primary-gray.disabled:focus,
+.btn-primary-gray[disabled]:focus,
+fieldset[disabled] .btn-primary-gray:focus,
+.btn-primary-gray.disabled.focus,
+.btn-primary-gray[disabled].focus,
+fieldset[disabled] .btn-primary-gray.focus {
+  background-color: #fff;
+  border-color: #ccc;
 }
