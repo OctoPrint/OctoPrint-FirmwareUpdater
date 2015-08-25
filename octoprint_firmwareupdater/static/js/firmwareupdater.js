@@ -22,7 +22,6 @@ $(function() {
         self.statusPercentage = ko.observable(0);
         self.statusString = ko.observable("0%");
 
-
         self.pathBroken = ko.observable(false);
         self.pathOk = ko.observable(false);
         self.pathText = ko.observable();
@@ -31,6 +30,11 @@ $(function() {
         });
 
         self.updateAvailable = ko.observable(false);
+
+        self.checkAfterConnect = ko.observable(true);
+        self.checkAfterConnect.subscribe(function(newValue){
+            self.onCheckAfterConnect(newValue);
+        }, self);
 
         self.selectHexPath = $("#settings_firmwareupdater_selectHexPath");
 
@@ -48,6 +52,10 @@ $(function() {
                 self.hexFileName(data.files[0].name);
             }
         })
+
+        self.onStartupComplete = function() {
+            self.checkAfterConnect(self.settings.settings.plugins.firmwareupdater.check_after_connect());
+        }
 
         self.startFlashFromFile = function() {
             if (self.printerState.isPrinting()){
@@ -214,16 +222,22 @@ $(function() {
             self.configurationDialog.modal();
         }
 
-        self.savePluginSettings = function() {
+        self._savePluginSettings = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
                         avrdude_path: self.configPathAvrdude(),
-                        avrdude_config_path: self.configPathAvrdudeConfig()
+                        check_after_connect: self.checkAfterConnect()
                     }
                 }
             }
-            self.settings.saveData(data, function() { self.configurationDialog.modal("hide"); self.onConfigHidden(); });
+            self.settings.saveData(data);
+        }
+
+        self.onConfigClose = function() {
+            self._savePluginSettings();
+            self.configurationDialog.modal("hide");
+            self.onConfigHidden();
         }
 
         self.onConfigHidden = function() {
@@ -304,7 +318,7 @@ $(function() {
             return true;
         }
 
-        self.isReadyToUpdate= function() {
+        self.isReadyToUpdate = function() {
             if (self.printerState.isPrinting()){
                 return false;
             }
@@ -315,6 +329,10 @@ $(function() {
                 return false;
             }
             return true;
+        }
+
+        self.onCheckAfterConnect = function(value) {
+            self._savePluginSettings();
         }
 
         // Popup Messages

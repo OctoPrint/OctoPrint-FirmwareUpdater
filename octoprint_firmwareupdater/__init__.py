@@ -17,7 +17,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 							octoprint.plugin.TemplatePlugin,
 							octoprint.plugin.AssetPlugin,
 							octoprint.plugin.SettingsPlugin,
-							octoprint.plugin.EventHandlerPlugin):
+							octoprint.plugin.EventHandlerPlugin,
+							octoprint.plugin.StartupPlugin):
+
+	#~~ Starup API
+
+	def on_after_startup(self):
+		self.force_check_updates = False
 
 	#~~ Template API
 
@@ -32,7 +38,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithPath", methods=["POST"])
 	def flash_firmware_with_path(self):
-
 		if not self._check_avrdude():
 			return flask.make_response("Error.", 500)
 
@@ -63,7 +68,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithURL", methods=["POST"])
 	def flash_firmware_with_url(self):
-
 		if not self._check_avrdude():
 			return flask.make_response("Error.", 500)
 
@@ -79,7 +83,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashUpdate", methods=["POST"])
 	def flash_update(self):
-
 		if not self._check_avrdude():
 			return flask.make_response("Error.", 500)
 
@@ -133,7 +136,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				if not line:
 					p.commands[0].poll()
 					continue
-				print line
 				if "avrdude: writing" in line:
 					self._logger.info(u"Writing memory...")
 					self.send_message("Writing memory...", "warning")
@@ -182,15 +184,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["GET"])
 	def check_for_updates(self):
 		self.send_message(message_title="Connecting to printer...", message_type="warning")
-
+		self.force_check_updates = True
 		self._printer.connect()
-
 		return flask.make_response("Ok.", 200)
 
 	#~~ EventHandler API
 
 	def on_event(self, event, payload):
 		if event == "Connected":
+			if not self.force_check_updates and not self._settings.get(["check_after_connect"]):
+				return
+
+			self.force_check_updates = False
 
 			if hasattr(self, "printer_info"):
 				del self.printer_info
@@ -274,7 +279,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def get_settings_defaults(self):
 		return {
 			"avrdude_path": None,
-			"avrdude_config_path": None,
+			"check_after_connect": True,
 			"update_service_url": "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
 		}
 
