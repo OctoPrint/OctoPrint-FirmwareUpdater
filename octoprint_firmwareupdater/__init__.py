@@ -237,7 +237,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		# Unregister callback
 		self.callback.on_printer_add_message = self.default_on_printer_add_message
 
-		self.printer_info = dict([pair.split(":") for pair in data.strip().split(" ")])
+		try:
+			self.printer_info = dict([pair.split(":") for pair in data.strip().split(" ")])
+		except ValueError as e:
+			self.send_message(message_title="Unable to parse M115 response", message_type="error")
+			self._logger.exception(u"Unable to parse M115 response: {error}".format(error=e))
 
 		self._logger.info(u"Current printer: %s (FW version: %s)" % (self.printer_info["MACHINE_TYPE"], self.printer_info["FIRMWARE_VERSION"]))
 
