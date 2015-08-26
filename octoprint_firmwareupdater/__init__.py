@@ -96,7 +96,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			else:
 				return flask.make_response("Error.", 500)
 		else:
-			self._logger.exception(u"No update info found")
+			self._logger.error(u"No update info found")
 			self.send_message(message_title="No update info found", message_type="error")
 			return flask.make_response("Error.", 500)
 
@@ -170,22 +170,23 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def _check_avrdude(self):
 		avrdude_path = self._settings.get(["avrdude_path"])
 		if not os.path.exists(avrdude_path):
-			self._logger.exception(u"Path to avrdude does not exist: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to avrdude does not exist: {path}".format(path=avrdude_path))
 			return False
 		elif not os.path.isfile(avrdude_path):
-			self._logger.exception(u"Path to avrdude is not a file: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to avrdude is not a file: {path}".format(path=avrdude_path))
 			return False
 		elif not os.access(avrdude_path, os.X_OK):
-			self._logger.exception(u"Path to avrdude is not executable: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to avrdude is not executable: {path}".format(path=avrdude_path))
 			return False
 		else:
 			return True
 
-	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["GET"])
+	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["POST"])
 	def check_for_updates(self):
+		selected_port = flask.request.json['selected_port']
 		self.send_message(message_title="Connecting to printer...", message_type="warning")
 		self.force_check_updates = True
-		self._printer.connect()
+		self._printer.connect(port=selected_port)
 		return flask.make_response("Ok.", 200)
 
 	#~~ EventHandler API
@@ -220,14 +221,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				del self.printer_info
 
 	def on_printer_add_message(self, data):
-		if time.time() - self.start_time > 60 or time.time() < self.start_time:
+		if time.time() - self.start_time > 30 or time.time() < self.start_time:
 			if hasattr(self, "printer_info"):
 				del self.printer_info
 			# Unregister callback
 			self.callback.on_printer_add_message = self.default_on_printer_add_message
 
 			self.send_message(message_title="Unable to get FW version from printer", message_type="error")
-			self._logger.exception(u"Unable to get FW version from printer")
+			self._logger.error(u"Unable to get FW version from printer")
 			return
 
 		elif not ("MACHINE_TYPE" in data and "FIRMWARE_VERSION" in data):
@@ -254,7 +255,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		if ws_response.status_code != 200:
 			self.send_message(message_title="Unable to connect to update server", message_type="error", message_text="Got status code {sc}".format(sc=ws_response.status_code))
-			self._logger.exception(u"Unable to connect to update server: Got status code {sc}".format(sc=ws_response.status_code))
+			self._logger.error(u"Unable to connect to update server: Got status code {sc}".format(sc=ws_response.status_code))
 			return
 
 		self.update_info = ws_response.json()
@@ -283,16 +284,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"update_service_url": "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
 		}
 
-	def on_settings_save(self, data):
-		for key in self.get_settings_defaults():
-			if key in data:
-				self._settings.set([key], data[key])
-
 	#~~ Asset API
 
 	def get_assets(self):
-		return dict(js=["js/firmwareupdater.js"],
-					css=["css/firmwareupdater.css"])
+		return dict(js=["js/firmwareupdater.js"])
 
 	#~~ Extra functions
 

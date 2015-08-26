@@ -154,7 +154,12 @@ $(function() {
 
             $.ajax({
                 url: PLUGIN_BASEURL + "firmwareupdater/checkForUpdates",
-                type: "GET"
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    selected_port: self.selectedPort()
+                }),
+                contentType: "application/json; charset=UTF-8"
             });
         }
 
@@ -218,7 +223,6 @@ $(function() {
 
         self.showPluginConfig = function() {
             self.configPathAvrdude(self.settings.settings.plugins.firmwareupdater.avrdude_path());
-            self.configPathAvrdudeConfig(self.settings.settings.plugins.firmwareupdater.avrdude_config_path());
             self.configurationDialog.modal();
         }
 
