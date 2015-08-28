@@ -1,8 +1,0 @@
-<div id="sidebar_plugin_firmwareupdater">
-	<label class="checkbox">
-		<input type="checkbox" data-bind="checked: checkAfterConnect">
-		{{ _('Check for updates at connect') }}
-	</label>
-	<button class="btn btn-block" data-bind="click: checkForUpdates, visible: !updateAvailable(), css: {disabled: !isReadyToCheck()}">{{ _('Check for Updates') }}</button>
-    <button class="btn btn-block btn-success" data-bind="click: flashUpdate, visible: updateAvailable(), css: {disabled: !isReadyToUpdate()}">{{ _('Update Firmware') }}</button>
-</div>

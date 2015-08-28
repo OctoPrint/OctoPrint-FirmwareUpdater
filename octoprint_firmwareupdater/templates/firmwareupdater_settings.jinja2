@@ -1,7 +1,6 @@
 <div id="settings_plugin_firmwareupdater">
 
-    <div class="alert alert-warning" data-bind="text: warningMessage, visible: showWarning() && (!isReadyToFlashFromFile() || !isReadyToFlashFromURL())"></div>
-    <div class="alert alert-info" data-bind="text: infoMessage, visible: showInfo()"></div>
+    <div class="alert" data-bind="text: alertMessage, visible: showAlert() && !is_busy(), css: alertType"></div>
 
     <div class="pull-right">
         <button class="btn btn-small" data-bind="click: showPluginConfig" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
@@ -30,7 +29,7 @@
                     </div>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromFile, css: {disabled: !isReadyToFlashFromFile()}">{{ _('Flash from File') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromFile, enable: !is_busy(), css: {disabled: !isReadyToFlashFromFile() || is_busy()}">{{ _('Flash from File') }}</button>
                 </div>
             </div>
         </div>
@@ -42,24 +41,35 @@
                     <input class="input-block-level" type="text" data-bind="value: hexFileURL">
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromURL, css: {disabled: !isReadyToFlashFromURL()}">{{ _('Flash from URL') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromURL, enable: !is_busy(), css: {disabled: !isReadyToFlashFromURL() || is_busy()}">{{ _('Flash from URL') }}</button>
                 </div>
             </div>
         </div>
 
         <h4>{{ _('Printer Settings') }}</h4>
 
+
         <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
-            <label class="control-label" for="connection_ports_flash" data-bind="css: {disabled: !connection.isErrorOrClosed()}, enable: connection.isErrorOrClosed() && loginState.isUser()">{{ _('Serial Port') }}</label>
+            <label class="control-label">{{ _('Serial Port') }}</label>
             <div class="controls">
-                <select id="connection_ports_flash" data-bind="options: connection.portOptions, value: selectedPort, css: {disabled: !connection.isErrorOrClosed()}, enable: connection.isErrorOrClosed() && loginState.isUser()"></select>
+                <select data-bind="options: connection.portOptions, value: connection.selectedPort, optionsCaption: 'AUTO', css: {disabled: !connection.isErrorOrClosed()}, enable: connection.isErrorOrClosed() && loginState.isUser()"></select>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.firmwareupdater.check_after_connect">{{ _('Check for firmware updates after connecting to printer') }}
+                </label>
             </div>
         </div>
 
         <hr>
 
-        <button id="b_check_for_updates" class="btn btn-block" data-bind="click: checkForUpdates, visible: !updateAvailable(), css: {disabled: !isReadyToCheck()}">{{ _('Check for Updates') }}</button>
-        <button id="b_update_firmware" class="btn btn-block btn-success" data-bind="click: flashUpdate, visible: updateAvailable(), css: {disabled: !isReadyToUpdate()}">{{ _('Update Firmware') }}</button>
+        <button id="b_check_for_updates" class="btn btn-block" data-bind="click: checkForUpdates, visible: !updateAvailable() && !is_busy(), enable: !is_busy(), css: {disabled: !isReadyToCheck()}">{{ _('Check for Updates') }}</button>
+        <button id="b_update_firmware" class="btn btn-block btn-success" data-bind="click: flashUpdate, visible: updateAvailable() && !is_busy(), enable: !is_busy(), css: {disabled: !isReadyToUpdate()}">{{ _('Update Firmware') }}</button>
+        <div class="progress progress-info progress-striped active" data-bind="visible: is_busy()">
+            <div class="bar" style="width: 100%;"><label data-bind="text: progressBarText()"></div>
+        </div>
 
     </form>
 
@@ -75,7 +85,7 @@
                     <div class="controls">
                         <div class="input-append">
                             <input type="text" class="input-block-level" data-bind="value: configPathAvrdude">
-                            <button class="btn" type="button" data-bind="click: testAvrdudePath">{{ _('Test') }}</button>
+                            <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configPathAvrdude, css: {disabled: !configPathAvrdude()}">{{ _('Test') }}</button>
                         </div>
                         <span class="help-block" data-bind="visible: pathBroken() || pathOk, text: pathText"></span>
                     </div>

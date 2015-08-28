@@ -13,30 +13,27 @@ import urlparse
 
 import octoprint.plugin
 
+from octoprint.server.util.flask import restricted_access
+from octoprint.server import admin_permission
+from octoprint.events import Events
+
 class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
-							octoprint.plugin.TemplatePlugin,
-							octoprint.plugin.AssetPlugin,
-							octoprint.plugin.SettingsPlugin,
-							octoprint.plugin.EventHandlerPlugin,
-							octoprint.plugin.StartupPlugin):
+	octoprint.plugin.TemplatePlugin,
+	octoprint.plugin.AssetPlugin,
+	octoprint.plugin.SettingsPlugin,
+	octoprint.plugin.EventHandlerPlugin):
 
-	#~~ Starup API
-
-	def on_after_startup(self):
+	def __init__(self):
+		self.printer_info = None
+		self.update_info = None
 		self.force_check_updates = False
-
-	#~~ Template API
-
-	def get_template_configs(self):
-		return [dict(type="sidebar",
-					div="sidebar_plugin_firmwareupdater",
-					name="Firmware Updater",
-					custom_bindings=True,
-					icon="bolt")]
+		self._checking = False
 
 	#~~ BluePrint API
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithPath", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def flash_firmware_with_path(self):
 		if not self._check_avrdude():
 			return flask.make_response("Error.", 500)
@@ -53,8 +50,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			temp_hex_file = tempfile.NamedTemporaryFile(mode='r+b')
 			with open(os.path.abspath(uploaded_hex_path),'r+b') as f:
 				shutil.copyfileobj(f, temp_hex_file)
-		except Exception as e:
-			self._logger.exception(u"Error when copying uploaded temp hex file: {error}".format(error=e))
+		except:
+			self._logger.exception(u"Error when copying uploaded temp hex file")
 		else:
 			temp_hex_file.seek(0)
 
@@ -67,12 +64,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return flask.make_response("Ok.", 200)
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithURL", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def flash_firmware_with_url(self):
 		if not self._check_avrdude():
 			return flask.make_response("Error.", 500)
 
 		hex_url = flask.request.json['hex_url']
-		self.selected_port = flask.request.json['selected_port']
+		self._selected_port = flask.request.json['selected_port']
 
 		ret = self._flash_firmware_with_url(hex_url)
 
@@ -82,22 +81,23 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			return flask.make_response("Error.", 500)
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashUpdate", methods=["POST"])
+	@restricted_access
+	@admin_permission.require(403)
 	def flash_update(self):
 		if not self._check_avrdude():
 			return flask.make_response("Error.", 500)
 
-		self.selected_port = flask.request.json['selected_port']
+		self._selected_port = flask.request.json['selected_port']
 
-		if hasattr(self, "update_info"):
+		if self.update_info is not None:
 			ret = self._flash_firmware_with_url(self.update_info["ota"]["url"])
-
 			if ret:
 				return flask.make_response("Ok.", 200)
 			else:
 				return flask.make_response("Error.", 500)
 		else:
 			self._logger.error(u"No update info found")
-			self.send_message(message_title="No update info found", message_type="error")
+			self._send_status(status_type="flashing_status", status_value="error", status_description="No update info found")
 			return flask.make_response("Error.", 500)
 
 	def _flash_firmware_with_url(self, hex_url):
@@ -106,13 +106,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		try:
 			urllib.urlretrieve(hex_url, temp_hex_file.name)
-		except Exception as e:
-			self._logger.exception(u"Error when retrieving hex file from URL: {error}".format(error=e))
+		except:
+			self._logger.exception(u"Error when retrieving hex file from URL")
 			return False
 
 		# Create thread to flash firmware
 		import threading
-		flash_thread = threading.Thread(target=self._flash_worker, args=(temp_hex_file, self.selected_port))
+		flash_thread = threading.Thread(target=self._flash_worker, args=(temp_hex_file, self._selected_port))
 		flash_thread.daemon = False
 		flash_thread.start()
 
@@ -138,11 +138,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					continue
 				if "avrdude: writing" in line:
 					self._logger.info(u"Writing memory...")
-					self.send_message("Writing memory...", "warning")
+					self._send_status(status_type="flashing_status", status_value="progress", status_description="Writting memory...")
 				elif "avrdude: verifying ..." in line:
 					self._logger.info(u"Verifying memory...")
-					self.send_message(message_title="Verifying memory...", message_type="warning")
-
+					self._send_status(status_type="flashing_status", status_value="progress", status_description="Verifying memory...")
 				elif "timeout communicating with programmer" in line:
 					e_msg = "Timeout communicating with programmer"
 					raise AvrdudeException
@@ -152,18 +151,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 			if p.returncode == 0:
 				self._logger.info(u"Flashing successful.")
-				self.send_message(message_title="Flashing successful", message_type="success")
-				self.send_status(status_type="update_available", status_value=False) # TODO: Should be handled by the frontend
+				self._send_status(status_type="flashing_status", status_value="successful")
+				self._send_status(status_type="check_update_status", status_value="up_to_date")
 			else:
 				e_msg = "Avrdude returned code {returncode}".format(returncode=p.returncode)
 				raise AvrdudeException
 
 		except AvrdudeException:
-			self._logger.exception(u"Flashing failed. {error}.".format(error=e_msg))
-			self.send_message(message_title="Flashing failed", message_type="error", message_text=e_msg)
-		except Exception as e:
-			self._logger.exception(u"Flashing failed. Unexpected error: {error}.".format(error=e))
-			self.send_message(message_title="Flashing failed", message_type="error", message_text="Unexpected error")
+			self._logger.error(u"Flashing failed. {error}.".format(error=e_msg))
+			self._send_status(status_type="flashing_status", status_value="error", status_description=e_msg)
+		except:
+			self._logger.exception(u"Flashing failed. Unexpected error.")
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Unexpected error")
 		finally:
 			hex_file.close()
 
@@ -183,101 +182,94 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["POST"])
 	def check_for_updates(self):
-		selected_port = flask.request.json['selected_port']
-		self.send_message(message_title="Connecting to printer...", message_type="warning")
+		self._selected_port = flask.request.json['selected_port']
 		self.force_check_updates = True
-		self._printer.connect(port=selected_port)
+		self._send_status(status_type="check_update_status", status_value="progress", status_description="Connecting to Printer...")
+		self._printer.connect(port=self._selected_port)
 		return flask.make_response("Ok.", 200)
 
 	#~~ EventHandler API
 
 	def on_event(self, event, payload):
-		if event == "Connected":
+		if event == Events.CONNECTED:
 			if not self.force_check_updates and not self._settings.get(["check_after_connect"]):
 				return
 
 			self.force_check_updates = False
-
-			if hasattr(self, "printer_info"):
-				del self.printer_info
-			if hasattr(self, "update_info"):
-				del self.update_info
+			self.printer_info = None
+			self.update_info = None
 
 			self.callback = octoprint.printer.PrinterCallback()
 			self.default_on_printer_add_message = self.callback.on_printer_add_message
 			self.callback.on_printer_add_message = self.on_printer_add_message
 			self._printer.register_callback(self.callback)
 
-			self.send_message(message_title="Retrieving current FW version from printer...", message_type="warning")
-			self._logger.info(u"Retrieving current FW version from printer...")
+			self._send_status(status_type="check_update_status", status_value="progress", status_description="Retrieving current firmware version from printer...")
+			self._logger.info(u"Retrieving current firmware version from printer...")
 			self._printer.commands("M115\n")
 
 			self.start_time = time.time()
-
+			self._checking = True
 			return
 
-		elif event == "Disconnected":
-			if hasattr(self, "printer_info"):
-				del self.printer_info
+		elif event == Events.DISCONNECTED:
+			if self._checking:
+				self.callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
+				self._send_status(status_type="check_update_status", status_value="error", status_description="Printer was disconnected")
+				self._checking = False
+			self.printer_info = None
+			return
 
 	def on_printer_add_message(self, data):
 		if time.time() - self.start_time > 30 or time.time() < self.start_time:
-			if hasattr(self, "printer_info"):
-				del self.printer_info
-			# Unregister callback
-			self.callback.on_printer_add_message = self.default_on_printer_add_message
-
-			self.send_message(message_title="Unable to get FW version from printer", message_type="error")
+			self.printer_info = None
+			self.callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
+			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to get FW version from printer")
 			self._logger.error(u"Unable to get FW version from printer")
+			self._checking = False
+			
+		if not ("MACHINE_TYPE" in data and "FIRMWARE_VERSION" in data):
 			return
 
-		elif not ("MACHINE_TYPE" in data and "FIRMWARE_VERSION" in data):
-			return
+		self.callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
+		self._checking = False
 
-		# Unregister callback
-		self.callback.on_printer_add_message = self.default_on_printer_add_message
-
+		import re
 		try:
-			self.printer_info = dict([pair.split(":") for pair in data.strip().split(" ")])
-		except ValueError as e:
-			self.send_message(message_title="Unable to parse M115 response", message_type="error")
-			self._logger.exception(u"Unable to parse M115 response: {error}".format(error=e))
+			m115_regex = re.compile("(?P<key>[A-Z_-]+):(?P<value>.*?)((\s+(?=[A-Z_-]+:))|$)")
+			self.printer_info = dict((m.group("key"), m.group("value")) for m in m115_regex.finditer(data))
+		except:
+			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to parse M115 response")
+			self._logger.exception(u"Unable to parse M115 response.")
 
-		self._logger.info(u"Current printer: %s (FW version: %s)" % (self.printer_info["MACHINE_TYPE"], self.printer_info["FIRMWARE_VERSION"]))
+		self._logger.info(u"Connected printer: {printer_model} (FW version: {fw_version})".format(printer_model=self.printer_info["MACHINE_TYPE"], fw_version=self.printer_info["FIRMWARE_VERSION"]))
 
 		printer_model = urllib.quote(self.printer_info["MACHINE_TYPE"])
 		fw_version = urllib.quote(self.printer_info["FIRMWARE_VERSION"])
 		fw_language = urllib.quote(self.printer_info["X-FIRMWARE_LANGUAGE"])
-		ws_url = self._settings.get(["update_service_url"]).format(model=printer_model, fw_version=fw_version, language=fw_language)
+		ws_url = self._settings.get(["_update_service_url"]).format(model=printer_model, fw_version=fw_version, language=fw_language)
 
 		try:
 			ws_response = requests.get(ws_url)
-		except Exception as e:
-			self.send_message(message_title="Unable to connect to update server", message_type="error")
-			self._logger.exception(u"Unable to connect to update server: {error}".format(error=e))
+		except:
+			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to connect to update server")
+			self._logger.exception(u"Unable to connect to update server.")
 			return
 
 		if ws_response.status_code != 200:
-			self.send_message(message_title="Unable to connect to update server", message_type="error", message_text="Got status code {sc}".format(sc=ws_response.status_code))
+			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to connect to update server")
 			self._logger.error(u"Unable to connect to update server: Got status code {sc}".format(sc=ws_response.status_code))
 			return
 
 		self.update_info = ws_response.json()
 		if self.update_info["available"]:
-			self.send_message(message_title="Firmware update available", message_type="info", message_text="Version %s" % self.update_info["ota"]["fw_version"], replaceable=False)
+			self._send_status(status_type="check_update_status", status_value="update_available", status_description=self.update_info["ota"]["fw_version"])
 			self._logger.info(u"Firmware update available (FW version: %s)" % self.update_info["ota"]["fw_version"])
-			self.send_status(status_type="update_available", status_value=True)
 			return
 		else:
-			self.send_message(message_title="Firmware is up to date", message_type="success")
+			self._send_status(status_type="check_update_status", status_value="up_to_date")
 			self._logger.info(u"Firmware is up to date")
-			self.send_status(status_type="update_available", status_value=False)
 			return
-
-	#~~ Hooks
-
-	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-		return [("POST", r"/flashFirmwareWithPath", 1000 * 1024)]
 
 	#~~ SettingsPlugin API
 
@@ -285,7 +277,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return {
 			"avrdude_path": None,
 			"check_after_connect": True,
-			"update_service_url": "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+			"_update_service_url": "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
 		}
 
 	#~~ Asset API
@@ -293,16 +285,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def get_assets(self):
 		return dict(js=["js/firmwareupdater.js"])
 
-	#~~ Extra functions
+	#~~ Extra methods
 
-	def send_message(self, message_title, message_type, message_text="", replaceable=True):
-		self._plugin_manager.send_plugin_message(self._identifier, dict(type="message", title=message_title, text=message_text, message_type=message_type, replaceable=replaceable))
+	def _send_status(self, status_type, status_value, status_description=""):
+		self._plugin_manager.send_plugin_message(self._identifier, dict(type="status", status_type=status_type, status_value=status_value, status_description=status_description))
 
-	def send_status(self, status_type, status_value):
-		self._plugin_manager.send_plugin_message(self._identifier, dict(type="status", status_type=status_type, status_value=status_value))
+	#~~ Hooks
 
-	def send_progress(self, progress_percentage, progress_string, progress_ok=True):
-		self._plugin_manager.send_plugin_message(self._identifier, dict(type="progress", progress_percentage=progress_percentage, progress_string=progress_string, progress_ok=progress_ok))
+	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
+		return [("POST", r"/flashFirmwareWithPath", 1000 * 1024)]
 
 
 class AvrdudeException(Exception):
