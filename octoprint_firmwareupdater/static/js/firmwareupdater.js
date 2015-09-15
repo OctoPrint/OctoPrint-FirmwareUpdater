@@ -14,6 +14,7 @@ $(function() {
         self.alertMessage = ko.observable("");
         self.alertType = ko.observable("alert-warning");
         self.showAlert = ko.observable(false);
+        self.missingParamToFlash = ko.observable(false);
         self.progressBarText = ko.observable();
         self.is_busy = ko.observable(false);
         self.updateAvailable = ko.observable(false);
@@ -50,7 +51,7 @@ $(function() {
                 self.showAlert(true);
                 return false;
             }
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
                 self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
@@ -64,7 +65,7 @@ $(function() {
             }
             if (!self.hexFileName()) {
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Hex file Path not selected"));
+                self.alertMessage(gettext("Hex file path not specified"));
                 self.showAlert(true);
                 return false;
             }
@@ -75,9 +76,9 @@ $(function() {
                 return false;
             }
 
+            self.progressBarText("Flashing firmware...");
             self.is_busy(true);
             self.showAlert(false);
-            self.progressBarText("Flashing firmware...");
 
             var form = {
                 selected_port: self.connection.selectedPort()
@@ -94,7 +95,7 @@ $(function() {
                 self.showAlert(true);
                 return false;
             }
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
                 self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
@@ -108,7 +109,7 @@ $(function() {
             }
             if (!self.hexFileURL()) {
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Hex file URL not selected"));
+                self.alertMessage(gettext("Hex file URL not specified"));
                 self.showAlert(true);
                 return false;
             }
@@ -136,7 +137,7 @@ $(function() {
         }
 
         self.checkForUpdates = function() {
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
                 self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
@@ -165,7 +166,7 @@ $(function() {
         }
 
         self.flashUpdate = function() {
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
                 self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
@@ -208,35 +209,38 @@ $(function() {
             if (data.type == "status" && data.status_type == "check_update_status") {
                 if (data.status_value == "progress") {
                     self.progressBarText(data.status_description);
-                } else if (data.status_value == "update_available") {
+                    return;
+                }
+                if (data.status_value == "update_available") {
                     if (!self.inSettingsDialog) {
                         self.showUpdateAvailablePopup(data.status_description);
                     }
                     self.updateAvailable(true);
-                    self.progressBarText("");
                     self.is_busy(false);
-                } else if (data.status_value == "up_to_date") {
+                    return;
+                }
+                if (data.status_value == "up_to_date") {
                     self.updateAvailable(false);
-                    self.progressBarText("");
                     self.is_busy(false);
-                } else if (data.status_value == "error") {
+                    return;
+                }
+                if (data.status_value == "error") {
                     self.updateAvailable(false);
-                    self.progressBarText("");
                     self.is_busy(false);
                     self.alertType("alert-danger");
                     self.alertMessage(data.status_description);
                     self.showAlert(true);
+                    return;
                 }
-            } else if (data.type == "status" && data.status_type == "flashing_status") {
+            }
+            if (data.type == "status" && data.status_type == "flashing_status") {
                 if (data.status_value == "progress") {
                     self.progressBarText(data.status_description);
                 } else if (data.status_value == "successful") {
                     self.showPopup("success", "Flashing Successful", "");
-                    self.progressBarText("");
                     self.is_busy(false);
                 } else if (data.status_value == "error") {
                     self.showPopup("error", "Flashing Failed", data.status_description);
-                    self.progressBarText("");
                     self.is_busy(false);
                 }
             }
@@ -304,7 +308,7 @@ $(function() {
         }
 
         self.isReadyToFlashFromFile = function() {
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
@@ -316,11 +320,12 @@ $(function() {
             if (!self.hexFileName()) {
                 return false;
             }
+            self.showAlert(false);
             return true;
         }
 
         self.isReadyToFlashFromURL = function() {
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
@@ -332,11 +337,12 @@ $(function() {
             if (!self.hexFileURL()) {
                 return false;
             }
+            self.showAlert(false);
             return true;
         }
 
         self.isReadyToCheck = function() {
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 return false;
             }
             if (!self.connection.selectedPort()) {
@@ -346,7 +352,7 @@ $(function() {
         }
 
         self.isReadyToUpdate = function() {
-            if (self.printerState.isPrinting()){
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {

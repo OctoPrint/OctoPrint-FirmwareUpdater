@@ -48,11 +48,10 @@
 
         <h4>{{ _('Printer Settings') }}</h4>
 
-
         <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
             <label class="control-label">{{ _('Serial Port') }}</label>
             <div class="controls">
-                <select data-bind="options: connection.portOptions, value: connection.selectedPort, optionsCaption: 'AUTO', css: {disabled: !connection.isErrorOrClosed()}, enable: connection.isErrorOrClosed() && loginState.isUser()"></select>
+                <select data-bind="options: connection.portOptions, value: connection.selectedPort, optionsCaption: 'AUTO', css: {disabled: !connection.isErrorOrClosed() || is_busy()}, enable: connection.isErrorOrClosed() && loginState.isUser() && !is_busy()"></select>
             </div>
         </div>
         <div class="control-group">
