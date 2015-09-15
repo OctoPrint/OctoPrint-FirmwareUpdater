@@ -35,15 +35,28 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	@restricted_access
 	@admin_permission.require(403)
 	def flash_firmware_with_path(self):
+		if self._printer.is_printing():
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
+			return flask.make_response("Error.", 500)
+
 		if not self._check_avrdude():
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Avrdude error")
 			return flask.make_response("Error.", 500)
 
 		input_name = "file"
 		input_upload_name = input_name + "." + self._settings.global_get(["server", "uploads", "nameSuffix"])
 		input_upload_path = input_name + "." + self._settings.global_get(["server", "uploads", "pathSuffix"])
 
-		uploaded_hex_path = flask.request.values[input_upload_path]
+		if not input_upload_path in flask.request.values or not "selected_port" in flask.request.values:
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
+			return flask.make_response("Error.", 500)
+
 		selected_port = flask.request.values["selected_port"]
+		uploaded_hex_path = flask.request.values[input_upload_path]
+
+		if not os.path.exists(uploaded_hex_path) or not os.path.isfile(uploaded_hex_path):
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Uploaded file error")
+			return flask.make_response("Error.", 500)
 
 		import shutil
 		try:
@@ -55,7 +68,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		else:
 			temp_hex_file.seek(0)
 
-		# Create thread to flash firmware
 		import threading
 		flash_thread = threading.Thread(target=self._flash_worker, args=(temp_hex_file, selected_port))
 		flash_thread.daemon = False
@@ -67,13 +79,17 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	@restricted_access
 	@admin_permission.require(403)
 	def flash_firmware_with_url(self):
+		if self._printer.is_printing():
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
+
 		if not self._check_avrdude():
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Avrdude error")
 			return flask.make_response("Error.", 500)
 
 		hex_url = flask.request.json['hex_url']
-		self._selected_port = flask.request.json['selected_port']
+		selected_port = flask.request.json['selected_port']
 
-		ret = self._flash_firmware_with_url(hex_url)
+		ret = self._flash_firmware_with_url(hex_url, selected_port)
 
 		if ret:
 			return flask.make_response("Ok.", 200)
@@ -84,13 +100,17 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	@restricted_access
 	@admin_permission.require(403)
 	def flash_update(self):
+		if self._printer.is_printing():
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
+
 		if not self._check_avrdude():
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Avrdude error")
 			return flask.make_response("Error.", 500)
 
-		self._selected_port = flask.request.json['selected_port']
+		selected_port = flask.request.json['selected_port']
 
 		if self.update_info is not None:
-			ret = self._flash_firmware_with_url(self.update_info["ota"]["url"])
+			ret = self._flash_firmware_with_url(self.update_info["ota"]["url"], selected_port)
 			if ret:
 				return flask.make_response("Ok.", 200)
 			else:
@@ -100,7 +120,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._send_status(status_type="flashing_status", status_value="error", status_description="No update info found")
 			return flask.make_response("Error.", 500)
 
-	def _flash_firmware_with_url(self, hex_url):
+	def _flash_firmware_with_url(self, hex_url, selected_port):
 
 		temp_hex_file = tempfile.NamedTemporaryFile(mode='r+b')
 
@@ -112,7 +132,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		# Create thread to flash firmware
 		import threading
-		flash_thread = threading.Thread(target=self._flash_worker, args=(temp_hex_file, self._selected_port))
+		flash_thread = threading.Thread(target=self._flash_worker, args=(temp_hex_file, selected_port))
 		flash_thread.daemon = False
 		flash_thread.start()
 
@@ -182,10 +202,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	@octoprint.plugin.BlueprintPlugin.route("/checkForUpdates", methods=["POST"])
 	def check_for_updates(self):
-		self._selected_port = flask.request.json['selected_port']
+		if self._printer.is_printing():
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
+
+		selected_port = flask.request.json['selected_port']
 		self.force_check_updates = True
 		self._send_status(status_type="check_update_status", status_value="progress", status_description="Connecting to Printer...")
-		self._printer.connect(port=self._selected_port)
+		self._printer.connect(port=selected_port)
 		return flask.make_response("Ok.", 200)
 
 	#~~ EventHandler API
