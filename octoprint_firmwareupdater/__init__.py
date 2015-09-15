@@ -13,7 +13,7 @@ import urlparse
 
 import octoprint.plugin
 
-from octoprint.server.util.flask import restricted_access
+import octoprint.server.util.flask
 from octoprint.server import admin_permission
 from octoprint.events import Events
 
@@ -32,8 +32,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	#~~ BluePrint API
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithPath", methods=["POST"])
-	@restricted_access
-	@admin_permission.require(403)
+	@octoprint.server.util.flask.restricted_access
+	@octoprint.server.admin_permission.require(403)
 	def flash_firmware_with_path(self):
 		if self._printer.is_printing():
 			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
@@ -47,7 +47,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		input_upload_name = input_name + "." + self._settings.global_get(["server", "uploads", "nameSuffix"])
 		input_upload_path = input_name + "." + self._settings.global_get(["server", "uploads", "pathSuffix"])
 
-		if not input_upload_path in flask.request.values or not "selected_port" in flask.request.values:
+		if input_upload_path not in flask.request.values or "selected_port" not in flask.request.values:
 			self._send_status(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
 			return flask.make_response("Error.", 500)
 
@@ -64,7 +64,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			with open(os.path.abspath(uploaded_hex_path),'r+b') as f:
 				shutil.copyfileobj(f, temp_hex_file)
 		except:
-			self._logger.exception(u"Error when copying uploaded temp hex file")
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Error when copying uploaded file")
+			return flask.make_response("Error.", 500)
 		else:
 			temp_hex_file.seek(0)
 
@@ -76,14 +77,19 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return flask.make_response("Ok.", 200)
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashFirmwareWithURL", methods=["POST"])
-	@restricted_access
-	@admin_permission.require(403)
+	@octoprint.server.util.flask.restricted_access
+	@octoprint.server.admin_permission.require(403)
 	def flash_firmware_with_url(self):
 		if self._printer.is_printing():
 			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
+			return flask.make_response("Error.", 500)
 
 		if not self._check_avrdude():
 			self._send_status(status_type="flashing_status", status_value="error", status_description="Avrdude error")
+			return flask.make_response("Error.", 500)
+
+		if 'hex_url' not in flask.request.json or 'selected_port' not in flask.request.json:
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
 			return flask.make_response("Error.", 500)
 
 		hex_url = flask.request.json['hex_url']
@@ -94,17 +100,23 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		if ret:
 			return flask.make_response("Ok.", 200)
 		else:
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Error when retrieving hex file from URL")
 			return flask.make_response("Error.", 500)
 
 	@octoprint.plugin.BlueprintPlugin.route("/flashUpdate", methods=["POST"])
-	@restricted_access
-	@admin_permission.require(403)
+	@octoprint.server.util.flask.restricted_access
+	@octoprint.server.admin_permission.require(403)
 	def flash_update(self):
 		if self._printer.is_printing():
 			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
+			return flask.make_response("Error.", 500)
 
 		if not self._check_avrdude():
 			self._send_status(status_type="flashing_status", status_value="error", status_description="Avrdude error")
+			return flask.make_response("Error.", 500)
+
+		if 'selected_port' not in flask.request.json:
+			self._send_status(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
 			return flask.make_response("Error.", 500)
 
 		selected_port = flask.request.json['selected_port']
@@ -114,20 +126,21 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			if ret:
 				return flask.make_response("Ok.", 200)
 			else:
+				self._send_status(status_type="flashing_status", status_value="error", status_description="Error when retrieving hex file from URL")
 				return flask.make_response("Error.", 500)
 		else:
-			self._logger.error(u"No update info found")
 			self._send_status(status_type="flashing_status", status_value="error", status_description="No update info found")
 			return flask.make_response("Error.", 500)
 
 	def _flash_firmware_with_url(self, hex_url, selected_port):
-
-		temp_hex_file = tempfile.NamedTemporaryFile(mode='r+b')
+		try:
+			temp_hex_file = tempfile.NamedTemporaryFile(mode='r+b')
+		except:
+			return False
 
 		try:
 			urllib.urlretrieve(hex_url, temp_hex_file.name)
 		except:
-			self._logger.exception(u"Error when retrieving hex file from URL")
 			return False
 
 		# Create thread to flash firmware
@@ -166,7 +179,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					e_msg = "Timeout communicating with programmer"
 					raise AvrdudeException
 				elif "avrdude: ERROR:" in line:
-					e_msg = "Avrdude error: " + line[line.find("avrdude: ERROR:")+len("avrdude: ERROR"):].strip()
+					e_msg = "Avrdude error: " + line[line.find("avrdude: ERROR:")+len("avrdude: ERROR:"):].strip()
 					raise AvrdudeException
 
 			if p.returncode == 0:
