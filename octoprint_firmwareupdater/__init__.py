@@ -28,6 +28,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self.update_info = None
 		self.force_check_updates = False
 		self._checking = False
+		self.printer_callback = None
+		self._default_firmware_language = 'en'
 
 	#~~ BluePrint API
 
@@ -217,7 +219,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def check_for_updates(self):
 		if self._printer.is_printing():
 			self._send_status(status_type="flashing_status", status_value="error", status_description="Printer is busy")
-
+			return flask.make_response("Error.", 500)
 		selected_port = flask.request.json['selected_port']
 		self.force_check_updates = True
 		self._send_status(status_type="check_update_status", status_value="progress", status_description="Connecting to Printer...")
@@ -235,10 +237,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self.printer_info = None
 			self.update_info = None
 
-			self.callback = octoprint.printer.PrinterCallback()
-			self.default_on_printer_add_message = self.callback.on_printer_add_message
-			self.callback.on_printer_add_message = self.on_printer_add_message
-			self._printer.register_callback(self.callback)
+			self.printer_callback = octoprint.printer.PrinterCallback()
+			self.default_on_printer_add_message = self.printer_callback.on_printer_add_message
+			self.printer_callback.on_printer_add_message = self.on_printer_add_message
+			self._printer.register_callback(self.printer_callback)
 
 			self._send_status(status_type="check_update_status", status_value="progress", status_description="Retrieving current firmware version from printer...")
 			self._logger.info(u"Retrieving current firmware version from printer...")
@@ -250,7 +252,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		elif event == Events.DISCONNECTED:
 			if self._checking:
-				self.callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
+				self.printer_callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
 				self._send_status(status_type="check_update_status", status_value="error", status_description="Printer was disconnected")
 				self._checking = False
 			self.printer_info = None
@@ -259,15 +261,16 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def on_printer_add_message(self, data):
 		if time.time() - self.start_time > 30 or time.time() < self.start_time:
 			self.printer_info = None
-			self.callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
+			self.printer_callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
 			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to get FW version from printer")
 			self._logger.error(u"Unable to get FW version from printer")
 			self._checking = False
+			return
 			
 		if not ("MACHINE_TYPE" in data and "FIRMWARE_VERSION" in data):
 			return
 
-		self.callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
+		self.printer_callback.on_printer_add_message = self.default_on_printer_add_message # Unregister callback
 		self._checking = False
 
 		import re
@@ -276,14 +279,25 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self.printer_info = dict((m.group("key"), m.group("value")) for m in m115_regex.finditer(data))
 		except:
 			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to parse M115 response")
-			self._logger.exception(u"Unable to parse M115 response.")
+			self._logger.exception(u"Unable to parse M115 response")
+			return
+
+		if "MACHINE_TYPE" not in self.printer_info.keys() or self.printer_info["MACHINE_TYPE"] == "" \
+			or "FIRMWARE_VERSION" not in self.printer_info.keys() or self.printer_info["FIRMWARE_VERSION"] == "":
+			self._send_status(status_type="check_update_status", status_value="error", status_description="Wrong format in M115 response")
+			self._logger.exception(u"Wrong format in M115 response")
+			return
+
+		if "X-FIRMWARE_LANGUAGE" not in self.printer_info.keys() or self.printer_info["X-FIRMWARE_LANGUAGE"] == "":
+			self._logger.exception(u"Firmware language not found in M115 response, using default one ({default_lang})".format(default_lang=self._default_firmware_language))
+			self.printer_info["X-FIRMWARE_LANGUAGE"] = self._default_firmware_language
 
 		self._logger.info(u"Connected printer: {printer_model} (FW version: {fw_version})".format(printer_model=self.printer_info["MACHINE_TYPE"], fw_version=self.printer_info["FIRMWARE_VERSION"]))
 
 		printer_model = urllib.quote(self.printer_info["MACHINE_TYPE"])
 		fw_version = urllib.quote(self.printer_info["FIRMWARE_VERSION"])
 		fw_language = urllib.quote(self.printer_info["X-FIRMWARE_LANGUAGE"])
-		ws_url = self._settings.get(["_update_service_url"]).format(model=printer_model, fw_version=fw_version, language=fw_language)
+		ws_url = self._settings.get(["update_service_url"]).format(model=printer_model, fw_version=fw_version, language=fw_language)
 
 		try:
 			ws_response = requests.get(ws_url)
@@ -293,7 +307,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			return
 
 		if ws_response.status_code != 200:
-			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to connect to update server")
+			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to connect to update server: Got status code {sc}".format(sc=ws_response.status_code))
 			self._logger.error(u"Unable to connect to update server: Got status code {sc}".format(sc=ws_response.status_code))
 			return
 
@@ -313,7 +327,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return {
 			"avrdude_path": None,
 			"check_after_connect": True,
-			"_update_service_url": "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+			"update_service_url": "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
 		}
 
 	#~~ Asset API
