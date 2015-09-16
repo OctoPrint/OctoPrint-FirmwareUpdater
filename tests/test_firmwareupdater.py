@@ -38,7 +38,6 @@ class TestFlashWithPath(unittest.TestCase):
 		# Set Up
 		mock_os_exists.return_value = True
 		mock_os_isfile.return_value = True
-		mock_os_access.return_value = True
 		mock_flask.request.values = {"file.path":"", "selected_port":""}
 		mock_check_avrdude.return_value = True
 

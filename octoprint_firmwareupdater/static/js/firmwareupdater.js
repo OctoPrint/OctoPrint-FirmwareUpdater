@@ -222,6 +222,12 @@ $(function() {
                 if (data.status_value == "up_to_date") {
                     self.updateAvailable(false);
                     self.is_busy(false);
+                    self.showAlert(false);
+                    if (self.inSettingsDialog) {
+                        self.alertType("alert-success");
+                        self.alertMessage(data.status_description);
+                        self.showAlert(true);
+                    }
                     return;
                 }
                 if (data.status_value == "error") {
@@ -239,9 +245,11 @@ $(function() {
                 } else if (data.status_value == "successful") {
                     self.showPopup("success", "Flashing Successful", "");
                     self.is_busy(false);
+                    self.showAlert(false);
                 } else if (data.status_value == "error") {
                     self.showPopup("error", "Flashing Failed", data.status_description);
                     self.is_busy(false);
+                    self.showAlert(false);
                 }
             }
         }

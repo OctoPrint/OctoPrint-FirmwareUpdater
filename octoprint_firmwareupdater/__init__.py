@@ -289,7 +289,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			return
 
 		if "X-FIRMWARE_LANGUAGE" not in self.printer_info.keys() or self.printer_info["X-FIRMWARE_LANGUAGE"] == "":
-			self._logger.exception(u"Firmware language not found in M115 response, using default one ({default_lang})".format(default_lang=self._default_firmware_language))
+			self._logger.info(u"Firmware language not found in M115 response, using default one ({default_lang})".format(default_lang=self._default_firmware_language))
 			self.printer_info["X-FIRMWARE_LANGUAGE"] = self._default_firmware_language
 
 		self._logger.info(u"Connected printer: {printer_model} (FW version: {fw_version})".format(printer_model=self.printer_info["MACHINE_TYPE"], fw_version=self.printer_info["FIRMWARE_VERSION"]))
@@ -297,7 +297,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		printer_model = urllib.quote(self.printer_info["MACHINE_TYPE"])
 		fw_version = urllib.quote(self.printer_info["FIRMWARE_VERSION"])
 		fw_language = urllib.quote(self.printer_info["X-FIRMWARE_LANGUAGE"])
-		ws_url = self._settings.get(["update_service_url"]).format(model=printer_model, fw_version=fw_version, language=fw_language)
+		ws_url = self._settings.get(["update_service_url"]).format(model=printer_model, language=fw_language, version=fw_version)
 
 		try:
 			ws_response = requests.get(ws_url)
@@ -313,11 +313,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		self.update_info = ws_response.json()
 		if self.update_info["available"]:
-			self._send_status(status_type="check_update_status", status_value="update_available", status_description=self.update_info["ota"]["fw_version"])
-			self._logger.info(u"Firmware update available (FW version: %s)" % self.update_info["ota"]["fw_version"])
+			self._send_status(status_type="check_update_status", status_value="update_available", status_description=self.update_info["ota"]["version"])
+			self._logger.info(u"Firmware update available (FW version: %s)" % self.update_info["ota"]["version"])
 			return
 		else:
-			self._send_status(status_type="check_update_status", status_value="up_to_date")
+			self._send_status(status_type="check_update_status", status_value="up_to_date", status_description="Firmware is up to date")
 			self._logger.info(u"Firmware is up to date")
 			return
 
@@ -327,7 +327,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return {
 			"avrdude_path": None,
 			"check_after_connect": True,
-			"update_service_url": "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+			"update_service_url": "http://devices-staging.bq.com/api/checkUpdate3D/{model}/{language}/{version}"
 		}
 
 	#~~ Asset API
