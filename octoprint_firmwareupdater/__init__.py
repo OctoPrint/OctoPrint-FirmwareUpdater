@@ -186,8 +186,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 			if p.returncode == 0:
 				self._logger.info(u"Flashing successful.")
-				self._send_status(status_type="flashing_status", status_value="successful")
 				self._send_status(status_type="check_update_status", status_value="up_to_date")
+				self._send_status(status_type="flashing_status", status_value="successful")
 			else:
 				e_msg = "Avrdude returned code {returncode}".format(returncode=p.returncode)
 				raise AvrdudeException

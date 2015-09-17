@@ -16,7 +16,7 @@ $(function() {
         self.showAlert = ko.observable(false);
         self.missingParamToFlash = ko.observable(false);
         self.progressBarText = ko.observable();
-        self.is_busy = ko.observable(false);
+        self.isBusy = ko.observable(false);
         self.updateAvailable = ko.observable(false);
 
         self.pathBroken = ko.observable(false);
@@ -77,7 +77,7 @@ $(function() {
             }
 
             self.progressBarText("Flashing firmware...");
-            self.is_busy(true);
+            self.isBusy(true);
             self.showAlert(false);
 
             var form = {
@@ -120,7 +120,7 @@ $(function() {
                 return false;
             }
 
-            self.is_busy(true);
+            self.isBusy(true);
             self.showAlert(false);
             self.progressBarText("Flashing firmware...");
 
@@ -151,7 +151,7 @@ $(function() {
                 return false;
             }
 
-            self.is_busy(true);
+            self.isBusy(true);
             self.showAlert(false);
 
             $.ajax({
@@ -187,7 +187,7 @@ $(function() {
                 return false;
             }
 
-            self.is_busy(true);
+            self.isBusy(true);
             self.showAlert(false);
             self.progressBarText("Flashing firmware...");
 
@@ -216,12 +216,12 @@ $(function() {
                         self.showUpdateAvailablePopup(data.status_description);
                     }
                     self.updateAvailable(true);
-                    self.is_busy(false);
+                    self.isBusy(false);
                     return;
                 }
                 if (data.status_value == "up_to_date") {
                     self.updateAvailable(false);
-                    self.is_busy(false);
+                    self.isBusy(false);
                     self.showAlert(false);
                     if (self.inSettingsDialog) {
                         self.alertType("alert-success");
@@ -232,7 +232,7 @@ $(function() {
                 }
                 if (data.status_value == "error") {
                     self.updateAvailable(false);
-                    self.is_busy(false);
+                    self.isBusy(false);
                     self.alertType("alert-danger");
                     self.alertMessage(data.status_description);
                     self.showAlert(true);
@@ -244,11 +244,11 @@ $(function() {
                     self.progressBarText(data.status_description);
                 } else if (data.status_value == "successful") {
                     self.showPopup("success", "Flashing Successful", "");
-                    self.is_busy(false);
+                    self.isBusy(false);
                     self.showAlert(false);
                 } else if (data.status_value == "error") {
                     self.showPopup("error", "Flashing Failed", data.status_description);
-                    self.is_busy(false);
+                    self.isBusy(false);
                     self.showAlert(false);
                 }
             }
