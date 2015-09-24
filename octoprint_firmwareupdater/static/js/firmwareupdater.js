@@ -240,8 +240,14 @@ $(function() {
                 }
             }
             if (data.type == "status" && data.status_type == "flashing_status") {
-                if (data.status_value == "progress") {
+                if (data.status_value == "starting_flash") {
+                    self.isBusy(true);
+                } else if (data.status_value == "progress") {
                     self.progressBarText(data.status_description);
+                } else if (data.status_value == "info") {
+                    self.alertType("alert-info");
+                    self.alertMessage(data.status_description);
+                    self.showAlert(true);
                 } else if (data.status_value == "successful") {
                     self.showPopup("success", "Flashing Successful", "");
                     self.isBusy(false);
