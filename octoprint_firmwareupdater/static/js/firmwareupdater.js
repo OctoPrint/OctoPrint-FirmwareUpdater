@@ -252,6 +252,8 @@ $(function() {
                     self.showPopup("success", "Flashing Successful", "");
                     self.isBusy(false);
                     self.showAlert(false);
+                    self.hexFileName(undefined);
+                    self.hexFileURL(undefined);
                 } else if (data.status_value == "error") {
                     self.showPopup("error", "Flashing Failed", data.status_description);
                     self.isBusy(false);
@@ -384,6 +386,7 @@ $(function() {
 
         self.onSettingsHidden = function() {
             self.inSettingsDialog = false;
+            self.showAlert(false);
         }
 
         // Popup Messages
