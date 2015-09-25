@@ -374,7 +374,7 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 return false;
             }
-            if (!self.connection.selectedPort()) {
+            if (!self.connection.selectedPort() || self.connection.selectedPort() == "AUTO") {
                 return false;
             }
             return true;
@@ -392,27 +392,12 @@ $(function() {
         // Popup Messages
 
         self.showUpdateAvailablePopup = function(new_fw_version) {
-            // Hack to remove automatically added Cancel button
-            // See https://github.com/sciactive/pnotify/issues/141
-            PNotify.prototype.options.confirm.buttons = [];
             self.updateAvailablePopup = new PNotify({
                 title: gettext('Firmware Update Available'),
                 text: gettext('Version ') + new_fw_version,
                 icon: true,
                 hide: false,
                 type: 'success',
-                confirm: {
-                    confirm: true,
-                    buttons: [{
-                        text: 'Update Firmware',
-                        addClass: 'btn-block btn-success',
-                        promptTrigger: true,
-                        click: function(notice, value){
-                            notice.remove();
-                            self.flashUpdate();
-                        }
-                    }]
-                },
                 buttons: {
                     closer: true,
                     sticker: false,
@@ -421,9 +406,6 @@ $(function() {
                     history: false
                 }
             });
-            if (!self.isReadyToUpdate()) {
-                self.updateAvailablePopup.get().confirm.confirm(false);
-            };
         };
 
         self.showPopup = function(message_type, title, text){
