@@ -20,8 +20,30 @@ or manually using this URL:
 
     https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/archive/master.zip
 
+### AVRDUDE setup
+
+AVRDUDE needs to be installed in the server, where OctoPrint is running.
+
+#### Raspberry Pi
+
+```
+sudo apt-get update
+sudo apt-get install avrdude
+```
+
+#### Ubuntu (12.04 - 14.04 - 15.04)
+
+Information about the package needed can be found here [Ubuntu avrdude package](https://launchpad.net/ubuntu/+source/avrdude)
+
+```
+sudo add-apt-repository ppa:pmjdebruijn/avrdude-release
+sudo apt-get update
+sudo apt-get install avrdude
+```
+
 ## Configuration
 
-In order to be able to flash the firmware, avrdude is needed. The path to avrdude can be set in the plugin's configuration dialog.
+In order to be able to flash firmwares, we need to install avrdude and then specify it's path. The path to avrdude can be set in the plugin's configuration dialog.
+This can be usually found in `/usr/bin/avrdude`
 
-Also, the URL to the web service can be set manually by editing OctoPrint's config.yaml
+In order to change the URL where the updates are checked you will need to edit OctoPrint's config.yaml.
