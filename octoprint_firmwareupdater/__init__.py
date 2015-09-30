@@ -328,6 +328,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		if ws_response.status_code != 200:
 			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to connect to update server: Got status code {sc}".format(sc=ws_response.status_code))
+			self._logger.error(u"Requested update information at: {url}".format(url=ws_url))
 			self._logger.error(u"Unable to connect to update server: Got status code {sc}".format(sc=ws_response.status_code))
 			return
 
