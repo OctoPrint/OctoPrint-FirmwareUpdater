@@ -322,6 +322,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			ws_response = requests.get(ws_url)
 		except:
 			self._send_status(status_type="check_update_status", status_value="error", status_description="Unable to connect to update server")
+			self._logger.error(u"Requested update information at: {url}".format(url=ws_url))
 			self._logger.exception(u"Unable to connect to update server.")
 			return
 
