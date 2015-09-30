@@ -346,7 +346,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return {
 			"avrdude_path": None,
 			"check_after_connect": True,
-			"update_service_url": "http://admin-devices.bq.com/api/checkUpdate3D/{model}/{language}/{version}"
+			"update_service_url": "http://devices.bq.com/api/checkUpdate3D/{model}/{language}/{version}"
 		}
 
 	#~~ Asset API
