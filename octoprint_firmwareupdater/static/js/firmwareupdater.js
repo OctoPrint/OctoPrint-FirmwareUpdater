@@ -59,7 +59,7 @@ $(function() {
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Avrdude path not configured"));
+                self.alertMessage(gettext("AVRDUDE path not configured"));
                 self.showAlert(true);
                 return false;
             }
@@ -103,7 +103,7 @@ $(function() {
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Avrdude path not configured"));
+                self.alertMessage(gettext("AVRDUDE path not configured"));
                 self.showAlert(true);
                 return false;
             }
@@ -175,7 +175,7 @@ $(function() {
 
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Avrdude path not configured"));
+                self.alertMessage(gettext("AVRDUDE path not configured"));
                 self.showAlert(true);
                 return false;
             }
