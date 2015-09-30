@@ -199,7 +199,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					e_msg = "Timeout communicating with programmer"
 					raise AvrdudeException
 				elif "avrdude: ERROR:" in line:
-					e_msg = "Avrdude error: " + line[line.find("avrdude: ERROR:")+len("avrdude: ERROR:"):].strip()
+					e_msg = "AVRDUDE error: " + line[line.find("avrdude: ERROR:")+len("avrdude: ERROR:"):].strip()
 					raise AvrdudeException
 
 			if p.returncode == 0:
@@ -222,13 +222,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def _check_avrdude(self):
 		avrdude_path = self._settings.get(["avrdude_path"])
 		if not os.path.exists(avrdude_path):
-			self._logger.error(u"Path to avrdude does not exist: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to AVRDUDE does not exist: {path}".format(path=avrdude_path))
 			return False
 		elif not os.path.isfile(avrdude_path):
-			self._logger.error(u"Path to avrdude is not a file: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to AVRDUDE is not a file: {path}".format(path=avrdude_path))
 			return False
 		elif not os.access(avrdude_path, os.X_OK):
-			self._logger.error(u"Path to avrdude is not executable: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to AVRDUDE is not executable: {path}".format(path=avrdude_path))
 			return False
 		else:
 			return True
@@ -311,7 +311,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._logger.warning(u"Firmware language not found in M115 response, using default one ({default_lang})".format(default_lang=self._default_firmware_language))
 			self.printer_info["X-FIRMWARE_LANGUAGE"] = self._default_firmware_language
 
-		self._logger.info(u"Connected printer: {printer_model} (FW version: {fw_version})".format(printer_model=self.printer_info["MACHINE_TYPE"], fw_version=self.printer_info["FIRMWARE_VERSION"]))
+		self._logger.info(u"Connected printer: {printer_model} (FW version: {fw_version} - Lang: {fw_lang})".format(printer_model=self.printer_info["MACHINE_TYPE"], fw_version=self.printer_info["FIRMWARE_VERSION"], fw_lang=self.printer_info["X-FIRMWARE_LANGUAGE"]))
 
 		printer_model = urllib.quote(self.printer_info["MACHINE_TYPE"])
 		fw_version = urllib.quote(self.printer_info["FIRMWARE_VERSION"])

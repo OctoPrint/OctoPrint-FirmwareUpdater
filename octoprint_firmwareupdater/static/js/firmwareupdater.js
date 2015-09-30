@@ -392,50 +392,20 @@ $(function() {
         // Popup Messages
 
         self.showUpdateAvailablePopup = function(new_fw_version) {
-            if (self.isReadyToUpdate()) {
-                self.updateAvailablePopup = new PNotify({
-                    title: gettext('Firmware Update Available'),
-                    text: gettext('Version ') + new_fw_version,
-                    icon: true,
-                    hide: false,
-                    type: 'success',
-                    confirm: {
-                        confirm: true,
-                        buttons: [{
-                            text: 'Update Firmware',
-                            addClass: 'btn-block btn-success',
-                            promptTrigger: true,
-                            click: function(notice, value){
-                                notice.remove();
-                                // Show settings dialog
-                                self.flashUpdate();
-                            }
-                        }]
-                    },
-                    buttons: {
-                        closer: true,
-                        sticker: false,
-                    },
-                    history: {
-                        history: false
-                    }
-                });
-            } else {
-                self.updateAvailablePopup = new PNotify({
-                    title: gettext('Firmware Update Available'),
-                    text: gettext('Version ') + new_fw_version,
-                    icon: true,
-                    hide: false,
-                    type: 'success',
-                    buttons: {
-                        closer: true,
-                        sticker: false,
-                    },
-                    history: {
-                        history: false
-                    }
-                });
-            }
+            self.updateAvailablePopup = new PNotify({
+                title: gettext('Firmware Update Available'),
+                text: gettext('Version ') + new_fw_version,
+                icon: true,
+                hide: false,
+                type: 'success',
+                buttons: {
+                    closer: true,
+                    sticker: false,
+                },
+                history: {
+                    history: false
+                }
+            });
         };
 
         self.showPopup = function(message_type, title, text){
