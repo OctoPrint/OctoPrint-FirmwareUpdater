@@ -191,7 +191,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					continue
 				if "avrdude: writing" in line:
 					self._logger.info(u"Writing memory...")
-					self._send_status(status_type="flashing_status", status_value="progress", status_description="Writting memory...")
+					self._send_status(status_type="flashing_status", status_value="progress", status_description="Writing memory...")
 				elif "avrdude: verifying ..." in line:
 					self._logger.info(u"Verifying memory...")
 					self._send_status(status_type="flashing_status", status_value="progress", status_description="Verifying memory...")
