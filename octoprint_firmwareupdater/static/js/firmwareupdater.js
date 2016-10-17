@@ -53,7 +53,7 @@ $(function() {
             }
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
+                self.alertMessage(gettext("Your Robo is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
                 return false;
             }
@@ -97,7 +97,7 @@ $(function() {
             }
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
+                self.alertMessage(gettext("Your Robo is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
                 return false;
             }
@@ -139,7 +139,7 @@ $(function() {
         self.checkForUpdates = function() {
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
+                self.alertMessage(gettext("Your Robo is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
                 return false;
             }
@@ -168,7 +168,7 @@ $(function() {
         self.flashUpdate = function() {
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
                 self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
+                self.alertMessage(gettext("Your Robo is printing. Please wait for the print to be finished."));
                 self.showAlert(true);
                 return false;
             }
