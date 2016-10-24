@@ -1,100 +1,35 @@
-<div id="settings_plugin_firmwareupdater">
-
-    <div class="alert" data-bind="text: alertMessage, visible: showAlert(), css: alertType"></div>
-
-    <div class="pull-right">
-        <button class="btn btn-small" data-bind="click: showPluginConfig" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
+<div class="row-fluid">
+    <button class="btn span12" id="update_firmware" data-bind="click: update_firmware, enable: loginState.isAdmin() && enableUpdating()"><span>{{ _('Update Printer Firmware') }}</span></button>
+</div>
+<form class="form-horizontal">
+    <div class="control-group" data-toggle="tooltip">
+        <label class="control-label">{{ _('Enable Firmware Auto-Update') }}</label>
+        <div class="controls">
+            <input type="checkbox" data-bind="checked: settings.auto_update" />
+        </div>
     </div>
-
-    <h3>{{ _('Firmware Updater') }}</h3>
-
-    <form class="form-horizontal">
-
-        <h4>{{ _('Hex File') }}</h4>
-
-        <div class="control-group">
-            <label class="control-label">{{ _('... from File') }}</label>
-            <div class="controls controls-row">
-                <div class="span8">
-                    <div class="input-group controls-row">
-                        <span class="span3">
-                            <span class="btn input-group-btn fileinput-button">
-                                <span>{{ _('Browse...') }}</span>
-                                <input id="settings_firmwareupdater_selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware_with_path") }}">
-                            </span>
-                        </span>
-                        <span class="span9">
-                            <input class="input input-block-level" type="text" data-bind="value: hexFileName" disabled>
-                        </span>
-                    </div>
-                </div>
-                <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromFile, enable: !isBusy(), css: {disabled: !isReadyToFlashFromFile() || isBusy()}">{{ _('Flash from File') }}</button>
-                </div>
+</form>
+<div class="advanced-container">
+    <a class="muted" data-toggle="collapse" href="#collapseFirmware" aria-expanded="false" aria-controls="collapseFirmware" onclick="$(this).children().toggleClass('icon-caret-right icon-caret-down')">
+        <i class="icon-caret-right"></i> Advanced
+    </a>
+</div>
+<div class="collapse" id="collapseFirmware">
+    <div class="settings-parent" data-bind="css: { disabled: !enableUpdating() }">
+        <div class="row-fluid">
+            <div class="span8">
+                <input type="file" data-bind="fileInput: fileData, customFileInput: {
+                  buttonText: 'Browse...',
+                  changeButtonText: 'Browse...',
+                  buttonClass: 'btn btn-primary no-left-radius right-radius',
+                  clearButtonClass: 'display-none',
+                  fileNameClass: 'disabled form-control',
+                  onClear: onClear,
+                }, enable: loginState.isAdmin() && enableUpdating()" accept=".hex">
             </div>
-        </div>
-
-        <div class="control-group">
-            <label class="control-label">{{ _('... from URL') }}</label>
-            <div class="controls controls-row">
-                <div class="span8">
-                    <input class="input-block-level" type="text" data-bind="value: hexFileURL">
-                </div>
-                <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromURL, enable: !isBusy(), css: {disabled: !isReadyToFlashFromURL() || isBusy()}">{{ _('Flash from URL') }}</button>
-                </div>
+            <div class="span4">
+                <button class="btn span12" id="update_firmware_from_file" data-bind="css: {disabled: !enableUploading()}, click: serverUpload, enable: loginState.isAdmin() && enableUploading()"><span>Upload</span></button>
             </div>
-        </div>
-
-        <h4>{{ _('Printer Settings') }}</h4>
-
-        <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
-            <label class="control-label">{{ _('Serial Port') }}</label>
-            <div class="controls">
-                <select data-bind="options: connection.portOptions, value: connection.selectedPort, optionsCaption: 'AUTO', css: {disabled: !connection.isErrorOrClosed() || isBusy()}, enable: connection.isErrorOrClosed() && loginState.isUser() && !isBusy()"></select>
-            </div>
-        </div>
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.firmwareupdater.check_after_connect">{{ _('Check for firmware updates after connecting to printer') }}
-                </label>
-            </div>
-        </div>
-
-        <hr>
-
-        <button id="b_check_for_updates" class="btn btn-block" data-bind="click: checkForUpdates, visible: !updateAvailable() && !isBusy(), enable: !isBusy(), css: {disabled: !isReadyToCheck()}">{{ _('Check for Updates') }}</button>
-        <button id="b_update_firmware" class="btn btn-block btn-success" data-bind="click: flashUpdate, visible: updateAvailable() && !isBusy(), enable: !isBusy(), css: {disabled: !isReadyToUpdate()}">{{ _('Update Firmware') }}</button>
-        <div class="progress progress-info progress-striped active" data-bind="visible: isBusy()">
-            <div class="bar" style="width: 100%;"><label data-bind="text: progressBarText()"></div>
-        </div>
-
-    </form>
-
-    <div id="settings_plugin_firmwareupdater_configurationdialog" class="modal hide fade">
-        <div class="modal-header">
-            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-            <h3>{{ _('Plugin Configuration') }}</h3>
-        </div>
-        <div class="modal-body">
-            <form class="form-horizontal">
-                <div class="control-group" data-bind="css: {error: pathBroken, success: pathOk}">
-                    <label class="control-label">{{ _('Path to AVRDUDE') }}</label>
-                    <div class="controls">
-                        <div class="input-append">
-                            <input type="text" class="input-block-level" data-bind="value: configPathAvrdude">
-                            <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configPathAvrdude, css: {disabled: !configPathAvrdude()}">{{ _('Test') }}</button>
-                        </div>
-                        <span class="help-block" data-bind="visible: pathBroken() || pathOk, text: pathText"></span>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn" data-dismiss="modal" data-bind="click: onConfigHidden" aria-hidden="true">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" data-bind="click: onConfigClose" aria-hidden="true">{{ _('Save') }}</button>
         </div>
     </div>
 </div>
-
