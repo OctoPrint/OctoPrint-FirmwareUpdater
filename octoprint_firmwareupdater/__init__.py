@@ -67,7 +67,7 @@ class FirmwareUpdatePlugin(octoprint.plugin.StartupPlugin,
     # Allow other OctoPrint plugins to get firmware updating status
     def _is_updating(self):
         return self.isUpdating
-
+        
     # Set default plugin settings for OctoPrint
     def get_settings_defaults(self):
         return dict(
@@ -485,3 +485,10 @@ def __plugin_load__():
     __plugin_hooks__ = {
         "octoprint.server.http.bodysize":
             __plugin_implementation__.increase_upload_bodysize
+    }
+
+    global __plugin_helpers__
+
+    __plugin_helpers__ = dict(
+        firmware_updating = __plugin_implementation__._is_updating
+    )
