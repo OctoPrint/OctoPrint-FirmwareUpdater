@@ -8,6 +8,7 @@ $(function() {
         self.printerState = parameters[3];
 
         self.configPathAvrdude = ko.observable();
+        self.configConfAvrdude = ko.observable();
 
         self.flashPort = ko.observable(undefined);
         self.hexFileName = ko.observable(undefined);
@@ -24,6 +25,13 @@ $(function() {
         self.pathOk = ko.observable(false);
         self.pathText = ko.observable();
         self.pathHelpVisible = ko.computed(function() {
+            return self.pathBroken() || self.pathOk();
+        });
+
+        self.confBroken = ko.observable(false);
+        self.confOk = ko.observable(false);
+        self.confText = ko.observable();
+        self.confHelpVisible = ko.computed(function() {
             return self.pathBroken() || self.pathOk();
         });
 
@@ -226,7 +234,7 @@ $(function() {
         };
 
         self.onConfigClose = function() {
-            self._saveAvrdudePath();
+            self._saveAvrdudePaths();
             self.configurationDialog.modal("hide");
             self.onConfigHidden();
             if (self.configPathAvrdude()) {
@@ -234,11 +242,12 @@ $(function() {
             }
         };
 
-        self._saveAvrdudePath = function() {
+        self._saveAvrdudePaths = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
                         avrdude_path: self.configPathAvrdude(),
+                        avrdude_conf: self.configConfAvrdude()
                     }
                 }
             };
@@ -277,6 +286,36 @@ $(function() {
                     }
                     self.pathOk(response.result);
                     self.pathBroken(!response.result);
+                }
+            })
+        };
+
+        self.testAvrdudeConf = function() {
+            $.ajax({
+                url: API_BASEURL + "util/test",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    command: "path",
+                    path: self.configConfAvrdude(),
+                    check_type: "file",
+                    check_access: "r"
+                }),
+                contentType: "application/json; charset=UTF-8",
+                success: function(response) {
+                    if (!response.result) {
+                        if (!response.exists) {
+                            self.confText(gettext("The path doesn't exist"));
+                        } else if (!response.typeok) {
+                            self.confText(gettext("The path is not a file"));
+                        } else if (!response.access) {
+                            self.confText(gettext("The path is not readable"));
+                        }
+                    } else {
+                        self.confText(gettext("The path is valid"));
+                    }
+                    self.confOk(response.result);
+                    self.confBroken(!response.result);
                 }
             })
         };

@@ -19,10 +19,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                             octoprint.plugin.AssetPlugin,
                             octoprint.plugin.SettingsPlugin):
 
-	AVRDUDE_WRITING = "avrdude: writing"
-	AVRDUDE_VERIFYING = "avrdude: verifying ..."
+	AVRDUDE_WRITING = "writing flash"
+	AVRDUDE_VERIFYING = "verifying ..."
 	AVRDUDE_TIMEOUT = "timeout communicating with programmer"
-	AVRDUDE_ERROR = "avrdude: ERROR:"
+	AVRDUDE_ERROR = "ERROR:"
 
 	def __init__(self):
 		self._flash_thread = None
@@ -182,6 +182,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					message = u"Flashing successful."
 					self._logger.info(message)
 					self._console_logger.info(message)
+					self._send_status("success")
 			except:
 				self._logger.exception(u"Error while attempting to flash")
 				self._send_status("error")
@@ -205,8 +206,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		assert(printer_port is not None)
 
 		avrdude_path = self._settings.get(["avrdude_path"])
+		avrdude_conf = self._settings.get(["avrdude_conf"])
+
 		working_dir = os.path.dirname(avrdude_path)
+
 		avrdude_command = [avrdude_path, "-v", "-p", "m2560", "-c", "wiring", "-P", printer_port, "-U", "flash:w:" + firmware + ":i", "-D"]
+		if avrdude_conf is not None:
+			avrdude_command += ["-C", avrdude_conf]
 
 		import sarge
 		self._logger.info(u"Running %r in %s" % (' '.join(avrdude_command), working_dir))
@@ -254,13 +260,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def _check_avrdude(self):
 		avrdude_path = self._settings.get(["avrdude_path"])
 		if not os.path.exists(avrdude_path):
-			self._logger.error(u"Path to AVRDUDE does not exist: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to avrdude does not exist: {path}".format(path=avrdude_path))
 			return False
 		elif not os.path.isfile(avrdude_path):
-			self._logger.error(u"Path to AVRDUDE is not a file: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to avrdude is not a file: {path}".format(path=avrdude_path))
 			return False
 		elif not os.access(avrdude_path, os.X_OK):
-			self._logger.error(u"Path to AVRDUDE is not executable: {path}".format(path=avrdude_path))
+			self._logger.error(u"Path to avrdude is not executable: {path}".format(path=avrdude_path))
 			return False
 		else:
 			return True
@@ -269,7 +275,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	def get_settings_defaults(self):
 		return {
-			"avrdude_path": None
+			"avrdude_path": None,
+			"avrdude_conf": None
 		}
 
 	#~~ Asset API

@@ -67,13 +67,25 @@
         <div class="modal-body">
             <form class="form-horizontal">
                 <div class="control-group" data-bind="css: {error: pathBroken, success: pathOk}">
-                    <label class="control-label">{{ _('Path to Avrdude') }}</label>
+                    <label class="control-label">{{ _('Path to avrdude') }}</label>
                     <div class="controls">
                         <div class="input-append">
                             <input type="text" class="input-block-level" data-bind="value: configPathAvrdude">
                             <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configPathAvrdude, css: {disabled: !configPathAvrdude()}">{{ _('Test') }}</button>
                         </div>
                         <span class="help-block" data-bind="visible: pathBroken() || pathOk, text: pathText"></span>
+                    </div>
+                </div>
+
+                <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
+                    <label class="control-label">{{ _('Path to avrdude config') }}</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <input type="text" class="input-block-level" data-bind="value: configConfAvrdude">
+                            <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configConfAvrdude, css: {disabled: !configConfAvrdude()}">{{ _('Test') }}</button>
+                        </div>
+                        <span class="help-block" data-bind="visible: confBroken() || confOk, text: confText"></span>
+                        <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
                     </div>
                 </div>
             </form>
