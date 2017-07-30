@@ -7,8 +7,10 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
 
-        self.configPathAvrdude = ko.observable();
-        self.configConfAvrdude = ko.observable();
+        self.configAvrdudePath = ko.observable();
+        self.configAvrdudeConfigFile = ko.observable();
+        self.configAvrdudeAvrMcu = ko.observable();
+        self.configAvrdudeProgrammer = ko.observable();
 
         self.flashPort = ko.observable(undefined);
         self.hexFileName = ko.observable(undefined);
@@ -134,6 +136,32 @@ $(function() {
             })
         };
 
+        self.startReadFlash = function() {
+            if (!self._checkIfReadyToFlash("backup")) {
+                return;
+            }
+
+            self.progressBarText("Reading firmware...");
+            self.isBusy(true);
+            self.showAlert(false);
+
+            $.ajax({
+                url: PLUGIN_BASEURL + "firmwareupdater/backup",
+                type: "POST",
+                dataType: "text",
+                data: JSON.stringify({
+                    port: self.flashPort()
+                }),
+                contentType: "application/json; charset=UTF-8",
+                success: function(response) {
+                    blob = new Blob([response], { type: 'application/octet-stream' })
+                    var str = new Date();
+    							  var filename = 'firmware_backup_' + str.toISOString().substring(0,10) + '.hex';
+    							  saveAs(blob, filename)
+						    }
+            })
+        };
+
         self.onDataUpdaterPluginMessage = function(plugin, data) {
             if (plugin !== "firmwareupdater") {
                 return;
@@ -143,7 +171,7 @@ $(function() {
 
             if (data.type === "status") {
                 switch (data.status) {
-                    case "error": {
+                    case "flasherror": {
                         message = gettext("Unknown error");
 
                         if (data.subtype) {
@@ -178,8 +206,51 @@ $(function() {
 
                         break;
                     }
+                    case "backuperror": {
+                        message = gettext("Unknown error");
+
+                        if (data.subtype) {
+                            switch (data.subtype) {
+                                case "busy": {
+                                    message = gettext("Printer is busy.");
+                                    break;
+                                }
+                                case "port": {
+                                    message = gettext("Printer port is not available.");
+                                    break;
+                                }
+                                case "method": {
+                                    message = gettext("Flash method is not fully configured.");
+                                    break;
+                                }
+                                case "hexfile": {
+                                    message = gettext("Cannot read file to flash.");
+                                    break;
+                                }
+                                case "already_flashing": {
+                                    message = gettext("Already flashing.");
+                                }
+                            }
+                        }
+
+                        self.showPopup("error", gettext("Reading failed"), message);
+                        self.isBusy(false);
+                        self.showAlert(false);
+                        self.hexFileName(undefined);
+                        self.hexFileURL(undefined);
+
+                        break;
+                    }
                     case "success": {
                         self.showPopup("success", gettext("Flashing successful"), "");
+                        self.isBusy(false);
+                        self.showAlert(false);
+                        self.hexFileName(undefined);
+                        self.hexFileURL(undefined);
+                        break;
+                    }
+                    case "backupsuccess": {
+                        self.showPopup("success", gettext("Reading successful"), "");
                         self.isBusy(false);
                         self.showAlert(false);
                         self.hexFileName(undefined);
@@ -193,9 +264,14 @@ $(function() {
                                     message = gettext("Disconnecting printer...");
                                     break;
                                 }
-                                case "starting": {
+                                case "startingflash": {
                                     self.isBusy(true);
                                     message = gettext("Starting flash...");
+                                    break;
+                                }
+                                case "startingbackup": {
+                                    self.isBusy(true);
+                                    message = gettext("Starting backup...");
                                     break;
                                 }
                                 case "writing": {
@@ -204,6 +280,10 @@ $(function() {
                                 }
                                 case "verifying": {
                                     message = gettext("Verifying memory...");
+                                    break;
+                                }
+                                case "reading": {
+                                    message = gettext("Reading memory...");
                                     break;
                                 }
                                 case "reconnecting": {
@@ -229,25 +309,30 @@ $(function() {
         };
 
         self.showPluginConfig = function() {
-            self.configPathAvrdude(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
+            self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
+            self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
+            self.configAvrdudeAvrMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
+            self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
             self.configurationDialog.modal();
         };
 
         self.onConfigClose = function() {
-            self._saveAvrdudePaths();
+            self._saveAvrdudeConfig();
             self.configurationDialog.modal("hide");
             self.onConfigHidden();
-            if (self.configPathAvrdude()) {
+            if (self.configAvrdudePath()) {
                 self.showAlert(false);
             }
         };
 
-        self._saveAvrdudePaths = function() {
+        self._saveAvrdudeConfig = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
-                        avrdude_path: self.configPathAvrdude(),
-                        avrdude_conf: self.configConfAvrdude()
+                        avrdude_path: self.configAvrdudePath(),
+                        avrdude_conf: self.configAvrdudeConfigFile(),
+                        avrdude_avrmcu: self.configAvrdudeAvrMcu(),
+                        avrdude_programmer: self.configAvrdudeProgrammer()
                     }
                 }
             };
@@ -267,7 +352,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     command: "path",
-                    path: self.configPathAvrdude(),
+                    path: self.configAvrdudePath(),
                     check_type: "file",
                     check_access: "x"
                 }),
@@ -297,7 +382,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     command: "path",
-                    path: self.configConfAvrdude(),
+                    path: self.configAvrdudeConfigFile(),
                     check_type: "file",
                     check_access: "r"
                 }),
@@ -327,6 +412,12 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 return false;
             }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                return false;
+            }
             if (!self.connection.selectedPort()) {
                 return false;
             }
@@ -344,12 +435,39 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 return false;
             }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                return false;
+            }
             if (!self.connection.selectedPort()) {
                 return false;
             }
             if (!self.hexFileURL()) {
                 return false;
             }
+            self.showAlert(false);
+            return true;
+        };
+
+        self.isReadyToReadFlash = function() {
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                return false;
+            }
+            if (!self.connection.selectedPort()) {
+                return false;
+            }
+
             self.showAlert(false);
             return true;
         };
