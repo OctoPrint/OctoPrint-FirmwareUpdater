@@ -70,8 +70,8 @@
                     <label class="control-label">{{ _('Path to avrdude') }}</label>
                     <div class="controls">
                         <div class="input-append">
-                            <input type="text" class="input-block-level" data-bind="value: configPathAvrdude">
-                            <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configPathAvrdude, css: {disabled: !configPathAvrdude()}">{{ _('Test') }}</button>
+                            <input type="text" class="input-block-level" data-bind="value: configAvrdudePath">
+                            <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configAvrdudePath, css: {disabled: !configAvrdudePath()}">{{ _('Test') }}</button>
                         </div>
                         <span class="help-block" data-bind="visible: pathBroken() || pathOk, text: pathText"></span>
                     </div>
@@ -81,11 +81,33 @@
                     <label class="control-label">{{ _('Path to avrdude config') }}</label>
                     <div class="controls">
                         <div class="input-append">
-                            <input type="text" class="input-block-level" data-bind="value: configConfAvrdude">
-                            <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configConfAvrdude, css: {disabled: !configConfAvrdude()}">{{ _('Test') }}</button>
+                            <input type="text" class="input-block-level" data-bind="value: configAvrdudeConfigFile">
+                            <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
                         </div>
                         <span class="help-block" data-bind="visible: confBroken() || confOk, text: confText"></span>
                         <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
+                    </div>
+                </div>
+
+                <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
+                    <label class="control-label">{{ _('AVR MCU Type') }}</label>
+                    <div class="controls">
+	                    <select data-bind="value: configAvrdudeAvrMcu">
+                            <option value=></option>
+                            <option value=m1284p>Atmega1284p</option>
+      	                    <option value=m2560>Atmega2560</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
+                    <label class="control-label">{{ _('AVR Progrmammer Type') }}</label>
+                    <div class="controls">
+                        <select data-bind="value: configAvrdudeProgrammer">
+                            <option value=></option>
+                            <option value=arduino>arduino</option>
+                            <option value=wiring>wiring</option>
+                        </select>
                     </div>
                 </div>
             </form>

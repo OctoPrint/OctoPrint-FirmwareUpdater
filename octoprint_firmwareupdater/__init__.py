@@ -60,21 +60,21 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def flash_firmware(self):
 		if self._printer.is_printing():
 			error_message = "Cannot flash firmware, printer is busy"
-			self._send_status("error", subtype="busy", message=error_message)
+			self._send_status("flasherror", subtype="busy", message=error_message)
 			return flask.make_response(error_message, 409)
 
 		value_source = flask.request.json if flask.request.json else flask.request.values
 
 		if not "port" in value_source:
 			error_message = "Cannot flash firmware, printer port is not specified"
-			self._send_status("error", subtype="port", message=error_message)
+			self._send_status("flasherror", subtype="port", message=error_message)
 			return flask.make_response(error_message, 400)
 
 		method = value_source.get("method", "avrdude")
 		if method in self._flash_prechecks:
 			if not self._flash_prechecks[method]():
 				error_message = "Cannot flash firmware, flash method {} is not fully configured".format(method)
-				self._send_status("error", subtype="method", message=error_message)
+				self._send_status("flasherror", subtype="method", message=error_message)
 				return flask.make_response(error_message, 400)
 
 		file_to_flash = None
@@ -101,7 +101,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						self._logger.exception("Error while trying to delete the temporary hex file")
 
 				error_message = "Error while copying the uploaded hex file"
-				self._send_status("error", subtype="hexfile", message=error_message)
+				self._send_status("flasherror", subtype="hexfile", message=error_message)
 				self._logger.exception(error_message)
 				return flask.make_response(error_message, 500)
 
@@ -129,7 +129,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						self._logger.exception("Error while trying to delete the temporary hex file")
 
 				error_message = "Error while retrieving the hex file from {}".format(url)
-				self._send_status("error", subtype="hexfile", message=error_message)
+				self._send_status("flasherror", subtype="hexfile", message=error_message)
 				self._logger.exception(error_message)
 				return flask.make_response(error_message, 500)
 
@@ -140,7 +140,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			return flask.make_response(NO_CONTENT)
 		else:
 			error_message = "Cannot flash firmware, already flashing"
-			self._send_status("error", subtype="already_flashing")
+			self._send_status("flasherror", subtype="already_flashing")
 			self._logger.debug(error_message)
 			return flask.make_response(error_message, 409)
 
@@ -175,7 +175,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					self._send_status("progress", subtype="disconnecting")
 					self._printer.disconnect()
 
-			self._send_status("progress", subtype="starting")
+			self._send_status("progress", subtype="startingflash")
 
 			try:
 				if flash_callable(firmware=firmware, printer_port=printer_port):
@@ -185,7 +185,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					self._send_status("success")
 			except:
 				self._logger.exception(u"Error while attempting to flash")
-				self._send_status("error")
+				self._send_status("flasherror")
 			finally:
 				try:
 					os.remove(firmware)
@@ -207,10 +207,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		avrdude_path = self._settings.get(["avrdude_path"])
 		avrdude_conf = self._settings.get(["avrdude_conf"])
+		avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
+		avrdude_programmer = self._settings.get(["avrdude_programmer"])
 
 		working_dir = os.path.dirname(avrdude_path)
 
-		avrdude_command = [avrdude_path, "-v", "-p", "m2560", "-c", "wiring", "-P", printer_port, "-U", "flash:w:" + firmware + ":i", "-D"]
+		avrdude_command = [avrdude_path, "-v", "-p", avrdude_avrmcu, "-c", avrdude_programmer, "-P", printer_port, "-U", "flash:w:" + firmware + ":i", "-D"]
 		if avrdude_conf is not None:
 			avrdude_command += ["-C", avrdude_conf]
 
@@ -250,15 +252,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		except FlashException as ex:
 			self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))
-			self._send_status("error", message=ex.reason)
+			self._send_status("flasherror", message=ex.reason)
 			return False
 		except:
 			self._logger.exception(u"Flashing failed. Unexpected error.")
-			self._send_status("error")
+			self._send_status("flasherror")
 			return False
 
 	def _check_avrdude(self):
 		avrdude_path = self._settings.get(["avrdude_path"])
+		avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
+		avrdude_programmer = self._settings.get(["avrdude_programmer"])
+
 		if not os.path.exists(avrdude_path):
 			self._logger.error(u"Path to avrdude does not exist: {path}".format(path=avrdude_path))
 			return False
@@ -268,6 +273,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		elif not os.access(avrdude_path, os.X_OK):
 			self._logger.error(u"Path to avrdude is not executable: {path}".format(path=avrdude_path))
 			return False
+		elif not avrdude_avrmcu:
+			self._logger.error(u"AVR MCU type has not been selected.")
+			return False
+		elif not avrdude_programmer:
+			self._logger.error(u"AVR programmer has not been selected.")
+			return False
 		else:
 			return True
 
@@ -276,7 +287,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def get_settings_defaults(self):
 		return {
 			"avrdude_path": None,
-			"avrdude_conf": None
+			"avrdude_conf": None,
+			"avrdude_avrmcu": None,
+			"avrdude_programmer": None
 		}
 
 	#~~ Asset API
