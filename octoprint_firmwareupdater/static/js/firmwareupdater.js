@@ -7,8 +7,10 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
 
-        self.configPathAvrdude = ko.observable();
-        self.configConfAvrdude = ko.observable();
+        self.configAvrdudePath = ko.observable();
+        self.configAvrdudeConfigFile = ko.observable();
+        self.configAvrdudeAvrMcu = ko.observable();
+        self.configAvrdudeProgrammer = ko.observable();
 
         self.flashPort = ko.observable(undefined);
         self.hexFileName = ko.observable(undefined);
@@ -143,7 +145,7 @@ $(function() {
 
             if (data.type === "status") {
                 switch (data.status) {
-                    case "error": {
+                    case "flasherror": {
                         message = gettext("Unknown error");
 
                         if (data.subtype) {
@@ -193,7 +195,7 @@ $(function() {
                                     message = gettext("Disconnecting printer...");
                                     break;
                                 }
-                                case "starting": {
+                                case "startingflash": {
                                     self.isBusy(true);
                                     message = gettext("Starting flash...");
                                     break;
@@ -229,25 +231,30 @@ $(function() {
         };
 
         self.showPluginConfig = function() {
-            self.configPathAvrdude(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
+            self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
+            self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
+            self.configAvrdudeAvrMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
+            self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
             self.configurationDialog.modal();
         };
 
         self.onConfigClose = function() {
-            self._saveAvrdudePaths();
+            self._saveAvrdudeConfig();
             self.configurationDialog.modal("hide");
             self.onConfigHidden();
-            if (self.configPathAvrdude()) {
+            if (self.configAvrdudePath()) {
                 self.showAlert(false);
             }
         };
 
-        self._saveAvrdudePaths = function() {
+        self._saveAvrdudeConfig = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
-                        avrdude_path: self.configPathAvrdude(),
-                        avrdude_conf: self.configConfAvrdude()
+                        avrdude_path: self.configAvrdudePath(),
+                        avrdude_conf: self.configAvrdudeConfigFile(),
+                        avrdude_avrmcu: self.configAvrdudeAvrMcu(),
+                        avrdude_programmer: self.configAvrdudeProgrammer()
                     }
                 }
             };
@@ -267,7 +274,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     command: "path",
-                    path: self.configPathAvrdude(),
+                    path: self.configAvrdudePath(),
                     check_type: "file",
                     check_access: "x"
                 }),
@@ -297,7 +304,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     command: "path",
-                    path: self.configConfAvrdude(),
+                    path: self.configAvrdudeConfigFile(),
                     check_type: "file",
                     check_access: "r"
                 }),
@@ -327,6 +334,12 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 return false;
             }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                return false;
+            }
             if (!self.connection.selectedPort()) {
                 return false;
             }
@@ -344,12 +357,39 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 return false;
             }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                return false;
+            }
             if (!self.connection.selectedPort()) {
                 return false;
             }
             if (!self.hexFileURL()) {
                 return false;
             }
+            self.showAlert(false);
+            return true;
+        };
+
+        self.isReadyToReadFlash = function() {
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                return false;
+            }
+            if (!self.connection.selectedPort()) {
+                return false;
+            }
+
             self.showAlert(false);
             return true;
         };
