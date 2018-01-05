@@ -10,17 +10,22 @@
 
     <form class="form-horizontal">
 
-        <h4>{{ _('Hex File') }}</h4>
+        <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
+            <label class="control-label">{{ _('Serial Port') }}</label>
+            <div class="controls">
+                <select data-bind="options: connection.portOptions, value: flashPort"></select>
+            </div>
+        </div>
 
         <div class="control-group">
-            <label class="control-label">{{ _('... from File') }}</label>
+            <label class="control-label">{{ _('... from file') }}</label>
             <div class="controls controls-row">
                 <div class="span8">
                     <div class="input-group controls-row">
                         <span class="span3">
                             <span class="btn input-group-btn fileinput-button">
                                 <span>{{ _('Browse...') }}</span>
-                                <input id="settings_firmwareupdater_selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware_with_path") }}">
+                                <input id="settings_firmwareupdater_selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
                             </span>
                         </span>
                         <span class="span9">
@@ -29,7 +34,7 @@
                     </div>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromFile, enable: !isBusy(), css: {disabled: !isReadyToFlashFromFile() || isBusy()}">{{ _('Flash from File') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="attr: {title: hexFlashButtonText}, click: function() { if (isReadyToFlashFromFile()) { startFlashFromFile() } }, enable: isReadyToFlashFromFile(), css: {disabled: !isReadyToFlashFromFile() || isBusy()}">{{ _('Flash from File') }}</button>
                 </div>
             </div>
         </div>
@@ -41,33 +46,15 @@
                     <input class="input-block-level" type="text" data-bind="value: hexFileURL">
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: startFlashFromURL, enable: !isBusy(), css: {disabled: !isReadyToFlashFromURL() || isBusy()}">{{ _('Flash from URL') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="attr: {title: urlFlashButtonText}, click: function() { if (isReadyToFlashFromURL()) { startFlashFromURL() } }, enable: isReadyToFlashFromURL(), css: {disabled: !isReadyToFlashFromURL() || isBusy()}">{{ _('Flash from URL') }}</button>
                 </div>
-            </div>
-        </div>
-
-        <h4>{{ _('Printer Settings') }}</h4>
-
-        <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
-            <label class="control-label">{{ _('Serial Port') }}</label>
-            <div class="controls">
-                <select data-bind="options: connection.portOptions, value: connection.selectedPort, optionsCaption: 'AUTO', css: {disabled: !connection.isErrorOrClosed() || isBusy()}, enable: connection.isErrorOrClosed() && loginState.isUser() && !isBusy()"></select>
-            </div>
-        </div>
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.firmwareupdater.check_after_connect">{{ _('Check for firmware updates after connecting to printer') }}
-                </label>
             </div>
         </div>
 
         <hr>
 
-        <button id="b_check_for_updates" class="btn btn-block" data-bind="click: checkForUpdates, visible: !updateAvailable() && !isBusy(), enable: !isBusy(), css: {disabled: !isReadyToCheck()}">{{ _('Check for Updates') }}</button>
-        <button id="b_update_firmware" class="btn btn-block btn-success" data-bind="click: flashUpdate, visible: updateAvailable() && !isBusy(), enable: !isBusy(), css: {disabled: !isReadyToUpdate()}">{{ _('Update Firmware') }}</button>
         <div class="progress progress-info progress-striped active" data-bind="visible: isBusy()">
-            <div class="bar" style="width: 100%;"><label data-bind="text: progressBarText()"></div>
+            <div class="bar" style="width: 100%;"><label data-bind="text: progressBarText()"></label></div>
         </div>
 
     </form>
@@ -80,15 +67,50 @@
         <div class="modal-body">
             <form class="form-horizontal">
                 <div class="control-group" data-bind="css: {error: pathBroken, success: pathOk}">
-                    <label class="control-label">{{ _('Path to AVRDUDE') }}</label>
+                    <label class="control-label">{{ _('Path to avrdude') }}</label>
                     <div class="controls">
                         <div class="input-append">
-                            <input type="text" class="input-block-level" data-bind="value: configPathAvrdude">
-                            <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configPathAvrdude, css: {disabled: !configPathAvrdude()}">{{ _('Test') }}</button>
+                            <input type="text" class="input-block-level" data-bind="value: configAvrdudePath">
+                            <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configAvrdudePath, css: {disabled: !configAvrdudePath()}">{{ _('Test') }}</button>
                         </div>
                         <span class="help-block" data-bind="visible: pathBroken() || pathOk, text: pathText"></span>
                     </div>
                 </div>
+
+                <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
+                    <label class="control-label">{{ _('Path to avrdude config') }}</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <input type="text" class="input-block-level" data-bind="value: configAvrdudeConfigFile">
+                            <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
+                        </div>
+                        <span class="help-block" data-bind="visible: confBroken() || confOk, text: confText"></span>
+                        <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('AVR MCU Type') }}</label>
+                    <div class="controls">
+	                    <select data-bind="value: configAvrdudeAvrMcu">
+                            <option value=></option>
+                            <option value=m1284p>Atmega1284p</option>
+      	                    <option value=m2560>Atmega2560</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('AVR Progrmammer Type') }}</label>
+                    <div class="controls">
+                        <select data-bind="value: configAvrdudeProgrammer">
+                            <option value=></option>
+                            <option value=arduino>arduino</option>
+                            <option value=wiring>wiring</option>
+                        </select>
+                    </div>
+                </div>
+								
             </form>
         </div>
         <div class="modal-footer">

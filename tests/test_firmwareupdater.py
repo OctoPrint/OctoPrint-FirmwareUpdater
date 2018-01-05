@@ -57,6 +57,7 @@ class TestFlashWithPath(unittest.TestCase):
 	def test_flash_with_path_printing(self, mock_send_status, mock_flask):
 		# Set Up
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
+		self.plugin._logger = logger_mock()
 		self.plugin._printer = printer_mock()
 		self.plugin._printer._is_printing = True
 
@@ -93,12 +94,13 @@ class TestFlashWithPath(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
 		self.plugin._settings = settings_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_path()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Port or file not specified")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_check_avrdude')
@@ -111,12 +113,13 @@ class TestFlashWithPath(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
 		self.plugin._settings = settings_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_path()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Port or file not specified")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_check_avrdude')
@@ -137,7 +140,7 @@ class TestFlashWithPath(unittest.TestCase):
 		self.plugin.flash_firmware_with_path()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Uploaded file error")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error with the uploaded hex file")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_check_avrdude')
@@ -153,12 +156,13 @@ class TestFlashWithPath(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
 		self.plugin._settings = settings_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_path()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Uploaded file error")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error with the uploaded hex file")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch('tempfile.NamedTemporaryFile')
@@ -176,12 +180,13 @@ class TestFlashWithPath(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
 		self.plugin._settings = settings_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_path()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error when copying uploaded file")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error when copying uploaded hex file")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch('__builtin__.open')
@@ -200,12 +205,13 @@ class TestFlashWithPath(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
 		self.plugin._settings = settings_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_path()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error when copying uploaded file")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error when copying uploaded hex file")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch('shutil.copyfileobj')
@@ -225,12 +231,13 @@ class TestFlashWithPath(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
 		self.plugin._settings = settings_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_path()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error when copying uploaded file")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Error when copying uploaded hex file")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 
@@ -265,6 +272,7 @@ class TestFlashWithURL(unittest.TestCase):
 		# Set Up
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
+		self.plugin._logger = logger_mock()
 		self.plugin._printer._is_printing = True
 
 		# Call test subject
@@ -303,12 +311,13 @@ class TestFlashWithURL(unittest.TestCase):
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_url()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Port or URL not specified")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_check_avrdude')
@@ -322,12 +331,13 @@ class TestFlashWithURL(unittest.TestCase):
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_url()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Port or URL not specified")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_flash_firmware_with_url')
@@ -343,6 +353,7 @@ class TestFlashWithURL(unittest.TestCase):
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_firmware_with_url()
@@ -384,6 +395,7 @@ class TestFlashUpdate(unittest.TestCase):
 	def test_flash_update_printing(self, mock_send_status, mock_flask, mock_route):
 		# Set Up
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
+		self.plugin._logger = logger_mock()
 		self.plugin._printer = printer_mock()
 		self.plugin._printer._is_printing = True
 
@@ -423,12 +435,13 @@ class TestFlashUpdate(unittest.TestCase):
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._printer = printer_mock()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		self.plugin.flash_update()
 
 		# Assert
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Parameters are missing")
+		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Port not specified")
 		mock_flask.make_response.assert_called_once_with('Error.', 500)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_check_avrdude')
@@ -441,6 +454,7 @@ class TestFlashUpdate(unittest.TestCase):
 		mock_flask.request.json = {"selected_port":""}
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
+		self.plugin._logger = logger_mock()
 		self.plugin._printer = printer_mock()
 		self.plugin.update_info = None
 
@@ -463,6 +477,7 @@ class TestFlashUpdate(unittest.TestCase):
 		mock_flask.request.json = {"selected_port":""}
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
+		self.plugin._logger = logger_mock()
 		self.plugin._printer = printer_mock()
 		self.plugin.update_info = {"ota": {"url":""}}
 
@@ -499,6 +514,7 @@ class Test_FlashWithURL(unittest.TestCase):
 		# Set Up
 		mock_tempfile.side_effect = Exception()
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
+		self.plugin._logger = logger_mock()
 
 		# Call test subject
 		ret = self.plugin._flash_firmware_with_url("url", "port")
@@ -537,6 +553,7 @@ class TestFlashWorker(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._settings = settings_mock()
 		self.plugin._logger = logger_mock()
+		self.plugin._printer = printer_mock()
 		p = pipeline_mock()
 		mock_sarge_run.return_value = p
 
@@ -560,6 +577,7 @@ class TestFlashWorker(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._settings = settings_mock()
 		self.plugin._logger = logger_mock()
+		self.plugin._printer = printer_mock()
 		mock_sarge_run.side_effect = Exception()
 
 		hex_file = named_temporary_file_mock()
@@ -570,7 +588,7 @@ class TestFlashWorker(unittest.TestCase):
 
 		# Assert
 		self.assertTrue(mock_sarge_run.called)
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Unexpected error")
+		mock_send_status.assert_any_call(status_type="flashing_status", status_value="error", status_description="Unexpected error")
 		self.assertTrue(hex_file.close.called)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_send_status')
@@ -581,6 +599,7 @@ class TestFlashWorker(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._settings = settings_mock()
 		self.plugin._logger = logger_mock()
+		self.plugin._printer = printer_mock()
 		p = pipeline_mock()
 		p.returncode = None
 		p.stderr.line = "timeout communicating with programmer"
@@ -594,7 +613,7 @@ class TestFlashWorker(unittest.TestCase):
 
 		# Assert
 		self.assertTrue(mock_sarge_run.called)
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Timeout communicating with programmer")
+		mock_send_status.assert_any_call(status_type="flashing_status", status_value="error", status_description="Timeout communicating with programmer")
 		self.assertTrue(hex_file.close.called)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_send_status')
@@ -605,6 +624,7 @@ class TestFlashWorker(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._settings = settings_mock()
 		self.plugin._logger = logger_mock()
+		self.plugin._printer = printer_mock()
 		p = pipeline_mock()
 		p.returncode = None
 		p.stderr.line = "avrdude: ERROR: Error Description"
@@ -618,7 +638,7 @@ class TestFlashWorker(unittest.TestCase):
 
 		# Assert
 		self.assertTrue(mock_sarge_run.called)
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Avrdude error: Error Description")
+		mock_send_status.assert_any_call(status_type="flashing_status", status_value="error", status_description="AVRDUDE error: Error Description")
 		self.assertTrue(hex_file.close.called)
 
 	@mock.patch.object(octoprint_firmwareupdater.FirmwareupdaterPlugin, '_send_status')
@@ -629,6 +649,7 @@ class TestFlashWorker(unittest.TestCase):
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
 		self.plugin._settings = settings_mock()
 		self.plugin._logger = logger_mock()
+		self.plugin._printer = printer_mock()
 		p = pipeline_mock()
 		p.returncode = 1
 		mock_sarge_run.return_value = p
@@ -641,7 +662,7 @@ class TestFlashWorker(unittest.TestCase):
 
 		# Assert
 		self.assertTrue(mock_sarge_run.called)
-		mock_send_status.assert_called_once_with(status_type="flashing_status", status_value="error", status_description="Avrdude returned code {returncode}".format(returncode=p.returncode))
+		mock_send_status.assert_any_call(status_type="flashing_status", status_value="error", status_description="Avrdude returned code {returncode}".format(returncode=p.returncode))
 		self.assertTrue(hex_file.close.called)
 
 
@@ -710,6 +731,7 @@ class TestCheckForUpdates(unittest.TestCase):
 	def test_check_for_updates_printing(self, mock_route, mock_flask, mock_send_status):
 		# Set Up
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
+		self.plugin._logger = logger_mock()
 		self.plugin._printer = printer_mock()
 		self.plugin._printer._is_printing = True
 		self.plugin._printer.connect = mock.MagicMock(name='connect')
@@ -878,7 +900,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		mock_time.return_value = 0
 		ws_response = requests_response_mock()
 		ws_response.status_code = 200
-		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'fw_version':'2.0.1'}}
+		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'version':'2.0.1'}}
 		mock_requests_get.return_value = ws_response
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
@@ -886,7 +908,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.plugin.default_on_printer_add_message = None
 		self.plugin.printer_callback = mock_printer_callback.PrinterCallback
 		self.plugin._settings = settings_mock()
-		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{version}/{language}"
 		self.plugin._logger = logger_mock()
 
 		# Call test subject
@@ -896,7 +918,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		# Assert
 		self.assertFalse(self.plugin._checking)
 		mock_requests_get.assert_called_once_with("http://localhost:8080/api/checkUpdate/Witbox_2/2.0.0/en")
-		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="update_available", status_description=ws_response._json["ota"]["fw_version"])
+		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="update_available", status_description=ws_response._json["ota"]["version"])
 
 	@mock.patch('requests.get')
 	@mock.patch('time.time')
@@ -915,7 +937,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.plugin.default_on_printer_add_message = None
 		self.plugin.printer_callback = mock_printer_callback.PrinterCallback
 		self.plugin._settings = settings_mock()
-		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{version}/{language}"
 		self.plugin._logger = logger_mock()
 
 		# Call test subject
@@ -925,7 +947,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		# Assert
 		self.assertFalse(self.plugin._checking)
 		mock_requests_get.assert_called_once_with("http://localhost:8080/api/checkUpdate/Witbox_2/2.0.0/en")
-		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="up_to_date")
+		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="up_to_date", status_description="Firmware is up to date")
 
 	@mock.patch('time.time')
 	@mock.patch.object(octoprint.printer.PrinterCallback, 'on_printer_add_message')
@@ -945,7 +967,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 
 		# Assert
 		self.assertIsNone(self.plugin.printer_info)
-		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="error", status_description="Unable to get FW version from printer")
+		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="error", status_description="Unable to get printer's data")
 		self.assertFalse(self.plugin._checking)
 
 	@mock.patch('time.time')
@@ -966,7 +988,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 
 		# Assert
 		self.assertIsNone(self.plugin.printer_info)
-		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="error", status_description="Unable to get FW version from printer")
+		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="error", status_description="Unable to get printer's data")
 		self.assertFalse(self.plugin._checking)
 
 	@mock.patch('time.time')
@@ -1055,7 +1077,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		mock_time.return_value = 0
 		ws_response = requests_response_mock()
 		ws_response.status_code = 200
-		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'fw_version':'2.0.1'}}
+		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'version':'2.0.1'}}
 		mock_requests_get.return_value = ws_response
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
@@ -1063,7 +1085,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.plugin.default_on_printer_add_message = None
 		self.plugin.printer_callback = mock_printer_callback.PrinterCallback
 		self.plugin._settings = settings_mock()
-		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{version}/{language}"
 		self.plugin._logger = logger_mock()
 		_default_firmware_language = "test_language"
 		self.plugin._default_firmware_language = _default_firmware_language
@@ -1076,7 +1098,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.assertFalse(self.plugin._checking)
 		self.assertEqual(self.plugin.printer_info["X-FIRMWARE_LANGUAGE"], _default_firmware_language)
 		mock_requests_get.assert_called_once_with("http://localhost:8080/api/checkUpdate/Witbox_2/2.0.0/{test_language}".format(test_language=_default_firmware_language))
-		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="update_available", status_description=ws_response._json["ota"]["fw_version"])
+		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="update_available", status_description=ws_response._json["ota"]["version"])
 
 	@mock.patch('requests.get')
 	@mock.patch('time.time')
@@ -1087,7 +1109,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		mock_time.return_value = 0
 		ws_response = requests_response_mock()
 		ws_response.status_code = 200
-		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'fw_version':'2.0.1'}}
+		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'version':'2.0.1'}}
 		mock_requests_get.return_value = ws_response
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
@@ -1095,7 +1117,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.plugin.default_on_printer_add_message = None
 		self.plugin.printer_callback = mock_printer_callback.PrinterCallback
 		self.plugin._settings = settings_mock()
-		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{version}/{language}"
 		self.plugin._logger = logger_mock()
 		_default_firmware_language = "test_language"
 		self.plugin._default_firmware_language = _default_firmware_language
@@ -1108,7 +1130,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.assertFalse(self.plugin._checking)
 		self.assertEqual(self.plugin.printer_info["X-FIRMWARE_LANGUAGE"], _default_firmware_language)
 		mock_requests_get.assert_called_once_with("http://localhost:8080/api/checkUpdate/Witbox_2/2.0.0/{test_language}".format(test_language=_default_firmware_language))
-		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="update_available", status_description=ws_response._json["ota"]["fw_version"])
+		mock_send_status.assert_called_once_with(status_type="check_update_status", status_value="update_available", status_description=ws_response._json["ota"]["version"])
 
 	@mock.patch('requests.get')
 	@mock.patch('time.time')
@@ -1119,7 +1141,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		mock_time.return_value = 0
 		ws_response = requests_response_mock()
 		ws_response.status_code = 200
-		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'fw_version':'2.0.1'}}
+		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'version':'2.0.1'}}
 		mock_requests_get.side_effect = Exception()
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
@@ -1127,7 +1149,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.plugin.default_on_printer_add_message = None
 		self.plugin.printer_callback = mock_printer_callback.PrinterCallback
 		self.plugin._settings = settings_mock()
-		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{version}/{language}"
 		self.plugin._logger = logger_mock()
 
 		# Call test subject
@@ -1148,7 +1170,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		mock_time.return_value = 0
 		ws_response = requests_response_mock()
 		ws_response.status_code = 0
-		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'fw_version':'2.0.1'}}
+		ws_response._json = {'available':True, 'ota':{'url':'http://localhost:8080/builds/witbox2-fw/248/Marlin_witbox_2_octoprintsupport.hex', 'version':'2.0.1'}}
 		mock_requests_get.return_value = ws_response
 
 		self.plugin = octoprint_firmwareupdater.FirmwareupdaterPlugin()
@@ -1156,7 +1178,7 @@ class TestOnPrinterAddMessage(unittest.TestCase):
 		self.plugin.default_on_printer_add_message = None
 		self.plugin.printer_callback = mock_printer_callback.PrinterCallback
 		self.plugin._settings = settings_mock()
-		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{fw_version}/{language}"
+		self.plugin._settings._settings["update_service_url"] = "http://localhost:8080/api/checkUpdate/{model}/{version}/{language}"
 		self.plugin._logger = logger_mock()
 
 		# Call test subject
@@ -1202,13 +1224,22 @@ class logger_mock():
 		return
 	def info(self, *argc, **kwargs):
 		return
+	def debug(self, *argc, **kwargs):
+		return
+	def warning(self, *argc, **kwargs):
+		return
 
 class printer_mock():
 	def __init__(self):
 		self._is_printing = False
+		self._is_operational = True
 	def is_printing(self, *argc, **kwargs):
 		return self._is_printing
+	def is_operational(self, *argc, **kwargs):
+		return self._is_operational
 	def connect(self, *argc, **kwargs):
+		pass
+	def disconnect(self, *argc, **kwargs):
 		pass
 	def register_callback(self, *argc, **kwargs):
 		pass

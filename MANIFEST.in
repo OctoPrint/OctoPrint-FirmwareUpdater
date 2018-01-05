@@ -1,1 +1,4 @@
 include README.md
+recursive-include octoprint_firmwareupdater/templates *
+recursive-include octoprint_firmwareupdater/translations *
+recursive-include octoprint_firmwareupdater/static *

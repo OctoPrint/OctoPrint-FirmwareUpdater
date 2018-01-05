@@ -7,7 +7,12 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
 
-        self.configPathAvrdude = ko.observable();
+        self.configAvrdudePath = ko.observable();
+        self.configAvrdudeConfigFile = ko.observable();
+        self.configAvrdudeAvrMcu = ko.observable();
+        self.configAvrdudeProgrammer = ko.observable();
+
+        self.flashPort = ko.observable(undefined);
         self.hexFileName = ko.observable(undefined);
         self.hexFileURL = ko.observable(undefined);
 
@@ -17,7 +22,8 @@ $(function() {
         self.missingParamToFlash = ko.observable(false);
         self.progressBarText = ko.observable();
         self.isBusy = ko.observable(false);
-        self.updateAvailable = ko.observable(false);
+        self.hexFlashButtonText = ko.observable("");
+        self.urlFlashButtonText = ko.observable("");
 
         self.pathBroken = ko.observable(false);
         self.pathOk = ko.observable(false);
@@ -26,98 +32,94 @@ $(function() {
             return self.pathBroken() || self.pathOk();
         });
 
+        self.confBroken = ko.observable(false);
+        self.confOk = ko.observable(false);
+        self.confText = ko.observable();
+        self.confHelpVisible = ko.computed(function() {
+            return self.pathBroken() || self.pathOk();
+        });
+
+        self.selectHexPath = undefined;
+        self.configurationDialog = undefined;
+
         self.inSettingsDialog = false;
 
-        self.selectHexPath = $("#settings_firmwareupdater_selectHexPath");
-        self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
+        self.connection.selectedPort.subscribe(function(value) {
+            if (value === undefined) return;
+            self.flashPort(value);
+        });
 
-        self.selectHexPath.fileupload({
-            dataType: "hex",
-            maxNumberOfFiles: 1,
-            autoUpload: false,
-            add: function(e, data) {
-                if (data.files.length == 0) {
-                    return false;
+        self.onStartup = function() {
+            self.selectHexPath = $("#settings_firmwareupdater_selectHexPath");
+            self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
+
+            self.selectHexPath.fileupload({
+                dataType: "hex",
+                maxNumberOfFiles: 1,
+                autoUpload: false,
+                add: function(e, data) {
+                    if (data.files.length === 0) {
+                        return false;
+                    }
+                    self.hexData = data;
+                    self.hexFileName(data.files[0].name);
                 }
-                self.hexData = data;
-                self.hexFileName(data.files[0].name);
+            });
+        };
+
+        self._checkIfReadyToFlash = function(source) {
+            var alert = undefined;
+
+            if (!self.loginState.isAdmin()){
+                alert = gettext("You need administrator privileges to flash firmware.");
             }
-        })
+
+            if (self.printerState.isPrinting() || self.printerState.isPaused()){
+                alert = gettext("Printer is printing. Please wait for the print to be finished.");
+            }
+
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                alert = gettext("The Avrdude path is not configured.");
+            }
+
+            if (!self.flashPort()) {
+                alert = gettext("The printer port is not selected.");
+            }
+
+            if (source === "file" && !self.hexFileName()) {
+                alert = gettext("Hex file path is not specified");
+            } else if (source === "url" && !self.hexFileURL()) {
+                alert = gettext("Hex file URL is not specified");
+            }
+
+            if (alert !== undefined) {
+                self.alertType("alert-warning");
+                self.alertMessage(alert);
+                self.showAlert(true);
+                return false;
+            }
+
+            return true;
+        };
 
         self.startFlashFromFile = function() {
-            if (!self.loginState.isAdmin()){
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Administrator privileges are needed to flash firmware."));
-                self.showAlert(true);
-                return false;
-            }
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
-                self.showAlert(true);
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("AVRDUDE path not configured"));
-                self.showAlert(true);
-                return false;
-            }
-            if (!self.hexFileName()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Hex file path not specified"));
-                self.showAlert(true);
-                return false;
-            }
-            if (!self.connection.selectedPort()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Port not selected"));
-                self.showAlert(true);
-                return false;
+            if (!self._checkIfReadyToFlash("file")) {
+                return;
             }
 
             self.progressBarText("Flashing firmware...");
             self.isBusy(true);
             self.showAlert(false);
 
-            var form = {
-                selected_port: self.connection.selectedPort()
+            self.hexData.formData = {
+                port: self.flashPort()
             };
-
-            self.hexData.formData = form;
             self.hexData.submit();
-        }
+        };
 
         self.startFlashFromURL = function() {
-            if (!self.loginState.isAdmin()){
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Administrator privileges are needed to flash firmware."));
-                self.showAlert(true);
-                return false;
-            }
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
-                self.showAlert(true);
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("AVRDUDE path not configured"));
-                self.showAlert(true);
-                return false;
-            }
-            if (!self.hexFileURL()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Hex file URL not specified"));
-                self.showAlert(true);
-                return false;
-            }
-            if (!self.connection.selectedPort()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Port not selected"));
-                self.showAlert(true);
-                return false;
+            if (!self._checkIfReadyToFlash("url")) {
+                return;
             }
 
             self.isBusy(true);
@@ -125,173 +127,147 @@ $(function() {
             self.progressBarText("Flashing firmware...");
 
             $.ajax({
-                url: PLUGIN_BASEURL + "firmwareupdater/flashFirmwareWithURL",
+                url: PLUGIN_BASEURL + "firmwareupdater/flash",
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
-                    selected_port: self.connection.selectedPort(),
-                    hex_url: self.hexFileURL()
+                    port: self.flashPort(),
+                    url: self.hexFileURL()
                 }),
                 contentType: "application/json; charset=UTF-8"
             })
-        }
-
-        self.checkForUpdates = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
-                self.showAlert(true);
-                return false;
-            }
-
-            if (!self.connection.selectedPort()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Port not selected"));
-                self.showAlert(true);
-                return false;
-            }
-
-            self.isBusy(true);
-            self.showAlert(false);
-
-            $.ajax({
-                url: PLUGIN_BASEURL + "firmwareupdater/checkForUpdates",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    selected_port: self.connection.selectedPort(),
-                }),
-                contentType: "application/json; charset=UTF-8"
-            });
-        }
-
-        self.flashUpdate = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Printer is printing. Please wait for the print to be finished."));
-                self.showAlert(true);
-                return false;
-            }
-
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("AVRDUDE path not configured"));
-                self.showAlert(true);
-                return false;
-            }
-
-            if (!self.connection.selectedPort()) {
-                self.alertType("alert-warning")
-                self.alertMessage(gettext("Port not selected"));
-                self.showAlert(true);
-                return false;
-            }
-
-            self.isBusy(true);
-            self.showAlert(false);
-            self.progressBarText("Flashing firmware...");
-
-            $.ajax({
-                url: PLUGIN_BASEURL + "firmwareupdater/flashUpdate",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    selected_port: self.connection.selectedPort()
-                }),
-                contentType: "application/json; charset=UTF-8"
-            });
-        }
+        };
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
-            if (plugin != "firmwareupdater") {
+            if (plugin !== "firmwareupdater") {
                 return;
             }
-            if (data.type == "status" && data.status_type == "check_update_status") {
-                if (data.status_value == "progress") {
-                    self.progressBarText(data.status_description);
-                    return;
-                }
-                if (data.status_value == "update_available") {
-                    if (!self.inSettingsDialog) {
-                        self.showUpdateAvailablePopup(data.status_description);
+
+            var message;
+
+            if (data.type === "status") {
+                switch (data.status) {
+                    case "flasherror": {
+                        message = gettext("Unknown error");
+
+                        if (data.subtype) {
+                            switch (data.subtype) {
+                                case "busy": {
+                                    message = gettext("Printer is busy.");
+                                    break;
+                                }
+                                case "port": {
+                                    message = gettext("Printer port is not available.");
+                                    break;
+                                }
+                                case "method": {
+                                    message = gettext("Flash method is not fully configured.");
+                                    break;
+                                }
+                                case "hexfile": {
+                                    message = gettext("Cannot read file to flash.");
+                                    break;
+                                }
+                                case "already_flashing": {
+                                    message = gettext("Already flashing.");
+                                }
+                            }
+                        }
+
+                        self.showPopup("error", gettext("Flashing failed"), message);
+                        self.isBusy(false);
+                        self.showAlert(false);
+                        self.hexFileName(undefined);
+                        self.hexFileURL(undefined);
+
+                        break;
                     }
-                    self.updateAvailable(true);
-                    self.isBusy(false);
-                    return;
-                }
-                if (data.status_value == "up_to_date") {
-                    self.updateAvailable(false);
-                    self.isBusy(false);
-                    self.showAlert(false);
-                    if (self.inSettingsDialog) {
-                        self.alertType("alert-success");
+                    case "success": {
+                        self.showPopup("success", gettext("Flashing successful"), "");
+                        self.isBusy(false);
+                        self.showAlert(false);
+                        self.hexFileName(undefined);
+                        self.hexFileURL(undefined);
+                        break;
+                    }
+                    case "progress": {
+                        if (data.subtype) {
+                            switch (data.subtype) {
+                                case "disconnecting": {
+                                    message = gettext("Disconnecting printer...");
+                                    break;
+                                }
+                                case "startingflash": {
+                                    self.isBusy(true);
+                                    message = gettext("Starting flash...");
+                                    break;
+                                }
+                                case "writing": {
+                                    message = gettext("Writing memory...");
+                                    break;
+                                }
+                                case "verifying": {
+                                    message = gettext("Verifying memory...");
+                                    break;
+                                }
+                                case "reconnecting": {
+                                    message = gettext("Reconnecting to printer...");
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (message) {
+                            self.progressBarText(message);
+                        }
+                        break;
+                    }
+                    case "info": {
+                        self.alertType("alert-info");
                         self.alertMessage(data.status_description);
                         self.showAlert(true);
+                        break;
                     }
-                    return;
-                }
-                if (data.status_value == "error") {
-                    self.updateAvailable(false);
-                    self.isBusy(false);
-                    self.alertType("alert-danger");
-                    self.alertMessage(data.status_description);
-                    self.showAlert(true);
-                    return;
                 }
             }
-            if (data.type == "status" && data.status_type == "flashing_status") {
-                if (data.status_value == "starting_flash") {
-                    self.isBusy(true);
-                } else if (data.status_value == "progress") {
-                    self.progressBarText(data.status_description);
-                } else if (data.status_value == "info") {
-                    self.alertType("alert-info");
-                    self.alertMessage(data.status_description);
-                    self.showAlert(true);
-                } else if (data.status_value == "successful") {
-                    self.showPopup("success", "Flashing Successful", "");
-                    self.isBusy(false);
-                    self.showAlert(false);
-                    self.hexFileName(undefined);
-                    self.hexFileURL(undefined);
-                } else if (data.status_value == "error") {
-                    self.showPopup("error", "Flashing Failed", data.status_description);
-                    self.isBusy(false);
-                    self.showAlert(false);
-                }
-            }
-        }
+        };
 
         self.showPluginConfig = function() {
-            self.configPathAvrdude(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
+            self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
+            self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
+            self.configAvrdudeAvrMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
+            self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
             self.configurationDialog.modal();
-        }
+        };
 
         self.onConfigClose = function() {
-            self._saveAvrdudePath();
+            self._saveAvrdudeConfig();
             self.configurationDialog.modal("hide");
             self.onConfigHidden();
-            if (self.configPathAvrdude()) {
+            if (self.configAvrdudePath()) {
                 self.showAlert(false);
             }
-        }
+        };
 
-        self._saveAvrdudePath = function() {
+        self._saveAvrdudeConfig = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
-                        avrdude_path: self.configPathAvrdude(),
+                        avrdude_path: self.configAvrdudePath(),
+                        avrdude_conf: self.configAvrdudeConfigFile(),
+                        avrdude_avrmcu: self.configAvrdudeAvrMcu(),
+                        avrdude_programmer: self.configAvrdudeProgrammer()
                     }
                 }
-            }
+            };
             self.settingsViewModel.saveData(data);
-        }
+        };
 
         self.onConfigHidden = function() {
             self.pathBroken(false);
             self.pathOk(false);
             self.pathText("");
-        }
+        };
 
         self.testAvrdudePath = function() {
             $.ajax({
@@ -300,7 +276,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     command: "path",
-                    path: self.configPathAvrdude(),
+                    path: self.configAvrdudePath(),
                     check_type: "file",
                     check_access: "x"
                 }),
@@ -321,92 +297,108 @@ $(function() {
                     self.pathBroken(!response.result);
                 }
             })
-        }
+        };
+
+        self.testAvrdudeConf = function() {
+            $.ajax({
+                url: API_BASEURL + "util/test",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    command: "path",
+                    path: self.configAvrdudeConfigFile(),
+                    check_type: "file",
+                    check_access: "r"
+                }),
+                contentType: "application/json; charset=UTF-8",
+                success: function(response) {
+                    if (!response.result) {
+                        if (!response.exists) {
+                            self.confText(gettext("The path doesn't exist"));
+                        } else if (!response.typeok) {
+                            self.confText(gettext("The path is not a file"));
+                        } else if (!response.access) {
+                            self.confText(gettext("The path is not readable"));
+                        }
+                    } else {
+                        self.confText(gettext("The path is valid"));
+                    }
+                    self.confOk(response.result);
+                    self.confBroken(!response.result);
+                }
+            })
+        };
 
         self.isReadyToFlashFromFile = function() {
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
+                self.hexFlashButtonText(gettext("Unable to flash: Printer is busy"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                self.hexFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
                 return false;
             }
-            if (!self.connection.selectedPort()) {
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                self.hexFlashButtonText(gettext("Unable to flash: MCU type not selected"));
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                self.hexFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
+                return false;
+            }
+            if (!self.flashPort()) {
+                self.hexFlashButtonText(gettext("Unable to flash: Port not selected"));
                 return false;
             }
             if (!self.hexFileName()) {
+                self.hexFlashButtonText(gettext("Unable to flash: Hex file not selected"));
                 return false;
             }
+                self.hexFlashButtonText(gettext("Ready to flash from file"));
             self.showAlert(false);
             return true;
-        }
+        };
 
         self.isReadyToFlashFromURL = function() {
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
+                self.urlFlashButtonText(gettext("Unable to flash: Printer is busy"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                self.urlFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
                 return false;
             }
-            if (!self.connection.selectedPort()) {
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                self.urlFlashButtonText(gettext("Unable to flash: MCU type not selected"));
+                return false;
+            }
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                self.urlFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
+                return false;
+            }
+            if (!self.flashPort()) {
+                self.urlFlashButtonText(gettext("Unable to flash: Port not selected"));
                 return false;
             }
             if (!self.hexFileURL()) {
+                self.urlFlashButtonText(gettext("Unable to flash: Hex file URL not set"));
                 return false;
             }
+            self.urlFlashButtonText(gettext("Ready to flash from file"));
             self.showAlert(false);
             return true;
-        }
-
-        self.isReadyToCheck = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                return false;
-            }
-            if (!self.connection.selectedPort()) {
-                return false;
-            }
-            return true;
-        }
-
-        self.isReadyToUpdate = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                return false;
-            }
-            if (!self.connection.selectedPort() || self.connection.selectedPort() == "AUTO") {
-                return false;
-            }
-            return true;
-        }
+        };
 
         self.onSettingsShown = function() {
             self.inSettingsDialog = true;
-        }
+        };
 
         self.onSettingsHidden = function() {
             self.inSettingsDialog = false;
             self.showAlert(false);
-        }
+        };
 
         // Popup Messages
-
-        self.showUpdateAvailablePopup = function(new_fw_version) {
-            self.updateAvailablePopup = new PNotify({
-                title: gettext('Firmware Update Available'),
-                text: gettext('Version ') + new_fw_version,
-                icon: true,
-                hide: false,
-                type: 'success',
-                buttons: {
-                    closer: true,
-                    sticker: false,
-                },
-                history: {
-                    history: false
-                }
-            });
-        };
 
         self.showPopup = function(message_type, title, text){
             if (self.popup !== undefined){
@@ -418,7 +410,7 @@ $(function() {
                 type: message_type,
                 hide: false
             });
-        }
+        };
 
         self.closePopup = function() {
             if (self.popup !== undefined) {
