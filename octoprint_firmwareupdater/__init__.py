@@ -213,7 +213,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		working_dir = os.path.dirname(avrdude_path)
 
 		avrdude_command = [avrdude_path, "-v", "-p", avrdude_avrmcu, "-c", avrdude_programmer, "-P", printer_port, "-U", "flash:w:" + firmware + ":i", "-D"]
-		if avrdude_conf is not None:
+		if avrdude_conf is not None and avrdude_conf != "":
 			avrdude_command += ["-C", avrdude_conf]
 
 		import sarge
