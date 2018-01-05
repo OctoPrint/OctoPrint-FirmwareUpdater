@@ -340,7 +340,7 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
                 return false;
             }
-            if (!self.connection.selectedPort()) {
+            if (!self.flashPort()) {
                 return false;
             }
             if (!self.hexFileName()) {
@@ -363,7 +363,7 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
                 return false;
             }
-            if (!self.connection.selectedPort()) {
+            if (!self.flashPort()) {
                 return false;
             }
             if (!self.hexFileURL()) {
@@ -386,7 +386,7 @@ $(function() {
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
                 return false;
             }
-            if (!self.connection.selectedPort()) {
+            if (!self.flashPort()) {
                 return false;
             }
 
