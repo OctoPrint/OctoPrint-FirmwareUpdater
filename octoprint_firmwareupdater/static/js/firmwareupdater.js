@@ -22,6 +22,8 @@ $(function() {
         self.missingParamToFlash = ko.observable(false);
         self.progressBarText = ko.observable();
         self.isBusy = ko.observable(false);
+        self.hexFlashButtonText = ko.observable("");
+        self.urlFlashButtonText = ko.observable("");
 
         self.pathBroken = ko.observable(false);
         self.pathOk = ko.observable(false);
@@ -329,67 +331,60 @@ $(function() {
 
         self.isReadyToFlashFromFile = function() {
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
+                self.hexFlashButtonText(gettext("Unable to flash: Printer is busy"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                self.hexFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                self.hexFlashButtonText(gettext("Unable to flash: MCU type not selected"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                self.hexFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
                 return false;
             }
             if (!self.flashPort()) {
+                self.hexFlashButtonText(gettext("Unable to flash: Port not selected"));
                 return false;
             }
             if (!self.hexFileName()) {
+                self.hexFlashButtonText(gettext("Unable to flash: Hex file not selected"));
                 return false;
             }
+                self.hexFlashButtonText(gettext("Ready to flash from file"));
             self.showAlert(false);
             return true;
         };
 
         self.isReadyToFlashFromURL = function() {
             if (self.printerState.isPrinting() || self.printerState.isPaused()){
+                self.urlFlashButtonText(gettext("Unable to flash: Printer is busy"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                self.urlFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                self.urlFlashButtonText(gettext("Unable to flash: MCU type not selected"));
                 return false;
             }
             if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                self.urlFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
                 return false;
             }
             if (!self.flashPort()) {
+                self.urlFlashButtonText(gettext("Unable to flash: Port not selected"));
                 return false;
             }
             if (!self.hexFileURL()) {
+                self.urlFlashButtonText(gettext("Unable to flash: Hex file URL not set"));
                 return false;
             }
-            self.showAlert(false);
-            return true;
-        };
-
-        self.isReadyToReadFlash = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
-                return false;
-            }
-            if (!self.flashPort()) {
-                return false;
-            }
-
+            self.urlFlashButtonText(gettext("Ready to flash from file"));
             self.showAlert(false);
             return true;
         };

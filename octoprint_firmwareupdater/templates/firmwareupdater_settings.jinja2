@@ -34,7 +34,7 @@
                     </div>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: function() { if (isReadyToFlashFromFile()) { startFlashFromFile() } }, enable: isReadyToFlashFromFile(), css: {disabled: !isReadyToFlashFromFile() || isBusy()}">{{ _('Flash from File') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="attr: {title: hexFlashButtonText}, click: function() { if (isReadyToFlashFromFile()) { startFlashFromFile() } }, enable: isReadyToFlashFromFile(), css: {disabled: !isReadyToFlashFromFile() || isBusy()}">{{ _('Flash from File') }}</button>
                 </div>
             </div>
         </div>
@@ -46,7 +46,7 @@
                     <input class="input-block-level" type="text" data-bind="value: hexFileURL">
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="click: function() { if (isReadyToFlashFromURL()) { startFlashFromURL() } }, enable: isReadyToFlashFromURL(), css: {disabled: !isReadyToFlashFromURL() || isBusy()}">{{ _('Flash from URL') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="attr: {title: urlFlashButtonText}, click: function() { if (isReadyToFlashFromURL()) { startFlashFromURL() } }, enable: isReadyToFlashFromURL(), css: {disabled: !isReadyToFlashFromURL() || isBusy()}">{{ _('Flash from URL') }}</button>
                 </div>
             </div>
         </div>
@@ -89,7 +89,7 @@
                     </div>
                 </div>
 
-                <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
+                <div class="control-group">
                     <label class="control-label">{{ _('AVR MCU Type') }}</label>
                     <div class="controls">
 	                    <select data-bind="value: configAvrdudeAvrMcu">
@@ -100,7 +100,7 @@
                     </div>
                 </div>
 
-                <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
+                <div class="control-group">
                     <label class="control-label">{{ _('AVR Progrmammer Type') }}</label>
                     <div class="controls">
                         <select data-bind="value: configAvrdudeProgrammer">
@@ -110,6 +110,7 @@
                         </select>
                     </div>
                 </div>
+								
             </form>
         </div>
         <div class="modal-footer">
