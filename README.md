@@ -45,7 +45,7 @@ The minimum settings are:
 * AVR MCU Type
 * AVR Programmer Type
 
-Typical MCU/programmer cominations are:
+Typical MCU/programmer combinations are:
 
 | AVR MCU | Programmer |
 | --- | --- |
