@@ -156,6 +156,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	def _flash_worker(self, method, firmware, printer_port):
 		try:
+			self._logger.info("Firmware update started")
+
 			if not method in self._flash_methods:
 				self._logger.error("Unsupported flashing method: {}".format(method))
 				return
@@ -169,11 +171,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			if self._printer.is_operational():
 				_, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
 
-				if current_port == printer_port:
-					reconnect = (current_port, current_baudrate, current_profile)
-					self._logger.info("Disconnecting from printer")
-					self._send_status("progress", subtype="disconnecting")
-					self._printer.disconnect()
+				reconnect = (current_port, current_baudrate, current_profile)
+				self._logger.info("Disconnecting from printer")
+				self._send_status("progress", subtype="disconnecting")
+				self._printer.disconnect()
 
 			self._send_status("progress", subtype="startingflash")
 
