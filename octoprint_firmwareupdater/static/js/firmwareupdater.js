@@ -11,6 +11,8 @@ $(function() {
         self.configAvrdudeConfigFile = ko.observable();
         self.configAvrdudeAvrMcu = ko.observable();
         self.configAvrdudeProgrammer = ko.observable();
+        self.configPostflashGcode = ko.observable();
+        self.configEnablePostflashGcode = ko.observable(false);
 
         self.flashPort = ko.observable(undefined);
         self.hexFileName = ko.observable(undefined);
@@ -237,11 +239,16 @@ $(function() {
             self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
             self.configAvrdudeAvrMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
             self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
+            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
+                self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
+            }
+
             self.configurationDialog.modal();
         };
 
         self.onConfigClose = function() {
-            self._saveAvrdudeConfig();
+            self._saveConfig();
             self.configurationDialog.modal("hide");
             self.onConfigHidden();
             if (self.configAvrdudePath()) {
@@ -249,14 +256,17 @@ $(function() {
             }
         };
 
-        self._saveAvrdudeConfig = function() {
+        self._saveConfig = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
                         avrdude_path: self.configAvrdudePath(),
                         avrdude_conf: self.configAvrdudeConfigFile(),
                         avrdude_avrmcu: self.configAvrdudeAvrMcu(),
-                        avrdude_programmer: self.configAvrdudeProgrammer()
+                        avrdude_programmer: self.configAvrdudeProgrammer(),
+                        postflash_gcode: self.configPostflashGcode(),
+                        enable_postflash_gcode: self.configEnablePostflashGcode()
+                        
                     }
                 }
             };

@@ -112,7 +112,25 @@
                         </select>
                     </div>
                 </div>
-								
+                <hr>
+                <div class="control-group">
+                    <label class="control-label">{{ _('Enable post-flash gcode') }}</label>
+                    <div class="controls">
+                        <div class="input">
+                            <input type="checkbox" class="input-block-level" data-bind="checked: configEnablePostflashGcode">
+                        </div>
+                        <span class="help-block">{{ _('If enabled, any gcode commands set below will be run the first time the printer connects after a firmware flash.') }}</span>
+                    </div>
+                </div>	
+                <div class="control-group">
+                    <label class="control-label">{{ _('Post-flash gcode') }}</label>
+                    <div class="controls">
+                        <div class="input">
+                            <input type="text" class="input-block-level" data-bind="value: configPostflashGcode, enable: configEnablePostflashGcode">
+                        </div>
+                        <span class="help-block">{{ _('Gcode commands which will be run when the printer reconnects after firmware is flashed.  Separate multi commands with a semi colon.') }}</span>
+                    </div>
+                </div>			
             </form>
         </div>
         <div class="modal-footer">
