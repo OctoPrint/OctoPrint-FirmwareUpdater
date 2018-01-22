@@ -20,7 +20,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                             octoprint.plugin.SettingsPlugin):
 
 	AVRDUDE_WRITING = "writing flash"
-	AVRDUDE_VERIFYING = "verifying ..."
+	AVRDUDE_VERIFYING = "reading on-chip flash data"
 	AVRDUDE_TIMEOUT = "timeout communicating with programmer"
 	AVRDUDE_ERROR = "ERROR:"
 
