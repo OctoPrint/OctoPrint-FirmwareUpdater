@@ -1,10 +1,10 @@
 # OctoPrint Firmware Updater
 
-This plugin can be used to flash the firmware of your printer by selecting a file or an URL.
+This plugin can be used to flash pre-compiled firmware images to your printer from a file or URL.
 
 ![Firmware Updater Plugin](extras/img/updater.png)
 
-Currently supported and tested MCUs are Atmega1284p and Atmega2560.
+Works with boards with Atmega1280, Atmega1284p, and Atmega2560 MCUs using arduino, usbasp, or wiring programmers.
 
 ## Setup
 
@@ -40,6 +40,10 @@ In order to be able to flash firmware we need to specify the path to avrdude, an
 
 ![Firmware Updater Plugin](extras/img/updater-settings.png)
 
+You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
+
+The post-flash code will run more or less immediately if the printer was connected before the flash started (so reconnects automatically when the flash finishes), or whenever the printer is manually reconnected.
+
 The minimum settings are:
 * Path to avrdude
 * AVR MCU Type
@@ -47,7 +51,7 @@ The minimum settings are:
 
 Typical MCU/programmer combinations are:
 
-| AVR MCU | Programmer |
-| --- | --- |
-| Atmega1284p | arduino |
-| Atmega2560 | wiring |
+| AVR MCU | Programmer | Example Board |
+| --- | --- | --- |
+| Atmega1284p | arduino | Anet A series |
+| Atmega2560 | wiring | RAMPS, RAMbo, etc. |

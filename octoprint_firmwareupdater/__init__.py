@@ -13,11 +13,13 @@ import octoprint.plugin
 
 import octoprint.server.util.flask
 from octoprint.server import admin_permission, NO_CONTENT
+from octoprint.events import Events
 
 class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                             octoprint.plugin.TemplatePlugin,
                             octoprint.plugin.AssetPlugin,
-                            octoprint.plugin.SettingsPlugin):
+                            octoprint.plugin.SettingsPlugin,
+							octoprint.plugin.EventHandlerPlugin):
 
 	AVRDUDE_WRITING = "writing flash"
 	AVRDUDE_VERIFYING = "reading on-chip flash data"
@@ -46,6 +48,29 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self._console_logger.addHandler(console_logging_handler)
 		self._console_logger.setLevel(logging.DEBUG)
 		self._console_logger.propagate = False
+
+
+	# Event handler
+	def on_event(self, event, payload):
+		#self._logger.info("Got event: {}".format(event))
+		if event == Events.CONNECTED:
+			self._logger.info("Got CONNECTED event")
+			if self._settings.get_boolean(["run_postflash_gcode"]):
+				self._logger.info("Run postflash flag is set")
+				postflash_gcode = self._settings.get(["postflash_gcode"])
+
+				if postflash_gcode is not None:
+					# Run post-flash commands
+					self._logger.info("Sending post-flash commands:{}".format(postflash_gcode))
+					self._printer.commands(postflash_gcode.split(";"))
+
+				self._logger.info("Clearing postflash flag")
+				self._settings.set_boolean(["run_postflash_gcode"], False)
+				self._settings.save()
+
+			else:
+				self._logger.info("Run postflash flag is not set")
+
 
 	#~~ BluePrint API
 
@@ -184,6 +209,17 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					self._logger.info(message)
 					self._console_logger.info(message)
 					self._send_status("success")
+
+					postflash_gcode = self._settings.get(["postflash_gcode"])
+					if postflash_gcode is not None and self._settings.get_boolean(["enable_postflash_gcode"]):
+						self._logger.info(u"Setting run_postflash_gcode flag to true")
+						self._settings.set_boolean (["run_postflash_gcode"], True)
+					else:
+						self._logger.info(u"No postflash gcode or postflash is disabled, setting run_postflash_gcode to false")
+						self._settings.set_boolean(["run_postflash_gcode"], False)
+
+					self._settings.save()
+
 			except:
 				self._logger.exception(u"Error while attempting to flash")
 				self._send_status("flasherror")
@@ -198,6 +234,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				self._logger.info("Reconnecting to printer: port={}, baudrate={}, profile={}".format(port, baudrate, profile))
 				self._send_status("progress", subtype="reconnecting")
 				self._printer.connect(port=port, baudrate=baudrate, profile=profile)
+
+			postflash_gcode = self._settings.get(["postflash_gcode"])
 
 		finally:
 			self._flash_thread = None
@@ -290,7 +328,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"avrdude_path": None,
 			"avrdude_conf": None,
 			"avrdude_avrmcu": None,
-			"avrdude_programmer": None
+			"avrdude_programmer": None,
+			"postflash_gcode": None,
+			"run_postflash_gcode": False,
+			"enable_postflash_gcode": False
 		}
 
 	#~~ Asset API
