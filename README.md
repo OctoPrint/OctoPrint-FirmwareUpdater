@@ -2,7 +2,7 @@
 
 This plugin can be used to flash pre-compiled firmware images to your printer from a file or URL.
 
-![Firmware Updater Plugin](extras/img/updater.png)
+<p align="center"><img  alt="Firmware Updater" src="extras/img/updater.png" width="550" height="406"></p>
 
 Works with boards with Atmega1280, Atmega1284p, and Atmega2560 MCUs using arduino, usbasp, or wiring programmers.
 
@@ -39,6 +39,7 @@ sudo apt-get install avrdude
 In order to be able to flash firmware we need to specify the path to avrdude, and some parameters it will need.
 
 ![Firmware Updater Plugin](extras/img/updater-settings.png)
+<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/updater-settings.png" width="511" height="550"></p>
 
 You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
 
