@@ -52,9 +52,25 @@
         </div>
 
         <hr>
-
         <div class="progress progress-info progress-striped active" data-bind="visible: isBusy()">
             <div class="bar" style="width: 100%;"><label data-bind="text: progressBarText()"></label></div>
+            <hr>
+        </div>
+        <div>
+            <i class="icon-list"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Instructions</h5>
+            <ol>
+                <li>Click the wrench icon in the top right corner and configure the settings for the plugin</li>
+                <li>Either click the 'Browse' button to upload a file, or provide a URL to a file</li>
+                <li>Click the appropriate 'Flash from' button</li>
+                <li>Wait for the flash to complete</li>
+            </ol>
+            <i class="icon-warning-sign"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Warning</h5>
+            <p>As with any firmware flashing there is a risk that things may go wrong.</p>
+            <ul>
+                <li><b>Do not</b> power-cycle or restart your printer while flashing is in progress</li>
+                <li><b>Do not</b> attempt to flash a hex file which includes a bootloader</li>
+            </ul>
+            <p>No warranty is given, and no responsibility can be accepted if there are problems.  By using this plugin you accept the associated risks.</p>
         </div>
 
     </form>
