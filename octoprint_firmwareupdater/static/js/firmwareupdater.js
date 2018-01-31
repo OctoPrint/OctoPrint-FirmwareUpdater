@@ -150,7 +150,11 @@ $(function() {
             if (data.type === "status") {
                 switch (data.status) {
                     case "flasherror": {
-                        message = gettext("Unknown error");
+                        if (data.message) {
+                            message = gettext(data.message);
+                        } else {
+                            message = gettext("Unknown error");
+                        }
 
                         if (data.subtype) {
                             switch (data.subtype) {

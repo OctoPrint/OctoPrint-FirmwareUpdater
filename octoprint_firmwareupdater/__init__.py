@@ -25,6 +25,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	AVRDUDE_VERIFYING = "reading on-chip flash data"
 	AVRDUDE_TIMEOUT = "timeout communicating with programmer"
 	AVRDUDE_ERROR = "ERROR:"
+	AVRDUDE_ERROR_VERIFICATION = "verification error"
+	AVRDUDE_ERROR_DEVICE = "can't open device"
 
 	def __init__(self):
 		self._flash_thread = None
@@ -281,6 +283,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					self._send_status("progress", subtype="verifying")
 				elif self.AVRDUDE_TIMEOUT in output:
 					raise FlashException("Timeout communicating with programmer")
+				elif self.AVRDUDE_ERROR_DEVICE in output:
+					p.commands[0].kill()
+					raise FlashException("Error opening serial device")
+				elif self.AVRDUDE_ERROR_VERIFICATION in output:
+					raise FlashException("Error verifying flash")
 				elif self.AVRDUDE_ERROR in output:
 					raise FlashException("Avrdude error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
 
