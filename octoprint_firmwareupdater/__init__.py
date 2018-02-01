@@ -250,12 +250,20 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		avrdude_conf = self._settings.get(["avrdude_conf"])
 		avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
 		avrdude_programmer = self._settings.get(["avrdude_programmer"])
+		avrdude_baudrate = self._settings.get(["avrdude_baudrate"])
+		avrdude_disableverify = self._settings.get(["avrdude_disableverify"])
 
 		working_dir = os.path.dirname(avrdude_path)
 
-		avrdude_command = [avrdude_path, "-v", "-p", avrdude_avrmcu, "-c", avrdude_programmer, "-P", printer_port, "-U", "flash:w:" + firmware + ":i", "-D"]
+		avrdude_command = [avrdude_path, "-v", "-q", "-p", avrdude_avrmcu, "-c", avrdude_programmer, "-P", printer_port, "-D"]
 		if avrdude_conf is not None and avrdude_conf != "":
 			avrdude_command += ["-C", avrdude_conf]
+		if avrdude_baudrate is not None and avrdude_baudrate != "":
+			avrdude_command += ["-b", avrdude_baudrate]
+		if avrdude_disableverify:
+			avrdude_command += ["-V"]
+		
+		avrdude_command += ["-U", "flash:w:" + firmware + ":i"]
 
 		import sarge
 		self._logger.info(u"Running %r in %s" % (' '.join(avrdude_command), working_dir))
@@ -282,9 +290,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					self._logger.info(u"Verifying memory...")
 					self._send_status("progress", subtype="verifying")
 				elif self.AVRDUDE_TIMEOUT in output:
+					p.close()
 					raise FlashException("Timeout communicating with programmer")
 				elif self.AVRDUDE_ERROR_DEVICE in output:
 					p.commands[0].kill()
+					p.close()
 					raise FlashException("Error opening serial device")
 				elif self.AVRDUDE_ERROR_VERIFICATION in output:
 					raise FlashException("Error verifying flash")
@@ -336,9 +346,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"avrdude_conf": None,
 			"avrdude_avrmcu": None,
 			"avrdude_programmer": None,
+			"avrdude_baudrate": None,
+			"avrdude_disableverify": None,
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,
-			"enable_postflash_gcode": False
+			"enable_postflash_gcode": None
 		}
 
 	#~~ Asset API

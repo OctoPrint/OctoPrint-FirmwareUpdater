@@ -86,22 +86,10 @@
                     <label class="control-label">{{ _('Path to avrdude') }}</label>
                     <div class="controls">
                         <div class="input-append">
-                            <input type="text" class="input-block-level" data-bind="value: configAvrdudePath">
+                            <input type="text" class="input-block-level" data-bind='value: configAvrdudePath, valueUpdate: "afterkeydown"'>
                             <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configAvrdudePath, css: {disabled: !configAvrdudePath()}">{{ _('Test') }}</button>
                         </div>
                         <span class="help-block" data-bind="visible: pathBroken() || pathOk, text: pathText"></span>
-                    </div>
-                </div>
-
-                <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
-                    <label class="control-label">{{ _('Path to avrdude config') }}</label>
-                    <div class="controls">
-                        <div class="input-append">
-                            <input type="text" class="input-block-level" data-bind="value: configAvrdudeConfigFile">
-                            <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
-                        </div>
-                        <span class="help-block" data-bind="visible: confBroken() || confOk, text: confText"></span>
-                        <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
                     </div>
                 </div>
 
@@ -127,6 +115,53 @@
                             <option value=wiring>wiring</option>
                         </select>
                     </div>
+                </div>
+                <div data-bind="visible: !showAdvancedConfig()">
+                    <label  data-bind="click: toggleAdvancedConfig" >
+                        <i class="icon-chevron-right icon-fixed-width"></i>Advanced Settings
+                    </label>
+                </div>
+                <div data-bind="visible: showAdvancedConfig">
+                    <label data-bind="click: toggleAdvancedConfig" >
+                            <i class="icon-chevron-down icon-fixed-width"></i>Advanced Settings
+                    </label>
+                    <div class="control-group">
+                        <label class="control-label">{{ _('avrdude Baud Rate') }}</label>
+                        <div class="controls">
+                            <select data-bind="value: configAvrdudeBaudRate">
+                                <option value=>Default</option>
+                                <option value=19200>19200</option>
+                                <option value=38400>38400</option>
+                                <option value=57600>57600</option>
+                                <option value=115200>115200</option>
+                                <option value=250000>250000</option>
+                            </select>
+                            <span class="help-block">{{ _('Override the default avrdude baud rate.') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
+                        <label class="control-label">{{ _('Path to avrdude config') }}</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input type="text" class="input-block-level" data-bind='value: configAvrdudeConfigFile, valueUpdate: "afterkeydown"'>
+                                <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
+                            </div>
+                            <span class="help-block" data-bind="visible: confBroken() || confOk, text: confText"></span>
+                            <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Disable write verification') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configAvrdudeDisableVerification">
+                            </div>
+                            <span class="help-block">{{ _('If checked the avrdude verification phase will be skipped.') }}</span>
+                        </div>
+                    </div>
+
                 </div>
                 <hr>
                 <div class="control-group">

@@ -7,12 +7,15 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
 
+        self.showAdvancedConfig = ko.observable(false);
         self.configAvrdudePath = ko.observable();
         self.configAvrdudeConfigFile = ko.observable();
         self.configAvrdudeAvrMcu = ko.observable();
         self.configAvrdudeProgrammer = ko.observable();
+        self.configAvrdudeBaudRate = ko.observable();
+        self.configAvrdudeDisableVerification = ko.observable();
         self.configPostflashGcode = ko.observable();
-        self.configEnablePostflashGcode = ko.observable(false);
+        self.configEnablePostflashGcode = ko.observable();
 
         self.flashPort = ko.observable(undefined);
         self.hexFileName = ko.observable(undefined);
@@ -50,6 +53,10 @@ $(function() {
             if (value === undefined) return;
             self.flashPort(value);
         });
+
+        self.toggleAdvancedConfig = function(){
+            self.showAdvancedConfig(!self.showAdvancedConfig());
+         }
 
         self.onStartup = function() {
             self.selectHexPath = $("#settings_firmwareupdater_selectHexPath");
@@ -243,7 +250,11 @@ $(function() {
             self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
             self.configAvrdudeAvrMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
             self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
+            self.configAvrdudeBaudRate(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_baudrate());
             self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify() != 'false') {
+                self.configAvrdudeDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify());
+            }
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
             }
@@ -268,9 +279,10 @@ $(function() {
                         avrdude_conf: self.configAvrdudeConfigFile(),
                         avrdude_avrmcu: self.configAvrdudeAvrMcu(),
                         avrdude_programmer: self.configAvrdudeProgrammer(),
+                        avrdude_baudrate: self.configAvrdudeBaudRate(),
+                        avrdude_disableverify: self.configAvrdudeDisableVerification(),
                         postflash_gcode: self.configPostflashGcode(),
                         enable_postflash_gcode: self.configEnablePostflashGcode()
-                        
                     }
                 }
             };
