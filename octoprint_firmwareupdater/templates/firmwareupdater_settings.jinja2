@@ -1,7 +1,5 @@
 <div id="settings_plugin_firmwareupdater">
 
-    <div class="alert" data-bind="text: alertMessage, visible: showAlert(), css: alertType"></div>
-
     <div class="pull-right">
         <button class="btn btn-small" data-bind="click: showPluginConfig" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
     </div>
@@ -25,16 +23,16 @@
                         <span class="span3">
                             <span class="btn input-group-btn fileinput-button">
                                 <span>{{ _('Browse...') }}</span>
-                                <input id="settings_firmwareupdater_selectHexPath" type="file" name="file" accept=".hex" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
+                                <input id="settings_firmwareupdater_selectFilePath" type="file" name="file" data-bind="attr: { accept: fileExtension }" data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
                             </span>
                         </span>
                         <span class="span9">
-                            <input class="input input-block-level" type="text" data-bind="value: hexFileName" disabled>
+                            <input class="input input-block-level" type="text" data-bind="value: firmwareFileName" disabled>
                         </span>
                     </div>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="attr: {title: hexFlashButtonText}, click: function() { if (isReadyToFlashFromFile()) { startFlashFromFile() } }, enable: isReadyToFlashFromFile(), css: {disabled: !isReadyToFlashFromFile() || isBusy()}">{{ _('Flash from File') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="attr: {title: fileFlashButtonText}, click: function() { if (isReadyToFlashFromFile()) { startFlashFromFile() } }, enable: isReadyToFlashFromFile(), css: {disabled: !isReadyToFlashFromFile() || isBusy()}">{{ _('Flash from File') }}</button>
                 </div>
             </div>
         </div>
@@ -43,7 +41,7 @@
             <label class="control-label">{{ _('... from URL') }}</label>
             <div class="controls controls-row">
                 <div class="span8">
-                    <input class="input-block-level" type="text" data-bind="value: hexFileURL">
+                    <input class="input-block-level" type="text" data-bind="value: firmwareFileURL">
                 </div>
                 <div class="span4">
                     <button class="btn btn-primary btn-block" data-bind="attr: {title: urlFlashButtonText}, click: function() { if (isReadyToFlashFromURL()) { startFlashFromURL() } }, enable: isReadyToFlashFromURL(), css: {disabled: !isReadyToFlashFromURL() || isBusy()}">{{ _('Flash from URL') }}</button>
@@ -56,6 +54,7 @@
             <div class="bar" style="width: 100%;"><label data-bind="text: progressBarText()"></label></div>
             <hr>
         </div>
+        <div class="alert" data-bind="text: alertMessage, visible: showAlert(), css: alertType"></div>
         <div>
             <i class="icon-list"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Instructions</h5>
             <ol>
@@ -68,7 +67,7 @@
             <p>As with any firmware flashing there is a risk that things may go wrong.</p>
             <ul>
                 <li><b>Do not</b> power-cycle or restart your printer while flashing is in progress</li>
-                <li><b>Do not</b> attempt to flash a hex file which includes a bootloader</li>
+                <li><b>Do not</b> attempt to flash a firmware file which includes a bootloader</li>
             </ul>
             <p>No warranty is given, and no responsibility can be accepted if there are problems.  By using this plugin you accept the associated risks.</p>
         </div>
@@ -82,87 +81,113 @@
         </div>
         <div class="modal-body">
             <form class="form-horizontal">
-                <div class="control-group" data-bind="css: {error: pathBroken, success: pathOk}">
-                    <label class="control-label">{{ _('Path to avrdude') }}</label>
-                    <div class="controls">
-                        <div class="input-append">
-                            <input type="text" class="input-block-level" data-bind='value: configAvrdudePath, valueUpdate: "afterkeydown"'>
-                            <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configAvrdudePath, css: {disabled: !configAvrdudePath()}">{{ _('Test') }}</button>
-                        </div>
-                        <span class="help-block" data-bind="visible: pathBroken() || pathOk, text: pathText"></span>
-                    </div>
-                </div>
-
                 <div class="control-group">
-                    <label class="control-label">{{ _('AVR MCU Type') }}</label>
+                    <label class="control-label">{{ _('Processor') }}</label>
                     <div class="controls">
-	                    <select data-bind="value: configAvrdudeAvrMcu">
+	                    <select data-bind="value: configProcessor">
                             <option value=></option>
-                            <option value=m1280>ATmega1280</option>
-                            <option value=m1284p>ATmega1284p</option>
-                            <option value=m2560>ATmega2560</option>
+                                <optgroup label="Atmel 8-bit AVR Family">
+                                <option value=m1280>ATmega1280</option>
+                                <option value=m1284p>ATmega1284p</option>
+                                <option value=m2560>ATmega2560</option>
+                            </optgroup>
+                            <optgroup label="Atmel 32-bit SAM Family">
+                                <option value=sam3x8e>ATsam3x8e</option>
+                            </optgroup>
                         </select>
                     </div>
                 </div>
+                <hr>
 
-                <div class="control-group">
-                    <label class="control-label">{{ _('AVR Progrmammer Type') }}</label>
-                    <div class="controls">
-                        <select data-bind="value: configAvrdudeProgrammer">
-                            <option value=></option>
-                            <option value=arduino>arduino</option>
-                            <option value=usbasp>usbasp</option>
-                            <option value=wiring>wiring</option>
-                        </select>
-                    </div>
-                </div>
-                <div data-bind="visible: !showAdvancedConfig()">
-                    <label  data-bind="click: toggleAdvancedConfig" >
-                        <i class="icon-chevron-right icon-fixed-width"></i>Advanced Settings
-                    </label>
-                </div>
-                <div data-bind="visible: showAdvancedConfig">
-                    <label data-bind="click: toggleAdvancedConfig" >
-                            <i class="icon-chevron-down icon-fixed-width"></i>Advanced Settings
-                    </label>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('avrdude Baud Rate') }}</label>
-                        <div class="controls">
-                            <select data-bind="value: configAvrdudeBaudRate">
-                                <option value=>Default</option>
-                                <option value=19200>19200</option>
-                                <option value=38400>38400</option>
-                                <option value=57600>57600</option>
-                                <option value=115200>115200</option>
-                                <option value=250000>250000</option>
-                            </select>
-                            <span class="help-block">{{ _('Override the default avrdude baud rate.') }}</span>
-                        </div>
-                    </div>
-
-                    <div class="control-group" data-bind="css: {error: confBroken, success: confOk}">
-                        <label class="control-label">{{ _('Path to avrdude config') }}</label>
+                <!-- avrdude options for 8-bit MCUs -->
+                <div data-bind="visible: showAvrdudeConfig">
+                    <div class="control-group" data-bind="css: {error: avrdudePathBroken, success: avrdudePathOk}">
+                        <label class="control-label">{{ _('Path to avrdude') }}</label>
                         <div class="controls">
                             <div class="input-append">
-                                <input type="text" class="input-block-level" data-bind='value: configAvrdudeConfigFile, valueUpdate: "afterkeydown"'>
-                                <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
+                                <input type="text" class="input-block-level" data-bind='value: configAvrdudePath, valueUpdate: "afterkeydown"'>
+                                <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configAvrdudePath, css: {disabled: !configAvrdudePath()}">{{ _('Test') }}</button>
                             </div>
-                            <span class="help-block" data-bind="visible: confBroken() || confOk, text: confText"></span>
-                            <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
+                            <span class="help-block" data-bind="visible: avrdudePathBroken() || avrdudePathOk, text: avrdudePathText"></span>
                         </div>
                     </div>
 
                     <div class="control-group">
-                        <label class="control-label">{{ _('Disable write verification') }}</label>
+                        <label class="control-label">{{ _('AVR Progrmammer Type') }}</label>
                         <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configAvrdudeDisableVerification">
-                            </div>
-                            <span class="help-block">{{ _('If checked the avrdude verification phase will be skipped.') }}</span>
+                            <select data-bind="value: configAvrdudeProgrammer">
+                                <option value=></option>
+                                <option value=arduino>arduino</option>
+                                <option value=usbasp>usbasp</option>
+                                <option value=wiring>wiring</option>
+                            </select>
                         </div>
                     </div>
+                    <div data-bind="visible: !showAdvancedConfig()">
+                        <label data-bind="click: toggleAdvancedConfig" >
+                            <i class="icon-chevron-right icon-fixed-width"></i>Advanced Settings
+                        </label>
+                    </div>
+                    <div data-bind="visible: showAdvancedConfig">
+                        <label data-bind="click: toggleAdvancedConfig" >
+                                <i class="icon-chevron-down icon-fixed-width"></i>Advanced Settings
+                        </label>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('avrdude Baud Rate') }}</label>
+                            <div class="controls">
+                                <select data-bind="value: configAvrdudeBaudRate">
+                                    <option value=>Default</option>
+                                    <option value=19200>19200</option>
+                                    <option value=38400>38400</option>
+                                    <option value=57600>57600</option>
+                                    <option value=115200>115200</option>
+                                    <option value=250000>250000</option>
+                                </select>
+                                <span class="help-block">{{ _('Override the default avrdude baud rate.') }}</span>
+                            </div>
+                        </div>
 
+                        <div class="control-group" data-bind="css: {error: avrdudeConfPathBroken, success: avrdudeConfPathOk}">
+                            <label class="control-label">{{ _('Path to avrdude config file') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="text" class="input-block-level" data-bind='value: configAvrdudeConfigFile, valueUpdate: "afterkeydown"'>
+                                    <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
+                                </div>
+                                <span class="help-block" data-bind="visible: avrdudeConfPathBroken() || avrdudeConfPathOk, text: avrdudeConfPathText"></span>
+                                <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Disable write verification') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" class="input-block-level" data-bind="checked: configAvrdudeDisableVerification">
+                                </div>
+                                <span class="help-block">{{ _('If checked the avrdude verification phase will be skipped.') }}</span>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
+                <!-- end avrdude options -->
+
+                <!-- bossac options for 32-bit MCUs -->
+                <div data-bind="visible: showBossacConfig">
+                    <div class="control-group" data-bind="css: {error: bossacPathBroken, success: bossacPathOk}">
+                        <label class="control-label">{{ _('Path to bossac') }}</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input type="text" class="input-block-level" data-bind='value: configBossacPath, valueUpdate: "afterkeydown"'>
+                                <button class="btn" type="button" data-bind="click: testBossacPath, enable: configBossacPath, css: {disabled: !configBossacPath()}">{{ _('Test') }}</button>
+                            </div>
+                            <span class="help-block" data-bind="visible: bossacPathBroken() || bossacPathOk, text: bossacPathText"></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- end bossac options -->
+
                 <hr>
                 <div class="control-group">
                     <label class="control-label">{{ _('Enable post-flash gcode') }}</label>

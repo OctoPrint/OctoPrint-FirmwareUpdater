@@ -28,6 +28,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	AVRDUDE_ERROR_VERIFICATION = "verification error"
 	AVRDUDE_ERROR_DEVICE = "can't open device"
 
+	BOSSAC_NODEVICE = "No device found on"
+
 	def __init__(self):
 		self._flash_thread = None
 
@@ -39,8 +41,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def initialize(self):
 		# TODO: make method configurable via new plugin hook "octoprint.plugin.firmwareupdater.flash_methods",
 		# also include prechecks
-		self._flash_prechecks = dict(avrdude=self._check_avrdude)
-		self._flash_methods = dict(avrdude=self._flash_avrdude)
+		self._flash_prechecks = dict(avrdude=self._check_avrdude, bossac=self._check_bossac)
+		self._flash_methods = dict(avrdude=self._flash_avrdude, bossac=self._flash_bossac)
 
 		console_logging_handler = logging.handlers.RotatingFileHandler(self._settings.get_plugin_logfile_path(postfix="console"), maxBytes=2*1024*1024)
 		console_logging_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
@@ -97,7 +99,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._send_status("flasherror", subtype="port", message=error_message)
 			return flask.make_response(error_message, 400)
 
-		method = value_source.get("method", "avrdude")
+		if self._settings.get(["avrdude_avrmcu"]) == 'sam3x8e':
+			method = value_source.get("method", "bossac")
+		else:
+			method = value_source.get("method", "avrdude")
+
 		if method in self._flash_prechecks:
 			if not self._flash_prechecks[method]():
 				error_message = "Cannot flash firmware, flash method {} is not fully configured".format(method)
@@ -338,6 +344,87 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		else:
 			return True
 
+	def _flash_bossac(self, firmware=None, printer_port=None):
+		assert(firmware is not None)
+		assert(printer_port is not None)
+
+		bossac_path = self._settings.get(["bossac_path"])
+		bossac_disableverify = self._settings.get(["bossac_disableverify"])
+
+		working_dir = os.path.dirname(bossac_path)
+
+		bossac_command = [bossac_path, "-p", printer_port, "-e"]
+		if not bossac_disableverify:
+			bossac_command += ["-v"]
+		
+		bossac_command += ["-w", firmware]
+
+		import sarge
+		self._logger.info(u"Running %r in %s" % (' '.join(bossac_command), working_dir))
+		self._console_logger.info(" ".join(bossac_command))
+		try:
+			p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+			p.wait_events()
+
+			while p.returncode is None:
+				output = p.stderr.read(timeout=0.5)
+				if not output:
+					p.commands[0].poll()
+					continue
+
+				for line in output.split("\n"):
+					if line.endswith("\r"):
+						line = line[:-1]
+					self._console_logger.info(u"> {}".format(line))
+
+				if self.AVRDUDE_WRITING in output:
+					self._logger.info(u"Writing memory...")
+					self._send_status("progress", subtype="writing")
+				elif self.AVRDUDE_VERIFYING in output:
+					self._logger.info(u"Verifying memory...")
+					self._send_status("progress", subtype="verifying")
+				elif self.AVRDUDE_TIMEOUT in output:
+					p.close()
+					raise FlashException("Timeout communicating with programmer")
+				elif self.BOSSAC_NODEVICE in output:
+					raise FlashException("No device found")
+				elif self.AVRDUDE_ERROR_VERIFICATION in output:
+					raise FlashException("Error verifying flash")
+				elif self.AVRDUDE_ERROR in output:
+					raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
+
+			if p.returncode == 0:
+				return True
+			else:
+				raise FlashException("bossac returned code {returncode}".format(returncode=p.returncode))
+
+		except FlashException as ex:
+			self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))
+			self._send_status("flasherror", message=ex.reason)
+			return False
+		except:
+			self._logger.exception(u"Flashing failed. Unexpected error.")
+			self._send_status("flasherror")
+			return False
+
+	def _check_bossac(self):
+		bossac_path = self._settings.get(["bossac_path"])
+
+		if bossac_path is None:
+			self._logger.error(u"Path to bossac is not set.")
+			return False
+		if not os.path.exists(bossac_path):
+			self._logger.error(u"Path to bossac does not exist: {path}".format(path=bossac_path))
+			return False
+		elif not os.path.isfile(bossac_path):
+			self._logger.error(u"Path to bossac is not a file: {path}".format(path=bossac_path))
+			return False
+		elif not os.access(bossac_path, os.X_OK):
+			self._logger.error(u"Path to bossac is not executable: {path}".format(path=bossac_path))
+			return False
+		else:
+			return True
+
 	#~~ SettingsPlugin API
 
 	def get_settings_defaults(self):
@@ -348,6 +435,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"avrdude_programmer": None,
 			"avrdude_baudrate": None,
 			"avrdude_disableverify": None,
+			"bossac_path": None,
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,
 			"enable_postflash_gcode": None
