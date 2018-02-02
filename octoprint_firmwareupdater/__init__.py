@@ -353,11 +353,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		working_dir = os.path.dirname(bossac_path)
 
-		bossac_command = [bossac_path, "-p", printer_port, "-e"]
+		bossac_command = [bossac_path, "-i", "-d", "-p", printer_port, "-U", "false", "-e" "-w"]
 		if not bossac_disableverify:
 			bossac_command += ["-v"]
-		
-		bossac_command += ["-w", firmware]
+		bossac_command += ["-b", firmware, "-R"]
 
 		import sarge
 		self._logger.info(u"Running %r in %s" % (' '.join(bossac_command), working_dir))
