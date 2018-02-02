@@ -255,6 +255,10 @@ $(function() {
                                     message = gettext("Writing memory...");
                                     break;
                                 }
+                                case "erasing": {
+                                    message = gettext("Erasing memory...");
+                                    break;
+                                }
                                 case "verifying": {
                                     message = gettext("Verifying memory...");
                                     break;

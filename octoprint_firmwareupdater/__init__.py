@@ -28,6 +28,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	AVRDUDE_ERROR_VERIFICATION = "verification error"
 	AVRDUDE_ERROR_DEVICE = "can't open device"
 
+	BOSSAC_ERASING = "Erase flash"
+	BOSSAC_WRITING = "Write"
+	BOSSAC_VERIFYING = "Verify"
 	BOSSAC_NODEVICE = "No device found on"
 
 	def __init__(self):
@@ -376,10 +379,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						line = line[:-1]
 					self._console_logger.info(u"> {}".format(line))
 
-				if self.AVRDUDE_WRITING in output:
+				if self.BOSSAC_ERASING in output:
+					self._logger.info(u"Erasing memory...")
+					self._send_status("progress", subtype="erasing")
+				elif self.BOSSAC_WRITING in output:
 					self._logger.info(u"Writing memory...")
 					self._send_status("progress", subtype="writing")
-				elif self.AVRDUDE_VERIFYING in output:
+				elif self.BOSSAC_VERIFYING in output:
 					self._logger.info(u"Verifying memory...")
 					self._send_status("progress", subtype="verifying")
 				elif self.AVRDUDE_TIMEOUT in output:
