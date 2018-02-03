@@ -8,14 +8,16 @@ $(function() {
         self.printerState = parameters[3];
 
         // General settings
-        self.configProcessor = ko.observable();
+        self.configFlashMethod = ko.observable();
         self.showAdvancedConfig = ko.observable(false);
         self.showAvrdudeConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
+        self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
 
         // Config settings for avrdude
+        self.configAvrdudeMcu = ko.observable();
         self.configAvrdudePath = ko.observable();
         self.configAvrdudeConfigFile = ko.observable(); 
         self.configAvrdudeProgrammer = ko.observable();
@@ -37,6 +39,8 @@ $(function() {
 
         // Config settings for bossac
         self.configBossacPath = ko.observable();
+        self.configBossacDisableVerification = ko.observable()
+
         self.bossacPathBroken = ko.observable(false);
         self.bossacPathOk = ko.observable(false);
         self.bossacPathText = ko.observable();
@@ -45,7 +49,6 @@ $(function() {
         });
 
         self.flashPort = ko.observable(undefined);
-        self.fileExtension = ko.observable("")
 
         self.firmwareFileName = ko.observable(undefined);
         self.firmwareFileURL = ko.observable(undefined);
@@ -71,22 +74,22 @@ $(function() {
 
         self.toggleAdvancedConfig = function(){
             self.showAdvancedConfig(!self.showAdvancedConfig());
-         }
+        }
 
-         self.configProcessor.subscribe(function(value) {
-            if (!value) {
-                value = self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu();
-            }
-            if(value == 'sam3x8e') {
-                self.showBossacConfig(true);
-                self.showAvrdudeConfig(false);
-                self.firmwareFileName(undefined)
-                self.fileExtension(".bin")
-            } else {
+        self.togglePostflashConfig = function(){
+            self.showPostflashConfig(!self.showPostflashConfig());
+        }
+
+        self.configFlashMethod.subscribe(function(value) {
+            if(value == 'avrdude') {
                 self.showBossacConfig(false);
                 self.showAvrdudeConfig(true);
-                self.firmwareFileName(undefined)
-                self.fileExtension(".hex")
+            } else if(value == 'bossac') {
+                self.showBossacConfig(true);
+                self.showAvrdudeConfig(false);
+            } else {
+                self.showBossacConfig(false);
+                self.showAvrdudeConfig(false);
             }
          });
 
@@ -119,11 +122,23 @@ $(function() {
                 alert = gettext("Printer is printing. Please wait for the print to be finished.");
             }
 
-            if (self.showAvrdudeConfig() && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+            if (!self.configFlashMethod()){
+                alert = gettext("The flash method is not selected.");
+            }
+
+            if (self.configFlashMethod() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                alert = gettext("The AVR MCU type is not selected.");
+            }
+
+            if (self.configFlashMethod() == "avrdude"&& !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 alert = gettext("The avrdude path is not configured.");
             }
 
-            if (self.showBossacConfig() && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
+            if (self.configFlashMethod() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                alert = gettext("The AVR programmer is not selected.");
+            }
+
+            if (self.configFlashMethod() == "bossac" && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
                 alert = gettext("The bossac path is not configured.");
             }
 
@@ -142,6 +157,9 @@ $(function() {
                 self.alertMessage(alert);
                 self.showAlert(true);
                 return false;
+            } else {
+                self.alertMessage(undefined);
+                self.showAlert(false);
             }
 
             return true;
@@ -286,42 +304,46 @@ $(function() {
         };
 
         self.showPluginConfig = function() {
+            // Load the general settings
+            self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
+                self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
+            }
+            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            
+            // Load the avrdude settings
             self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
             self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
-            self.configProcessor(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
+            self.configAvrdudeMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
             self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
             self.configAvrdudeBaudRate(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_baudrate());
             if(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify() != 'false') {
                 self.configAvrdudeDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify());
             }
 
+            // Load the bossac settings
             self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
+            self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
             
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
-                self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
-            }
-            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
-
-
             self.configurationDialog.modal();
         };
 
         self.onConfigClose = function() {
             self._saveConfig();
+
             self.configurationDialog.modal("hide");
-            self.onConfigHidden();
-            if (self.configAvrdudePath()) {
-                self.showAlert(false);
-            }
+            self.alertMessage(undefined);
+            self.showAlert(false);
         };
 
         self._saveConfig = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
+                        flash_method: self.configFlashMethod(),
                         avrdude_path: self.configAvrdudePath(),
                         avrdude_conf: self.configAvrdudeConfigFile(),
-                        avrdude_avrmcu: self.configProcessor(),
+                        avrdude_avrmcu: self.configAvrdudeMcu(),
                         avrdude_programmer: self.configAvrdudeProgrammer(),
                         avrdude_baudrate: self.configAvrdudeBaudRate(),
                         avrdude_disableverify: self.configAvrdudeDisableVerification(),
@@ -331,11 +353,6 @@ $(function() {
                     }
                 }
             };
-            if(self.configProcessor() == 'sam3x8e') {
-                self.fileExtension(".bin")
-            } else {
-                self.fileExtension(".hex")
-            }
             self.settingsViewModel.saveData(data);
         };
 
@@ -436,70 +453,6 @@ $(function() {
                     self.avrdudeConfPathBroken(!response.result);
                 }
             })
-        };
-
-        self.isReadyToFlashFromFile = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.fileFlashButtonText(gettext("Unable to flash: Printer is busy"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
-                self.fileFlashButtonText(gettext("Unable to flash: Processor type not selected"));
-                return false;
-            }
-            if (self.showAvrdudeConfig() && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                self.fileFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
-                return false;
-            }
-            if (self.showBossacConfig() && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
-                self.fileFlashButtonText(gettext("Unable to flash: bossac path is not set"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
-                self.fileFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
-                return false;
-            }
-            if (!self.flashPort()) {
-                self.fileFlashButtonText(gettext("Unable to flash: Port not selected"));
-                return false;
-            }
-            if (!self.firmwareFileName()) {
-                self.fileFlashButtonText(gettext("Unable to flash: Firmware file not selected"));
-                return false;
-            }
-                self.fileFlashButtonText(gettext("Ready to flash from file"));
-            self.showAlert(false);
-            return true;
-        };
-
-        self.isReadyToFlashFromURL = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.urlFlashButtonText(gettext("Unable to flash: Printer is busy"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                self.urlFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
-                self.urlFlashButtonText(gettext("Unable to flash: MCU type not selected"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
-                self.urlFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
-                return false;
-            }
-            if (!self.flashPort()) {
-                self.urlFlashButtonText(gettext("Unable to flash: Port not selected"));
-                return false;
-            }
-            if (!self.firmwareFileURL()) {
-                self.urlFlashButtonText(gettext("Unable to flash: Firmware file URL not set"));
-                return false;
-            }
-            self.urlFlashButtonText(gettext("Ready to flash from file"));
-            self.showAlert(false);
-            return true;
         };
 
         self.onSettingsShown = function() {

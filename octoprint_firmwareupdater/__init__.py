@@ -102,10 +102,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._send_status("flasherror", subtype="port", message=error_message)
 			return flask.make_response(error_message, 400)
 
-		if self._settings.get(["avrdude_avrmcu"]) == 'sam3x8e':
-			method = value_source.get("method", "bossac")
-		else:
-			method = value_source.get("method", "avrdude")
+		method = self._settings.get(["flash_method"])
 
 		if method in self._flash_prechecks:
 			if not self._flash_prechecks[method]():
@@ -434,6 +431,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	def get_settings_defaults(self):
 		return {
+			"flash_method": None,
 			"avrdude_path": None,
 			"avrdude_conf": None,
 			"avrdude_avrmcu": None,
@@ -441,6 +439,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"avrdude_baudrate": None,
 			"avrdude_disableverify": None,
 			"bossac_path": None,
+			"bossac_disableverify": None,
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,
 			"enable_postflash_gcode": None
