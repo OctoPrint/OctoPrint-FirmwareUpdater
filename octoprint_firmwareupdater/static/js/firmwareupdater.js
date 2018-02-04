@@ -122,23 +122,23 @@ $(function() {
                 alert = gettext("Printer is printing. Please wait for the print to be finished.");
             }
 
-            if (!self.configFlashMethod()){
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.flash_method()){
                 alert = gettext("The flash method is not selected.");
             }
 
-            if (self.configFlashMethod() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
                 alert = gettext("The AVR MCU type is not selected.");
             }
 
-            if (self.configFlashMethod() == "avrdude"&& !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
                 alert = gettext("The avrdude path is not configured.");
             }
 
-            if (self.configFlashMethod() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
                 alert = gettext("The AVR programmer is not selected.");
             }
 
-            if (self.configFlashMethod() == "bossac" && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "bossac" && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
                 alert = gettext("The bossac path is not configured.");
             }
 
