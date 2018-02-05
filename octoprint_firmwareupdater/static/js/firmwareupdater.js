@@ -15,6 +15,7 @@ $(function() {
         self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
+        self.configDisableBootloaderCheck = ko.observable();
 
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
@@ -93,9 +94,18 @@ $(function() {
             }
          });
 
+         self.firmwareFileName.subscribe(function(value) {
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck()) {
+                if (self._checkForBootloader(value)) {
+                    self.bootloaderWarningDialog.modal();
+                }
+            }
+         });
+
         self.onStartup = function() {
             self.selectFilePath = $("#settings_firmwareupdater_selectFilePath");
             self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
+            self.bootloaderWarningDialog = $("#BootLoaderWarning");
 
             self.selectFilePath.fileupload({
                 dataType: "hex",
@@ -145,7 +155,7 @@ $(function() {
             if (!self.flashPort()) {
                 alert = gettext("The printer port is not selected.");
             }
-
+            
             if (source === "file" && !self.firmwareFileName()) {
                 alert = gettext("Firmware file path is not specified");
             } else if (source === "url" && !self.firmwareFileURL()) {
@@ -164,6 +174,22 @@ $(function() {
 
             return true;
         };
+
+        self._checkForBootloader = function(filename) {
+            if (filename.search(/bootloader/i) > -1) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        self.returnTrue = function() {
+            return true;
+        }
+
+        self.returnFalse = function() {
+            return false;
+        }
 
         self.startFlashFromFile = function() {
             if (!self._checkIfReadyToFlash("file")) {
@@ -310,6 +336,9 @@ $(function() {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
             }
             self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck() != 'false') {
+                self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
+            }
             
             // Load the avrdude settings
             self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
@@ -349,7 +378,8 @@ $(function() {
                         avrdude_disableverify: self.configAvrdudeDisableVerification(),
                         bossac_path: self.configBossacPath(),
                         postflash_gcode: self.configPostflashGcode(),
-                        enable_postflash_gcode: self.configEnablePostflashGcode()
+                        enable_postflash_gcode: self.configEnablePostflashGcode(),
+                        disable_bootloadercheck: self.configDisableBootloaderCheck()
                     }
                 }
             };

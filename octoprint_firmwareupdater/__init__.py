@@ -472,7 +472,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"bossac_disableverify": None,
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,
-			"enable_postflash_gcode": None
+			"enable_postflash_gcode": None,
+			"disable_bootloadercheck": None
 		}
 
 	#~~ Asset API

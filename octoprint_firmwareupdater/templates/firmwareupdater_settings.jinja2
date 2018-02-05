@@ -205,6 +205,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Disable bootloader warning') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
+                            </div>
+                            <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
+                        </div>
+                    </div>
                     <hr>
                 </div>
                 
@@ -241,6 +250,21 @@
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" data-bind="click: onConfigHidden" aria-hidden="true">{{ _('Cancel') }}</button>
             <button class="btn btn-primary" data-bind="click: onConfigClose" aria-hidden="true">{{ _('Save') }}</button>
+        </div>
+    </div>
+    <div id="BootLoaderWarning" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>Firmware Updater</h3>
+        </div>
+        <div class="modal-body">
+            <i class="icon-warning-sign"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Warning</h5>
+            <p>
+                {{ _("You have selected a file with 'bootloader' in the name. Flashing a firmware file which includes a bootloader may corrupt the board's bootloader.") }}
+            </p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse">{{ _('OK') }}</a>
         </div>
     </div>
 </div>
