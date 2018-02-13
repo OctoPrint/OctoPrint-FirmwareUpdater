@@ -157,9 +157,9 @@ $(function() {
             }
             
             if (source === "file" && !self.firmwareFileName()) {
-                alert = gettext("Firmware file path is not specified");
+                alert = gettext("Firmware file is not specified");
             } else if (source === "url" && !self.firmwareFileURL()) {
-                alert = gettext("Firmware file URL is not specified");
+                alert = gettext("Firmware URL is not specified");
             }
 
             if (alert !== undefined) {
@@ -270,17 +270,16 @@ $(function() {
                         self.showPopup("error", gettext("Flashing failed"), message);
                         self.isBusy(false);
                         self.showAlert(false);
-                        self.firmwareFileName(undefined);
-                        self.firmwareFileURL(undefined);
-
+                        self.firmwareFileName("");
+                        self.firmwareFileURL("");
                         break;
                     }
                     case "success": {
                         self.showPopup("success", gettext("Flashing successful"), "");
                         self.isBusy(false);
                         self.showAlert(false);
-                        self.firmwareFileName(undefined);
-                        self.firmwareFileURL(undefined);
+                        self.firmwareFileName("");
+                        self.firmwareFileURL("");
                         break;
                     }
                     case "progress": {
@@ -377,6 +376,7 @@ $(function() {
                         avrdude_baudrate: self.configAvrdudeBaudRate(),
                         avrdude_disableverify: self.configAvrdudeDisableVerification(),
                         bossac_path: self.configBossacPath(),
+                        bossac_disableverify: self.configBossacDisableVerification(),
                         postflash_gcode: self.configPostflashGcode(),
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck()

@@ -8,6 +8,7 @@ import os
 import requests
 import tempfile
 import threading
+import time
 import serial
 from serial import SerialException
 
@@ -32,8 +33,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	AVRDUDE_ERROR_DEVICE = "can't open device"
 
 	BOSSAC_ERASING = "Erase flash"
-	BOSSAC_WRITING = "Write"
-	BOSSAC_VERIFYING = "Verify"
+	BOSSAC_WRITING = "bytes to flash"
+	BOSSAC_VERIFYING = "bytes of flash"
 	BOSSAC_NODEVICE = "No device found on"
 
 	def __init__(self):
@@ -363,12 +364,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		working_dir = os.path.dirname(bossac_path)
 
-		bossac_command = [bossac_path, "-i", "-d", "-p", printer_port, "-U", "false", "-e", "-w"]
+		bossac_command = [bossac_path, "-i", "-p", printer_port, "-U", "false", "-e", "-w"]
 		if not bossac_disableverify:
 			bossac_command += ["-v"]
 		bossac_command += ["-b", firmware, "-R"]
 
-		self._logger.info(u"Attempting to reset the board")
+		self._logger.info(u"Attempting to reset the board to SAM-BA")
 		if not self._reset_1200(printer_port):
 			self._logger.error(u"Reset failed")
 			return False
@@ -377,11 +378,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self._logger.info(u"Running %r in %s" % (' '.join(bossac_command), working_dir))
 		self._console_logger.info(" ".join(bossac_command))
 		try:
-			p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+			p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
 			p.wait_events()
 
 			while p.returncode is None:
-				output = p.stderr.read(timeout=0.5)
+				output = p.stdout.read(timeout=0.5)
 				if not output:
 					p.commands[0].poll()
 					continue
@@ -391,24 +392,24 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						line = line[:-1]
 					self._console_logger.info(u"> {}".format(line))
 
-				if self.BOSSAC_ERASING in output:
-					self._logger.info(u"Erasing memory...")
-					self._send_status("progress", subtype="erasing")
-				elif self.BOSSAC_WRITING in output:
-					self._logger.info(u"Writing memory...")
-					self._send_status("progress", subtype="writing")
-				elif self.BOSSAC_VERIFYING in output:
-					self._logger.info(u"Verifying memory...")
-					self._send_status("progress", subtype="verifying")
-				elif self.AVRDUDE_TIMEOUT in output:
-					p.close()
-					raise FlashException("Timeout communicating with programmer")
-				elif self.BOSSAC_NODEVICE in output:
-					raise FlashException("No device found")
-				elif self.AVRDUDE_ERROR_VERIFICATION in output:
-					raise FlashException("Error verifying flash")
-				elif self.AVRDUDE_ERROR in output:
-					raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
+					if self.BOSSAC_ERASING in line:
+						self._logger.info(u"Erasing memory...")
+						self._send_status("progress", subtype="erasing")
+					elif self.BOSSAC_WRITING in line:
+						self._logger.info(u"Writing memory...")
+						self._send_status("progress", subtype="writing")
+					elif self.BOSSAC_VERIFYING in line:
+						self._logger.info(u"Verifying memory...")
+						self._send_status("progress", subtype="verifying")
+					elif self.AVRDUDE_TIMEOUT in line:
+						p.close()
+						raise FlashException("Timeout communicating with programmer")
+					elif self.BOSSAC_NODEVICE in line:
+						raise FlashException("No device found")
+					elif self.AVRDUDE_ERROR_VERIFICATION in line:
+						raise FlashException("Error verifying flash")
+					elif self.AVRDUDE_ERROR in line:
+						raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
 
 			if p.returncode == 0:
 				return True
@@ -446,9 +447,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		assert(printer_port is not None)
 		self._logger.info(u"Toggling '{port}' at 1200bps".format(port=printer_port))
 		try:
-			ser = serial.Serial(printer_port, 1200)
-			ser.close()
-			ser.open()
+			ser = serial.Serial(port=printer_port, \
+								baudrate=1200, \
+								parity=serial.PARITY_NONE, \
+								stopbits=serial.STOPBITS_ONE , \
+								bytesize=serial.EIGHTBITS, \
+								timeout=2000)
+			time.sleep(5)
 			ser.close()
 		except SerialException as ex:
 			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
