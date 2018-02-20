@@ -106,11 +106,12 @@
                 </div>
 
                 <div class="control-group">
-                    <label class="control-label">{{ _('AVR Progrmammer Type') }}</label>
+                    <label class="control-label">{{ _('AVR Programmer Type') }}</label>
                     <div class="controls">
                         <select data-bind="value: configAvrdudeProgrammer">
                             <option value=></option>
                             <option value=arduino>arduino</option>
+                            <option value=stk500v2>stk500v2</option>
                             <option value=usbasp>usbasp</option>
                             <option value=wiring>wiring</option>
                         </select>
@@ -172,7 +173,7 @@
                         </div>
                         <span class="help-block">{{ _('If enabled, any gcode commands set below will be run the first time the printer connects after a firmware flash.') }}</span>
                     </div>
-                </div>	
+                </div>
                 <div class="control-group">
                     <label class="control-label">{{ _('Post-flash gcode') }}</label>
                     <div class="controls">
@@ -181,7 +182,7 @@
                         </div>
                         <span class="help-block">{{ _('Gcode commands which will be run when the printer reconnects after firmware is flashed.  Separate multi commands with a semi colon.') }}</span>
                     </div>
-                </div>			
+                </div>
             </form>
         </div>
         <div class="modal-footer">
