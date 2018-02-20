@@ -20,7 +20,7 @@ $(function() {
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
         self.configAvrdudePath = ko.observable();
-        self.configAvrdudeConfigFile = ko.observable(); 
+        self.configAvrdudeConfigFile = ko.observable();
         self.configAvrdudeProgrammer = ko.observable();
         self.configAvrdudeBaudRate = ko.observable();
         self.configAvrdudeDisableVerification = ko.observable();
@@ -155,7 +155,7 @@ $(function() {
             if (!self.flashPort()) {
                 alert = gettext("The printer port is not selected.");
             }
-            
+
             if (source === "file" && !self.firmwareFileName()) {
                 alert = gettext("Firmware file is not specified");
             } else if (source === "url" && !self.firmwareFileURL()) {
@@ -338,7 +338,7 @@ $(function() {
             if(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck() != 'false') {
                 self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
             }
-            
+
             // Load the avrdude settings
             self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
             self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
@@ -352,7 +352,7 @@ $(function() {
             // Load the bossac settings
             self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
             self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
-            
+
             self.configurationDialog.modal();
         };
 

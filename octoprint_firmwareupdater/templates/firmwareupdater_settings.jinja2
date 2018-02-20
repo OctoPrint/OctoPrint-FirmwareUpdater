@@ -117,7 +117,7 @@
                         </div>
                     </div>
                     <div class="control-group">
-                        <label class="control-label">{{ _('AVR Progrmammer Type') }}</label>
+                        <label class="control-label">{{ _('AVR Programmer Type') }}</label>
                         <div class="controls">
                             <select data-bind="value: configAvrdudeProgrammer">
                                 <option value=></option>
@@ -149,7 +149,7 @@
                 <!-- end bossac options -->
 
                 <!-- advanced options -->
-                
+
                 <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig())">
                     <label data-bind="click: toggleAdvancedConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Advanced Settings
@@ -217,7 +217,7 @@
                     </div>
                     <hr>
                 </div>
-                
+
                 <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig())">
                     <label data-bind="click: togglePostflashConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Post-flash Settings
@@ -235,7 +235,7 @@
                             </div>
                             <span class="help-block">{{ _('If enabled, any gcode commands set below will be run the first time the printer connects after a firmware flash.') }}</span>
                         </div>
-                    </div>	
+                    </div>
                     <div class="control-group">
                         <label class="control-label">{{ _('Post-flash gcode') }}</label>
                         <div class="controls">

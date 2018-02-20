@@ -272,7 +272,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			avrdude_command += ["-b", avrdude_baudrate]
 		if avrdude_disableverify:
 			avrdude_command += ["-V"]
-		
+
 		avrdude_command += ["-U", "flash:w:" + firmware + ":i"]
 
 		import sarge
@@ -459,7 +459,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
 			self._send_status("flasherror", message="Board reset failed")
 			return False
-		
+
 		return True
 
 	#~~ SettingsPlugin API
