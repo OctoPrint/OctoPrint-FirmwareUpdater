@@ -7,19 +7,52 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
 
+        // General settings
+        self.configFlashMethod = ko.observable();
         self.showAdvancedConfig = ko.observable(false);
+        self.showAvrdudeConfig = ko.observable(false);
+        self.showBossacConfig = ko.observable(false);
+        self.showPostflashConfig = ko.observable(false);
+        self.configEnablePostflashGcode = ko.observable();
+        self.configPostflashGcode = ko.observable();
+        self.configDisableBootloaderCheck = ko.observable();
+
+        // Config settings for avrdude
+        self.configAvrdudeMcu = ko.observable();
         self.configAvrdudePath = ko.observable();
         self.configAvrdudeConfigFile = ko.observable();
-        self.configAvrdudeAvrMcu = ko.observable();
         self.configAvrdudeProgrammer = ko.observable();
         self.configAvrdudeBaudRate = ko.observable();
         self.configAvrdudeDisableVerification = ko.observable();
-        self.configPostflashGcode = ko.observable();
-        self.configEnablePostflashGcode = ko.observable();
+        self.avrdudePathBroken = ko.observable(false);
+        self.avrdudePathOk = ko.observable(false);
+        self.avrdudePathText = ko.observable();
+        self.avrdudePathHelpVisible = ko.computed(function() {
+            return self.avrdudePathBroken() || self.avrdudePathOk();
+        });
+
+        self.avrdudeConfPathBroken = ko.observable(false);
+        self.avrdudeConfPathOk = ko.observable(false);
+        self.avrdudeConfPathText = ko.observable();
+        self.avrdudeConfPathHelpVisible = ko.computed(function() {
+            return self.avrdudeConfPathBroken() || self.avrdudeConfPathOk();
+        });
+
+        // Config settings for bossac
+        self.configBossacPath = ko.observable();
+        self.configBossacDisableVerification = ko.observable()
+
+        self.bossacPathBroken = ko.observable(false);
+        self.bossacPathOk = ko.observable(false);
+        self.bossacPathText = ko.observable();
+        self.bossacPathHelpVisible = ko.computed(function() {
+            return self.bossacPathBroken() || self.bossacPathOk();
+        });
 
         self.flashPort = ko.observable(undefined);
-        self.hexFileName = ko.observable(undefined);
-        self.hexFileURL = ko.observable(undefined);
+
+        self.firmwareFileName = ko.observable(undefined);
+        self.firmwareFileURL = ko.observable(undefined);
 
         self.alertMessage = ko.observable("");
         self.alertType = ko.observable("alert-warning");
@@ -27,24 +60,10 @@ $(function() {
         self.missingParamToFlash = ko.observable(false);
         self.progressBarText = ko.observable();
         self.isBusy = ko.observable(false);
-        self.hexFlashButtonText = ko.observable("");
+        self.fileFlashButtonText = ko.observable("");
         self.urlFlashButtonText = ko.observable("");
 
-        self.pathBroken = ko.observable(false);
-        self.pathOk = ko.observable(false);
-        self.pathText = ko.observable();
-        self.pathHelpVisible = ko.computed(function() {
-            return self.pathBroken() || self.pathOk();
-        });
-
-        self.confBroken = ko.observable(false);
-        self.confOk = ko.observable(false);
-        self.confText = ko.observable();
-        self.confHelpVisible = ko.computed(function() {
-            return self.pathBroken() || self.pathOk();
-        });
-
-        self.selectHexPath = undefined;
+        self.selectFilePath = undefined;
         self.configurationDialog = undefined;
 
         self.inSettingsDialog = false;
@@ -56,13 +75,39 @@ $(function() {
 
         self.toggleAdvancedConfig = function(){
             self.showAdvancedConfig(!self.showAdvancedConfig());
-         }
+        }
+
+        self.togglePostflashConfig = function(){
+            self.showPostflashConfig(!self.showPostflashConfig());
+        }
+
+        self.configFlashMethod.subscribe(function(value) {
+            if(value == 'avrdude') {
+                self.showBossacConfig(false);
+                self.showAvrdudeConfig(true);
+            } else if(value == 'bossac') {
+                self.showBossacConfig(true);
+                self.showAvrdudeConfig(false);
+            } else {
+                self.showBossacConfig(false);
+                self.showAvrdudeConfig(false);
+            }
+         });
+
+         self.firmwareFileName.subscribe(function(value) {
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck()) {
+                if (self._checkForBootloader(value)) {
+                    self.bootloaderWarningDialog.modal();
+                }
+            }
+         });
 
         self.onStartup = function() {
-            self.selectHexPath = $("#settings_firmwareupdater_selectHexPath");
+            self.selectFilePath = $("#settings_firmwareupdater_selectFilePath");
             self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
+            self.bootloaderWarningDialog = $("#BootLoaderWarning");
 
-            self.selectHexPath.fileupload({
+            self.selectFilePath.fileupload({
                 dataType: "hex",
                 maxNumberOfFiles: 1,
                 autoUpload: false,
@@ -71,7 +116,7 @@ $(function() {
                         return false;
                     }
                     self.hexData = data;
-                    self.hexFileName(data.files[0].name);
+                    self.firmwareFileName(data.files[0].name);
                 }
             });
         };
@@ -87,18 +132,34 @@ $(function() {
                 alert = gettext("Printer is printing. Please wait for the print to be finished.");
             }
 
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                alert = gettext("The Avrdude path is not configured.");
+            if (!self.settingsViewModel.settings.plugins.firmwareupdater.flash_method()){
+                alert = gettext("The flash method is not selected.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+                alert = gettext("The AVR MCU type is not selected.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+                alert = gettext("The avrdude path is not configured.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+                alert = gettext("The AVR programmer is not selected.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "bossac" && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
+                alert = gettext("The bossac path is not configured.");
             }
 
             if (!self.flashPort()) {
                 alert = gettext("The printer port is not selected.");
             }
 
-            if (source === "file" && !self.hexFileName()) {
-                alert = gettext("Hex file path is not specified");
-            } else if (source === "url" && !self.hexFileURL()) {
-                alert = gettext("Hex file URL is not specified");
+            if (source === "file" && !self.firmwareFileName()) {
+                alert = gettext("Firmware file is not specified");
+            } else if (source === "url" && !self.firmwareFileURL()) {
+                alert = gettext("Firmware URL is not specified");
             }
 
             if (alert !== undefined) {
@@ -106,10 +167,29 @@ $(function() {
                 self.alertMessage(alert);
                 self.showAlert(true);
                 return false;
+            } else {
+                self.alertMessage(undefined);
+                self.showAlert(false);
             }
 
             return true;
         };
+
+        self._checkForBootloader = function(filename) {
+            if (filename.search(/bootloader/i) > -1) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        self.returnTrue = function() {
+            return true;
+        }
+
+        self.returnFalse = function() {
+            return false;
+        }
 
         self.startFlashFromFile = function() {
             if (!self._checkIfReadyToFlash("file")) {
@@ -141,7 +221,7 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     port: self.flashPort(),
-                    url: self.hexFileURL()
+                    url: self.firmwareFileURL()
                 }),
                 contentType: "application/json; charset=UTF-8"
             })
@@ -190,17 +270,16 @@ $(function() {
                         self.showPopup("error", gettext("Flashing failed"), message);
                         self.isBusy(false);
                         self.showAlert(false);
-                        self.hexFileName(undefined);
-                        self.hexFileURL(undefined);
-
+                        self.firmwareFileName("");
+                        self.firmwareFileURL("");
                         break;
                     }
                     case "success": {
                         self.showPopup("success", gettext("Flashing successful"), "");
                         self.isBusy(false);
                         self.showAlert(false);
-                        self.hexFileName(undefined);
-                        self.hexFileURL(undefined);
+                        self.firmwareFileName("");
+                        self.firmwareFileURL("");
                         break;
                     }
                     case "progress": {
@@ -217,6 +296,10 @@ $(function() {
                                 }
                                 case "writing": {
                                     message = gettext("Writing memory...");
+                                    break;
+                                }
+                                case "erasing": {
+                                    message = gettext("Erasing memory...");
                                     break;
                                 }
                                 case "verifying": {
@@ -246,43 +329,57 @@ $(function() {
         };
 
         self.showPluginConfig = function() {
-            self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
-            self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
-            self.configAvrdudeAvrMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
-            self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
-            self.configAvrdudeBaudRate(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_baudrate());
-            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify() != 'false') {
-                self.configAvrdudeDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify());
-            }
+            // Load the general settings
+            self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
             }
+            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck() != 'false') {
+                self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
+            }
+
+            // Load the avrdude settings
+            self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
+            self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
+            self.configAvrdudeMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
+            self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
+            self.configAvrdudeBaudRate(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_baudrate());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify() != 'false') {
+                self.configAvrdudeDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify());
+            }
+
+            // Load the bossac settings
+            self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
+            self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
 
             self.configurationDialog.modal();
         };
 
         self.onConfigClose = function() {
             self._saveConfig();
+
             self.configurationDialog.modal("hide");
-            self.onConfigHidden();
-            if (self.configAvrdudePath()) {
-                self.showAlert(false);
-            }
+            self.alertMessage(undefined);
+            self.showAlert(false);
         };
 
         self._saveConfig = function() {
             var data = {
                 plugins: {
                     firmwareupdater: {
+                        flash_method: self.configFlashMethod(),
                         avrdude_path: self.configAvrdudePath(),
                         avrdude_conf: self.configAvrdudeConfigFile(),
-                        avrdude_avrmcu: self.configAvrdudeAvrMcu(),
+                        avrdude_avrmcu: self.configAvrdudeMcu(),
                         avrdude_programmer: self.configAvrdudeProgrammer(),
                         avrdude_baudrate: self.configAvrdudeBaudRate(),
                         avrdude_disableverify: self.configAvrdudeDisableVerification(),
+                        bossac_path: self.configBossacPath(),
+                        bossac_disableverify: self.configBossacDisableVerification(),
                         postflash_gcode: self.configPostflashGcode(),
-                        enable_postflash_gcode: self.configEnablePostflashGcode()
+                        enable_postflash_gcode: self.configEnablePostflashGcode(),
+                        disable_bootloadercheck: self.configDisableBootloaderCheck()
                     }
                 }
             };
@@ -290,9 +387,12 @@ $(function() {
         };
 
         self.onConfigHidden = function() {
-            self.pathBroken(false);
-            self.pathOk(false);
-            self.pathText("");
+            self.avrdudePathBroken(false);
+            self.avrdudePathOk(false);
+            self.avrdudePathText("");
+            self.bossacPathBroken(false);
+            self.bossacPathOk(false);
+            self.bossacPathText("");
         };
 
         self.testAvrdudePath = function() {
@@ -310,17 +410,47 @@ $(function() {
                 success: function(response) {
                     if (!response.result) {
                         if (!response.exists) {
-                            self.pathText(gettext("The path doesn't exist"));
+                            self.avrdudePathText(gettext("The path doesn't exist"));
                         } else if (!response.typeok) {
-                            self.pathText(gettext("The path is not a file"));
+                            self.avrdudePathText(gettext("The path is not a file"));
                         } else if (!response.access) {
-                            self.pathText(gettext("The path is not an executable"));
+                            self.avrdudePathText(gettext("The path is not an executable"));
                         }
                     } else {
-                        self.pathText(gettext("The path is valid"));
+                        self.avrdudePathText(gettext("The path is valid"));
                     }
-                    self.pathOk(response.result);
-                    self.pathBroken(!response.result);
+                    self.avrdudePathOk(response.result);
+                    self.avrdudePathBroken(!response.result);
+                }
+            })
+        };
+
+        self.testBossacPath = function() {
+            $.ajax({
+                url: API_BASEURL + "util/test",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    command: "path",
+                    path: self.configBossacPath(),
+                    check_type: "file",
+                    check_access: "x"
+                }),
+                contentType: "application/json; charset=UTF-8",
+                success: function(response) {
+                    if (!response.result) {
+                        if (!response.exists) {
+                            self.bossacPathText(gettext("The path doesn't exist"));
+                        } else if (!response.typeok) {
+                            self.bossacPathText(gettext("The path is not a file"));
+                        } else if (!response.access) {
+                            self.bossacPathText(gettext("The path is not an executable"));
+                        }
+                    } else {
+                        self.bossacPathText(gettext("The path is valid"));
+                    }
+                    self.bossacPathOk(response.result);
+                    self.bossacPathBroken(!response.result);
                 }
             })
         };
@@ -340,79 +470,19 @@ $(function() {
                 success: function(response) {
                     if (!response.result) {
                         if (!response.exists) {
-                            self.confText(gettext("The path doesn't exist"));
+                            self.avrdudeConfPathText(gettext("The path doesn't exist"));
                         } else if (!response.typeok) {
-                            self.confText(gettext("The path is not a file"));
+                            self.avrdudeConfPathText(gettext("The path is not a file"));
                         } else if (!response.access) {
-                            self.confText(gettext("The path is not readable"));
+                            self.avrdudeConfPathText(gettext("The path is not readable"));
                         }
                     } else {
-                        self.confText(gettext("The path is valid"));
+                        self.avrdudeConfPathText(gettext("The path is valid"));
                     }
-                    self.confOk(response.result);
-                    self.confBroken(!response.result);
+                    self.avrdudeConfPathOk(response.result);
+                    self.avrdudeConfPathBroken(!response.result);
                 }
             })
-        };
-
-        self.isReadyToFlashFromFile = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.hexFlashButtonText(gettext("Unable to flash: Printer is busy"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                self.hexFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
-                self.hexFlashButtonText(gettext("Unable to flash: MCU type not selected"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
-                self.hexFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
-                return false;
-            }
-            if (!self.flashPort()) {
-                self.hexFlashButtonText(gettext("Unable to flash: Port not selected"));
-                return false;
-            }
-            if (!self.hexFileName()) {
-                self.hexFlashButtonText(gettext("Unable to flash: Hex file not selected"));
-                return false;
-            }
-                self.hexFlashButtonText(gettext("Ready to flash from file"));
-            self.showAlert(false);
-            return true;
-        };
-
-        self.isReadyToFlashFromURL = function() {
-            if (self.printerState.isPrinting() || self.printerState.isPaused()){
-                self.urlFlashButtonText(gettext("Unable to flash: Printer is busy"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
-                self.urlFlashButtonText(gettext("Unable to flash: avrdude path is not set"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
-                self.urlFlashButtonText(gettext("Unable to flash: MCU type not selected"));
-                return false;
-            }
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
-                self.urlFlashButtonText(gettext("Unable to flash: Programmer type not selected"));
-                return false;
-            }
-            if (!self.flashPort()) {
-                self.urlFlashButtonText(gettext("Unable to flash: Port not selected"));
-                return false;
-            }
-            if (!self.hexFileURL()) {
-                self.urlFlashButtonText(gettext("Unable to flash: Hex file URL not set"));
-                return false;
-            }
-            self.urlFlashButtonText(gettext("Ready to flash from file"));
-            self.showAlert(false);
-            return true;
         };
 
         self.onSettingsShown = function() {
