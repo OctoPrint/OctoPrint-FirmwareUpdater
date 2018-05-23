@@ -43,7 +43,7 @@ Bossac cannot be installed using a package manager as the packaged version is ou
 
 ```
 cd ~/
-sudo apt-get install libwxgtk3.0-dev libreadline-dev 
+sudo apt-get install libwxgtk3.0-dev libreadline-dev
 wget https://github.com/shumatech/BOSSA/archive/1.7.0.zip
 unzip 1.7.0.zip
 cd BOSSA-1.7.0
@@ -69,6 +69,7 @@ Typical MCU/programmer combinations are:
 | --- | --- | --- |
 | Atmega1284p | arduino | Anet A series |
 | Atmega2560 | wiring | RAMPS, RAMbo, etc. |
+| Atmega644p | arduino | Sanguinololu, Melzi |
 
 #### Avrdude Advanced Settings
 All advanced settings are optional.
