@@ -11,6 +11,7 @@ import threading
 import time
 import serial
 from serial import SerialException
+from octoprint.util import version
 
 import octoprint.plugin
 
@@ -279,7 +280,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self._logger.info(u"Running %r in %s" % (' '.join(avrdude_command), working_dir))
 		self._console_logger.info(" ".join(avrdude_command))
 		try:
-			p = sarge.run(avrdude_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+			if version.get_octoprint_version() > version.get_comparable_version("1.3.9"):
+				p = sarge.run(avrdude_command, cwd=working_dir, async_=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+			else:				
+				p = sarge.run(avrdude_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
 			p.wait_events()
 
 			while p.returncode is None:
@@ -378,7 +382,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self._logger.info(u"Running %r in %s" % (' '.join(bossac_command), working_dir))
 		self._console_logger.info(" ".join(bossac_command))
 		try:
-			p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
+			if version.get_octoprint_version() > version.get_comparable_version("1.3.9"):
+				p = sarge.run(bossac_command, cwd=working_dir, async_=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
+			else:
+				p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
 			p.wait_events()
 
 			while p.returncode is None:
