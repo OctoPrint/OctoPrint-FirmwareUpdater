@@ -9,6 +9,7 @@ import requests
 import tempfile
 import threading
 import time
+import re
 import serial
 from serial import SerialException
 
@@ -336,8 +337,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		avrdude_path = self._settings.get(["avrdude_path"])
 		avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
 		avrdude_programmer = self._settings.get(["avrdude_programmer"])
+		pattern = re.compile("^(\/[^\0/]+)+$")
 
-		if not os.path.exists(avrdude_path):
+		if not pattern.match(avrdude_path):
+			self._logger.error(u"Path to avrdude is not valid: {path}".format(path=avrdude_path))
+			return False
+		elif not os.path.exists(avrdude_path):
 			self._logger.error(u"Path to avrdude does not exist: {path}".format(path=avrdude_path))
 			return False
 		elif not os.path.isfile(avrdude_path):
@@ -427,8 +432,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	def _check_bossac(self):
 		bossac_path = self._settings.get(["bossac_path"])
+		pattern = re.compile("^(\/[^\0/]+)+$")
 
-		if bossac_path is None:
+		if not pattern.match(bossac_path):
+			self._logger.error(u"Path to bossac is not valid: {path}".format(path=bossac_path))
+			return False
+		elif bossac_path is None:
 			self._logger.error(u"Path to bossac is not set.")
 			return False
 		if not os.path.exists(bossac_path):

@@ -254,7 +254,7 @@ $(function() {
                                     break;
                                 }
                                 case "method": {
-                                    message = gettext("Flash method is not fully configured.");
+                                    message = gettext("Flash method is not properly configured.");
                                     break;
                                 }
                                 case "hexfile": {
@@ -396,63 +396,79 @@ $(function() {
         };
 
         self.testAvrdudePath = function() {
-            $.ajax({
-                url: API_BASEURL + "util/test",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    command: "path",
-                    path: self.configAvrdudePath(),
-                    check_type: "file",
-                    check_access: "x"
-                }),
-                contentType: "application/json; charset=UTF-8",
-                success: function(response) {
-                    if (!response.result) {
-                        if (!response.exists) {
-                            self.avrdudePathText(gettext("The path doesn't exist"));
-                        } else if (!response.typeok) {
-                            self.avrdudePathText(gettext("The path is not a file"));
-                        } else if (!response.access) {
-                            self.avrdudePathText(gettext("The path is not an executable"));
+            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+
+            if (!filePathRegEx.test(self.configAvrdudePath())) {
+                self.avrdudePathText(gettext("The path is not valid"));
+                self.avrdudePathOk(false);
+                self.avrdudePathBroken(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configAvrdudePath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.avrdudePathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.avrdudePathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.avrdudePathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.avrdudePathText(gettext("The path is valid"));
                         }
-                    } else {
-                        self.avrdudePathText(gettext("The path is valid"));
+                        self.avrdudePathOk(response.result);
+                        self.avrdudePathBroken(!response.result);
                     }
-                    self.avrdudePathOk(response.result);
-                    self.avrdudePathBroken(!response.result);
-                }
-            })
+                })
+            }
         };
 
         self.testBossacPath = function() {
-            $.ajax({
-                url: API_BASEURL + "util/test",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    command: "path",
-                    path: self.configBossacPath(),
-                    check_type: "file",
-                    check_access: "x"
-                }),
-                contentType: "application/json; charset=UTF-8",
-                success: function(response) {
-                    if (!response.result) {
-                        if (!response.exists) {
-                            self.bossacPathText(gettext("The path doesn't exist"));
-                        } else if (!response.typeok) {
-                            self.bossacPathText(gettext("The path is not a file"));
-                        } else if (!response.access) {
-                            self.bossacPathText(gettext("The path is not an executable"));
+            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+
+            if (!filePathRegEx.test(self.configBossacPath())) {
+                self.bossacPathText(gettext("The path is not valid"));
+                self.bossacPathOk(false);
+                self.bossacPathBroken(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configBossacPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.bossacPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.bossacPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.bossacPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.bossacPathText(gettext("The path is valid"));
                         }
-                    } else {
-                        self.bossacPathText(gettext("The path is valid"));
+                        self.bossacPathOk(response.result);
+                        self.bossacPathBroken(!response.result);
                     }
-                    self.bossacPathOk(response.result);
-                    self.bossacPathBroken(!response.result);
-                }
-            })
+                })
+            }
         };
 
         self.testAvrdudeConf = function() {
