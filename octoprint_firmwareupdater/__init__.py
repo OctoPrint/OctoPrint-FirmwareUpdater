@@ -417,7 +417,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
 
 			if p.returncode == 0:
-				time.sleep(15)
+				time.sleep(20)
 				return True
 			else:
 				raise FlashException("bossac returned code {returncode}".format(returncode=p.returncode))
