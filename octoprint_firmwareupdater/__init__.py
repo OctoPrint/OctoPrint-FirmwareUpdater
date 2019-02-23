@@ -372,7 +372,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		bossac_command = [bossac_path, "-i", "-p", printer_port, "-e", "-w"]
 		if not bossac_disableverify:
 			bossac_command += ["-v"]
-		bossac_command += ["-b", firmware, "-R", "&&", "sleep", "10"]
+		bossac_command += ["-b", firmware, "-R"]
 
 		self._logger.info(u"Attempting to reset the board to SAM-BA")
 		if not self._reset_1200(printer_port):
@@ -417,6 +417,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
 
 			if p.returncode == 0:
+				time.sleep(15)
 				return True
 			else:
 				raise FlashException("bossac returned code {returncode}".format(returncode=p.returncode))
