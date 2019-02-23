@@ -456,14 +456,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		assert(printer_port is not None)
 		self._logger.info(u"Toggling '{port}' at 1200bps".format(port=printer_port))
 		try:
-			ser = serial.Serial(port=printer_port, \
-								baudrate=1200, \
-								parity=serial.PARITY_NONE, \
-								stopbits=serial.STOPBITS_ONE , \
-								bytesize=serial.EIGHTBITS, \
-								timeout=2000)
+			os.system("stty -F "+printer_port+" speed 1200")
+			# ser = serial.Serial(port=printer_port, \
+			# 					baudrate=1200, \
+			# 					parity=serial.PARITY_NONE, \
+			# 					stopbits=serial.STOPBITS_ONE , \
+			# 					bytesize=serial.EIGHTBITS, \
+			# 					timeout=2000)
 			time.sleep(5)
-			ser.close()
+			# ser.close()
 		except SerialException as ex:
 			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
 			self._send_status("flasherror", message="Board reset failed")
