@@ -369,7 +369,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		working_dir = os.path.dirname(bossac_path)
 
-		bossac_command = [bossac_path, "-i", "-p", printer_port, "-U", "false", "-e", "-w"]
+		bossac_command = [bossac_path, "-i", "-p", printer_port, "-e", "-w"]
 		if not bossac_disableverify:
 			bossac_command += ["-v"]
 		bossac_command += ["-b", firmware, "-R"]
