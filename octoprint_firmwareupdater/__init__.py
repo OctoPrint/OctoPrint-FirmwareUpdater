@@ -417,8 +417,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
 
 			if p.returncode == 0:
-				self._send_status("progress", subtype="wait_at_end")
-				time.sleep(10) # wait for serial port to wake up
+				# self._send_status("progress", subtype="wait_at_end")
+				# time.sleep(10) # wait for serial port to wake up
 				return True
 			else:
 				raise FlashException("bossac returned code {returncode}".format(returncode=p.returncode))
