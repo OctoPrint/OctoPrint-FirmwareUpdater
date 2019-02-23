@@ -310,6 +310,10 @@ $(function() {
                                     message = gettext("Reconnecting to printer...");
                                     break;
                                 }
+                                case "wake_up": {
+                                    message = gettext("Waiting for port to wake up...");
+                                    break;
+                                }
                             }
                         }
 
