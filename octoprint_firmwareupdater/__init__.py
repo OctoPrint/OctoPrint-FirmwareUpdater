@@ -417,6 +417,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
 
 			if p.returncode == 0:
+				self._send_status("progress", subtype="wait_at_end")
+				time.sleep(10) # wait for serial port to wake up
 				return True
 			else:
 				raise FlashException("bossac returned code {returncode}".format(returncode=p.returncode))
@@ -457,15 +459,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self._logger.info(u"Toggling '{port}' at 1200bps".format(port=printer_port))
 		try:
 			os.system("stty -F "+printer_port+" speed 1200")
-			# ser = serial.Serial(port=printer_port, \
-			# 					baudrate=1200, \
-			# 					parity=serial.PARITY_NONE, \
-			# 					stopbits=serial.STOPBITS_ONE , \
-			# 					bytesize=serial.EIGHTBITS, \
-			# 					timeout=2000)
 			time.sleep(5)
-			# ser.close()
-		except SerialException as ex:
+		except:
 			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
 			self._send_status("flasherror", message="Board reset failed")
 			return False

@@ -306,6 +306,10 @@ $(function() {
                                     message = gettext("Verifying memory...");
                                     break;
                                 }
+                                case "wait_at_end": {
+                                    message = gettext("Waiting for serial port to wake up...");
+                                    break;
+                                }
                                 case "reconnecting": {
                                     message = gettext("Reconnecting to printer...");
                                     break;
