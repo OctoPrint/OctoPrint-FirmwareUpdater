@@ -87,3 +87,10 @@ All advanced settings are optional.
 You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
 <p align="center"><img  alt="Firmware Updater Settings" src="extras/img/post-flash.png"></p>
 The post-flash code will run more or less immediately if the printer was connected before the flash started (so reconnects automatically when the flash finishes), or whenever the printer is manually reconnected after the firmware is flashed.
+
+## Troubleshooting
+Log messages can be found in the OctoPrint log `octoprint.log` and the Firmware Updater's console log `plugin_firmwareupdater_console.log`.  
+
+Both log files can be downloaded from OctoPrint's logging interface, found under 'Logging' in the settings page.
+
+If you have trouble using the plugin please check these logs for any error messages.  If you need help, please include both logs when reporting a problem.
