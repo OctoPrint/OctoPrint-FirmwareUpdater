@@ -479,8 +479,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 								stopbits=serial.STOPBITS_ONE , \
 								bytesize=serial.EIGHTBITS, \
 								timeout=2000)
-			time.sleep(5)
+			time.sleep(1)
 			ser.close()
+			time.sleep(3)
 		except SerialException as ex:
 			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
 			self._send_status("flasherror", message="Board reset failed")
@@ -501,7 +502,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"avrdude_disableverify": None,
 			"avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
 			"bossac_path": None,
-			"bossac_commandline": "{bossac} -i -p {port} -U false -e -w {disableverify} -b {firmware} -R",
+			"bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
 			"bossac_disableverify": None,
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,

@@ -481,7 +481,7 @@ $(function() {
         };
 
         self.resetBossacCommandLine = function() {
-            self.configBossacCommandLine("{bossac} -i -p {port} -U false -e -w {disableverify} -b {firmware} -R");
+            self.configBossacCommandLine("{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R");
         };
 
         self.testAvrdudeConf = function() {
