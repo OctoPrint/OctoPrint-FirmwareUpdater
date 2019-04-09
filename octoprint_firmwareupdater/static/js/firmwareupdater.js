@@ -24,6 +24,7 @@ $(function() {
         self.configAvrdudeProgrammer = ko.observable();
         self.configAvrdudeBaudRate = ko.observable();
         self.configAvrdudeDisableVerification = ko.observable();
+        self.configAvrdudeCommandLine = ko.observable();
         self.avrdudePathBroken = ko.observable(false);
         self.avrdudePathOk = ko.observable(false);
         self.avrdudePathText = ko.observable();
@@ -41,6 +42,7 @@ $(function() {
         // Config settings for bossac
         self.configBossacPath = ko.observable();
         self.configBossacDisableVerification = ko.observable()
+        self.configBossacCommandLine = ko.observable();
 
         self.bossacPathBroken = ko.observable(false);
         self.bossacPathOk = ko.observable(false);
@@ -348,11 +350,12 @@ $(function() {
             if(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify() != 'false') {
                 self.configAvrdudeDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify());
             }
+            self.configAvrdudeCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_commandline());
 
             // Load the bossac settings
             self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
             self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
-
+            self.configBossacCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_commandline());
             self.configurationDialog.modal();
         };
 
@@ -375,8 +378,10 @@ $(function() {
                         avrdude_programmer: self.configAvrdudeProgrammer(),
                         avrdude_baudrate: self.configAvrdudeBaudRate(),
                         avrdude_disableverify: self.configAvrdudeDisableVerification(),
+                        avrdude_commandline: self.configAvrdudeCommandLine(),
                         bossac_path: self.configBossacPath(),
                         bossac_disableverify: self.configBossacDisableVerification(),
+                        bossac_commandline: self.configBossacCommandLine(),
                         postflash_gcode: self.configPostflashGcode(),
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck()
@@ -433,6 +438,10 @@ $(function() {
             }
         };
 
+        self.resetAvrdudeCommandLine = function() {
+            self.configAvrdudeCommandLine("{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i");
+        };
+
         self.testBossacPath = function() {
             var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
 
@@ -469,6 +478,10 @@ $(function() {
                     }
                 })
             }
+        };
+
+        self.resetBossacCommandLine = function() {
+            self.configBossacCommandLine("{bossac} -i -p {port} -U false -e -w {disableverify} -b {firmware} -R");
         };
 
         self.testAvrdudeConf = function() {

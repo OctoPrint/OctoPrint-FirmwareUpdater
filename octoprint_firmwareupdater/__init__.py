@@ -266,19 +266,31 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		working_dir = os.path.dirname(avrdude_path)
 
-		avrdude_command = [avrdude_path, "-v", "-q", "-p", avrdude_avrmcu, "-c", avrdude_programmer, "-P", printer_port, "-D"]
-		if avrdude_conf is not None and avrdude_conf != "":
-			avrdude_command += ["-C", avrdude_conf]
-		if avrdude_baudrate is not None and avrdude_baudrate != "":
-			avrdude_command += ["-b", avrdude_baudrate]
-		if avrdude_disableverify:
-			avrdude_command += ["-V"]
+		avrdude_command = self._settings.get(["avrdude_commandline"])
+		avrdude_command = avrdude_command.replace("{avrdude}", avrdude_path)
+		avrdude_command = avrdude_command.replace("{mcu}", avrdude_avrmcu)
+		avrdude_command = avrdude_command.replace("{programmer}", avrdude_programmer)
+		avrdude_command = avrdude_command.replace("{port}", printer_port)
+		avrdude_command = avrdude_command.replace("{firmware}", firmware)
 
-		avrdude_command += ["-U", "flash:w:" + firmware + ":i"]
+		if avrdude_conf is not None and avrdude_conf != "":
+			avrdude_command = avrdude_command.replace("{conffile}", avrdude_conf)
+		else:
+			avrdude_command = avrdude_command.replace(" -C {conffile} ", " ")
+
+		if avrdude_baudrate is not None and avrdude_baudrate != "":
+			avrdude_command = avrdude_command.replace("{baudrate}", avrdude_baudrate)
+		else:
+			avrdude_command = avrdude_command.replace(" -b {baudrate} ", " ")
+
+		if avrdude_disableverify:
+			avrdude_command = avrdude_command.replace("{disableverify}", "-V")
+		else:
+			avrdude_command = avrdude_command.replace(" {disableverify} ", " ")
 
 		import sarge
-		self._logger.info(u"Running %r in %s" % (' '.join(avrdude_command), working_dir))
-		self._console_logger.info(" ".join(avrdude_command))
+		self._logger.info(u"Running '{}' in {}".format(avrdude_command, working_dir))
+		self._console_logger.info(avrdude_command)
 		try:
 			p = sarge.run(avrdude_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
 			p.wait_events()
@@ -369,10 +381,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		working_dir = os.path.dirname(bossac_path)
 
-		bossac_command = [bossac_path, "-i", "-p", printer_port, "-U", "false", "-e", "-w"]
-		if not bossac_disableverify:
-			bossac_command += ["-v"]
-		bossac_command += ["-b", firmware, "-R"]
+		bossac_command = self._settings.get(["bossac_commandline"])
+		bossac_command = bossac_command.replace("{bossac}", bossac_path)
+		bossac_command = bossac_command.replace("{port}", printer_port)
+		bossac_command = bossac_command.replace("{firmware}", firmware)
+
+		if bossac_disableverify:
+			bossac_command = bossac_command.replace("{disableverify}", "-v")
+		else:
+			bossac_command = bossac_command.replace(" {disableverify} ", " -v ")
 
 		self._logger.info(u"Attempting to reset the board to SAM-BA")
 		if not self._reset_1200(printer_port):
@@ -380,8 +397,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			return False
 
 		import sarge
-		self._logger.info(u"Running %r in %s" % (' '.join(bossac_command), working_dir))
-		self._console_logger.info(" ".join(bossac_command))
+		self._logger.info(u"Running '{}' in {}".format(bossac_command, working_dir))
+		self._console_logger.info(bossac_command)
 		try:
 			p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
 			p.wait_events()
@@ -482,7 +499,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"avrdude_programmer": None,
 			"avrdude_baudrate": None,
 			"avrdude_disableverify": None,
+			"avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
 			"bossac_path": None,
+			"bossac_commandline": "{bossac} -i -p {port} -U false -e -w {disableverify} -b {firmware} -R",
 			"bossac_disableverify": None,
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,

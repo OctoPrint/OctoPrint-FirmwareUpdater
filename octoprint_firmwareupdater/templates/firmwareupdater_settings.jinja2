@@ -161,6 +161,8 @@
                     <label data-bind="click: toggleAdvancedConfig" >
                             <i class="icon-chevron-down icon-fixed-width"></i>Advanced Settings
                     </label>
+
+                    <!-- Advanced avrdude options-->
                     <div data-bind="visible: showAvrdudeConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('avrdude Baud Rate') }}</label>
@@ -196,7 +198,20 @@
                                 <span class="help-block">{{ _('If checked the avrdude verification phase will be skipped.') }}</span>
                             </div>
                         </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Command line') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="text" class="input-block-level" data-bind="value: configAvrdudeCommandLine">
+                                    <button class="btn" type="button" data-bind="click: resetAvrdudeCommandLine">{{ _('Reset') }}</button>
+                                </div>
+                                <span class="help-block">{{ _('Customize the avrdude command line.') }}</span>
+                            </div>
+                        </div>
                     </div>
+                    <!-- End advanced avrdude options -->
+
+                    <!-- Advanced bossac options -->
                     <div data-bind="visible: showBossacConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('Disable write verification') }}</label>
@@ -207,7 +222,19 @@
                                 <span class="help-block">{{ _('If checked the bossac verification phase will be skipped.') }}</span>
                             </div>
                         </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Command line') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="text" class="input-block-level" data-bind="value: configBossacCommandLine">
+                                    <button class="btn" type="button" data-bind="click: resetBossacCommandLine">{{ _('Reset') }}</button>
+                                </div>
+                                <span class="help-block">{{ _('Customize the bossac command line.') }}</span>
+                            </div>
+                        </div>
                     </div>
+                    <!-- End advanced bossac options-->
+
                     <div class="control-group">
                         <label class="control-label">{{ _('Disable bootloader warning') }}</label>
                         <div class="controls">
@@ -219,6 +246,7 @@
                     </div>
                     <hr>
                 </div>
+                <!-- End advanced options-->
 
                 <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig())">
                     <label data-bind="click: togglePostflashConfig" >
