@@ -13,6 +13,8 @@ $(function() {
         self.showAvrdudeConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
+        self.configEnablePostflashDelay = ko.observable();
+        self.configPostflashDelay = ko.observable();
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
         self.configDisableBootloaderCheck = ko.observable();
@@ -24,6 +26,7 @@ $(function() {
         self.configAvrdudeProgrammer = ko.observable();
         self.configAvrdudeBaudRate = ko.observable();
         self.configAvrdudeDisableVerification = ko.observable();
+        self.configAvrdudeCommandLine = ko.observable();
         self.avrdudePathBroken = ko.observable(false);
         self.avrdudePathOk = ko.observable(false);
         self.avrdudePathText = ko.observable();
@@ -41,6 +44,7 @@ $(function() {
         // Config settings for bossac
         self.configBossacPath = ko.observable();
         self.configBossacDisableVerification = ko.observable()
+        self.configBossacCommandLine = ko.observable();
 
         self.bossacPathBroken = ko.observable(false);
         self.bossacPathOk = ko.observable(false);
@@ -306,6 +310,10 @@ $(function() {
                                     message = gettext("Verifying memory...");
                                     break;
                                 }
+                                case "postflashdelay": {
+                                    message = gettext("Post-flash delay...");
+                                    break;
+                                }
                                 case "reconnecting": {
                                     message = gettext("Reconnecting to printer...");
                                     break;
@@ -330,6 +338,10 @@ $(function() {
 
         self.showPluginConfig = function() {
             // Load the general settings
+            self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay() != 'false') {
+                self.configEnablePostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay());
+            }
             self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
@@ -348,11 +360,12 @@ $(function() {
             if(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify() != 'false') {
                 self.configAvrdudeDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify());
             }
+            self.configAvrdudeCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_commandline());
 
             // Load the bossac settings
             self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
             self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
-
+            self.configBossacCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_commandline());
             self.configurationDialog.modal();
         };
 
@@ -375,9 +388,13 @@ $(function() {
                         avrdude_programmer: self.configAvrdudeProgrammer(),
                         avrdude_baudrate: self.configAvrdudeBaudRate(),
                         avrdude_disableverify: self.configAvrdudeDisableVerification(),
+                        avrdude_commandline: self.configAvrdudeCommandLine(),
                         bossac_path: self.configBossacPath(),
                         bossac_disableverify: self.configBossacDisableVerification(),
+                        bossac_commandline: self.configBossacCommandLine(),
+                        postflash_delay: self.configPostflashDelay(),
                         postflash_gcode: self.configPostflashGcode(),
+                        enable_postflash_delay: self.configEnablePostflashDelay(),
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck()
                     }
@@ -433,6 +450,10 @@ $(function() {
             }
         };
 
+        self.resetAvrdudeCommandLine = function() {
+            self.configAvrdudeCommandLine("{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i");
+        };
+
         self.testBossacPath = function() {
             var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
 
@@ -469,6 +490,10 @@ $(function() {
                     }
                 })
             }
+        };
+
+        self.resetBossacCommandLine = function() {
+            self.configBossacCommandLine("{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R");
         };
 
         self.testAvrdudeConf = function() {
