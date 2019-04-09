@@ -13,6 +13,8 @@ $(function() {
         self.showAvrdudeConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
+        self.configEnablePostflashDelay = ko.observable();
+        self.configPostflashDelay = ko.observable();
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
         self.configDisableBootloaderCheck = ko.observable();
@@ -308,6 +310,10 @@ $(function() {
                                     message = gettext("Verifying memory...");
                                     break;
                                 }
+                                case "postflashdelay": {
+                                    message = gettext("Post-flash delay...");
+                                    break;
+                                }
                                 case "reconnecting": {
                                     message = gettext("Reconnecting to printer...");
                                     break;
@@ -332,6 +338,10 @@ $(function() {
 
         self.showPluginConfig = function() {
             // Load the general settings
+            self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay() != 'false') {
+                self.configEnablePostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay());
+            }
             self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
@@ -382,7 +392,9 @@ $(function() {
                         bossac_path: self.configBossacPath(),
                         bossac_disableverify: self.configBossacDisableVerification(),
                         bossac_commandline: self.configBossacCommandLine(),
+                        postflash_delay: self.configPostflashDelay(),
                         postflash_gcode: self.configPostflashGcode(),
+                        enable_postflash_delay: self.configEnablePostflashDelay(),
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck()
                     }

@@ -218,6 +218,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 			try:
 				if flash_callable(firmware=firmware, printer_port=printer_port):
+
+					postflash_delay = self._settings.get(["postflash_delay"])
+					if float(postflash_delay) > 0 and self._settings.get(["enable_postflash_delay"]):
+						self._logger.info("Post-flash delay: {}s".format(postflash_delay))
+						self._send_status("progress", subtype="postflashdelay")
+						time.sleep(float(postflash_delay))
+
 					message = u"Flashing successful."
 					self._logger.info(message)
 					self._console_logger.info(message)
@@ -504,8 +511,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"bossac_path": None,
 			"bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
 			"bossac_disableverify": None,
+			"postflash_delay": "0",
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,
+			"enable_postflash_delay": None,
 			"enable_postflash_gcode": None,
 			"disable_bootloadercheck": None
 		}

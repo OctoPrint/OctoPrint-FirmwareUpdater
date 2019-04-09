@@ -258,6 +258,25 @@
                             <i class="icon-chevron-down icon-fixed-width"></i>Post-flash Settings
                     </label>
                     <div class="control-group">
+                        <label class="control-label">{{ _('Enable post-flash delay') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configEnablePostflashDelay">
+                            </div>
+                            <span class="help-block">{{ _('If enabled, the firmware update routine will include a post-flashing delay of the specified number of seconds.') }}</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Post-flash delay') }}</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input type="number" class="input-mini text-right" step=any min="0" max="180" data-bind="value: configPostflashDelay, enable: configEnablePostflashDelay">
+                                <span class="add-on">s</span>
+                            </div>
+                            <span class="help-block">{{ _('Number of seconds to delay for in order to allow the controller to boot following flashing.') }}</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
                         <label class="control-label">{{ _('Enable post-flash gcode') }}</label>
                         <div class="controls">
                             <div class="input">
