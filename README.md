@@ -76,7 +76,7 @@ Typical MCU/programmer combinations are:
 The only required setting is the path to the bossac binary.
 
 ### Customizing the Command Lines
-The command lines for avrdude and bossac can be customized by editing the string in the advance settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
+The command lines for avrdude and bossac can be customized by editing the string in the advanced settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
 
 | String | Description|
 | --- | --- |
