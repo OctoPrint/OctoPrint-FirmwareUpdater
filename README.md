@@ -76,9 +76,12 @@ Typical MCU/programmer combinations are:
 The only required setting is the path to the bossac binary.
 
 ### Post-flash Settings
-You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
 <p align="center"><img  alt="Firmware Updater Settings" src="extras/img/post-flash-config.png"></p>
+Post-flash delay can be used to insert a delay of up to 180s after the firmware has been uploaded, before OctoPrint will try to reconnect to the printer.  This can be useful if the board takes some time to restart.  A delay of 20-30s is usually enough.
+
+You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
 The post-flash code will run more or less immediately if the printer was connected before the flash started (so reconnects automatically when the flash finishes), or whenever the printer is manually reconnected after the firmware is flashed.
+
 
 ## Flashing
 Once the plugin is configured, flashing firmware is a simple operation:
