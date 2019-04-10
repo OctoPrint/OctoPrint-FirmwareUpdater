@@ -2,7 +2,7 @@
 
 This plugin can be used to flash pre-compiled firmware images to your printer from a file or URL.
 
-<p align="center"><img  alt="Firmware Updater" src="extras/img/updater.png"></p>
+<p align="center"><img  alt="Firmware Updater" src="extras/img/firmware-updater.png"></p>
 
 Works with boards with Atmel AVR family 8-bit MCUs (Atmega1280, Atmega1284p, and Atmega2560) MCUs, and Atmel SAM family 32-bit MCUs (Arduino DUE).
 
@@ -56,7 +56,7 @@ sudo cp ~/BOSSA-1.7.0/bin/bossac /usr/local/bin/
 In order to be able to flash firmware we need to select and configure a flash method.  Once the flash method is selected additional options will be available.
 
 ### AVRDUDE Configuration
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/avrdude-settings.png"></p>
+<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/avrdude-config.png"></p>
 
 The minimum settings are:
 * Path to avrdude
@@ -71,22 +71,21 @@ Typical MCU/programmer combinations are:
 | Atmega2560 | wiring | RAMPS, RAMbo, etc. |
 | Atmega644p | arduino | Sanguinololu, Melzi |
 
-#### Avrdude Advanced Settings
-All advanced settings are optional.
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/avrdude-adv.png"></p>
-
 ### BOSSAC Configuration
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/bossac-settings.png"></p>
+<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/bossac-config.png"></p>
 The only required setting is the path to the bossac binary.
-
-#### BOSSAC Advanced Settings
-All advanced settings are optional.
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/bossac-adv.png"></p>
 
 ### Post-flash Settings
 You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/post-flash.png"></p>
+<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/post-flash-config.png"></p>
 The post-flash code will run more or less immediately if the printer was connected before the flash started (so reconnects automatically when the flash finishes), or whenever the printer is manually reconnected after the firmware is flashed.
+
+## Flashing
+Once the plugin is configured, flashing firmware is a simple operation:
+1. Select the COM port to communicate with the board
+1. Select a firmware file, either located on the filesystem or via a URL
+1. Click the appropriate **Flash from** button
+1. Wait for the firmware update to complete
 
 ## Troubleshooting
 Log messages can be found in the OctoPrint log `octoprint.log` and the Firmware Updater's console log `plugin_firmwareupdater_console.log`.  
