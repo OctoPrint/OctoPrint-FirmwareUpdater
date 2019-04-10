@@ -513,9 +513,10 @@ $(function() {
         };
 
         self.testAvrdudePath = function() {
-            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+            var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");
+            var filePathRegEx_Windows = new RegExp("^[A-z]\:\\\\.+.exe$");
 
-            if (!filePathRegEx.test(self.configAvrdudePath())) {
+            if ( !filePathRegEx_Linux.test(self.configAvrdudePath()) && !filePathRegEx_Windows.test(self.configAvrdudePath()) ) {
                 self.avrdudePathText(gettext("The path is not valid"));
                 self.avrdudePathOk(false);
                 self.avrdudePathBroken(true);
@@ -555,9 +556,10 @@ $(function() {
         };
 
         self.testBossacPath = function() {
-            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+            var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");
+            var filePathRegEx_Windows = new RegExp("^[A-z]\:\\\\.+.exe$");
 
-            if (!filePathRegEx.test(self.configBossacPath())) {
+            if ( !filePathRegEx_Linux.test(self.configBossacPath()) && !filePathRegEx_Windows.test(self.configBossacPath()) ) {
                 self.bossacPathText(gettext("The path is not valid"));
                 self.bossacPathOk(false);
                 self.bossacPathBroken(true);
