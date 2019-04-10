@@ -331,6 +331,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		import sarge
 		self._logger.info(u"Running '{}' in {}".format(avrdude_command, working_dir))
+		self._console_logger.info(u"")
 		self._console_logger.info(avrdude_command)
 		try:
 			p = sarge.run(avrdude_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
@@ -439,6 +440,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		import sarge
 		self._logger.info(u"Running '{}' in {}".format(bossac_command, working_dir))
+		self._console_logger.info(u"")
 		self._console_logger.info(bossac_command)
 		try:
 			p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
@@ -449,7 +451,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				if not output:
 					p.commands[0].poll()
 					continue
-
+				
 				for line in output.split("\n"):
 					if line.endswith("\r"):
 						line = line[:-1]
@@ -464,11 +466,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					elif self.BOSSAC_VERIFYING in line:
 						self._logger.info(u"Verifying memory...")
 						self._send_status("progress", subtype="verifying")
-					elif self.AVRDUDE_TIMEOUT in line:
-						p.close()
-						raise FlashException("Timeout communicating with programmer")
-					elif self.BOSSAC_NODEVICE in line:
-						raise FlashException("No device found")
 					elif self.AVRDUDE_ERROR_VERIFICATION in line:
 						raise FlashException("Error verifying flash")
 					elif self.AVRDUDE_ERROR in line:
@@ -477,6 +474,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			if p.returncode == 0:
 				return True
 			else:
+				output = p.stderr.read(timeout=0.5)
+				for line in output.split("\n"):
+					if line.endswith("\r"):
+						line = line[:-1]
+					self._console_logger.info(u"> {}".format(line))
+
+					if self.BOSSAC_NODEVICE in line:
+						raise FlashException(line)
+
 				raise FlashException("bossac returned code {returncode}".format(returncode=p.returncode))
 
 		except FlashException as ex:
