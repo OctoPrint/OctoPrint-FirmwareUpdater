@@ -12,6 +12,7 @@ $(function() {
         self.showAdvancedConfig = ko.observable(false);
         self.showAvrdudeConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
+        self.showLpc1768Config = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
@@ -53,6 +54,16 @@ $(function() {
             return self.bossacPathBroken() || self.bossacPathOk();
         });
 
+        // Config settings for lpc1768
+        self.configLpc1768Path = ko.observable();
+
+        self.lpc1768PathBroken = ko.observable(false);
+        self.lpc1768PathOk = ko.observable(false);
+        self.lpc1768PathText = ko.observable();
+        self.lpc1768PathHelpVisible = ko.computed(function() {
+            return self.lpc1768PathBroken() || self.lpc1768PathOk();
+        });
+
         self.flashPort = ko.observable(undefined);
 
         self.firmwareFileName = ko.observable(undefined);
@@ -87,14 +98,21 @@ $(function() {
 
         self.configFlashMethod.subscribe(function(value) {
             if(value == 'avrdude') {
-                self.showBossacConfig(false);
                 self.showAvrdudeConfig(true);
-            } else if(value == 'bossac') {
-                self.showBossacConfig(true);
-                self.showAvrdudeConfig(false);
-            } else {
                 self.showBossacConfig(false);
+                self.showLpc1768Config(false);
+            } else if(value == 'bossac') {
                 self.showAvrdudeConfig(false);
+                self.showBossacConfig(true);
+                self.showLpc1768Config(false);
+            } else if(value == 'lpc1768'){
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(true);
+            } else {
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(false);
             }
          });
 
@@ -154,6 +172,10 @@ $(function() {
 
             if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "bossac" && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
                 alert = gettext("The bossac path is not configured.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "lpc1768" && !self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path()) {
+                alert = gettext("The lpc1768 firmware folder path is not configured.");
             }
 
             if (!self.flashPort()) {
@@ -314,6 +336,10 @@ $(function() {
                                     message = gettext("Post-flash delay...");
                                     break;
                                 }
+                                    case "boardreset": {
+                                        message = gettext("Resetting the board...");
+                                        break;
+                                }
                                 case "reconnecting": {
                                     message = gettext("Reconnecting to printer...");
                                     break;
@@ -338,15 +364,18 @@ $(function() {
 
         self.showPluginConfig = function() {
             // Load the general settings
+            self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
             self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
+            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay() != 'false') {
                 self.configEnablePostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay());
             }
-            self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
+            
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
             }
-            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            
             if(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck() != 'false') {
                 self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
             }
@@ -366,6 +395,10 @@ $(function() {
             self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
             self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
             self.configBossacCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_commandline());
+            
+            // Load the lpc1768 settings
+            self.configLpc1768Path(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path());
+            
             self.configurationDialog.modal();
         };
 
@@ -392,6 +425,7 @@ $(function() {
                         bossac_path: self.configBossacPath(),
                         bossac_disableverify: self.configBossacDisableVerification(),
                         bossac_commandline: self.configBossacCommandLine(),
+                        lpc1768_path: self.configLpc1768Path(),
                         postflash_delay: self.configPostflashDelay(),
                         postflash_gcode: self.configPostflashGcode(),
                         enable_postflash_delay: self.configEnablePostflashDelay(),
@@ -522,6 +556,37 @@ $(function() {
                     }
                     self.avrdudeConfPathOk(response.result);
                     self.avrdudeConfPathBroken(!response.result);
+                }
+            })
+        };
+
+        self.testLpc1768Path = function() {
+            $.ajax({
+                url: API_BASEURL + "util/test",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    command: "path",
+                    path: self.configLpc1768Path(),
+                    check_type: "path",
+                    check_access: ["r", "w"],
+                    check_writable_dir: "true"
+                }),
+                contentType: "application/json; charset=UTF-8",
+                success: function(response) {
+                    if (!response.result) {
+                        if (!response.exists) {
+                            self.lpc1768PathText(gettext("The path doesn't exist"));
+                        } else if (!response.typeok) {
+                            self.lpc1768PathText(gettext("The path is not a folder"));
+                        } else if (!response.access) {
+                            self.lpc1768PathText(gettext("The path is not writeable"));
+                        }
+                    } else {
+                        self.lpc1768PathText(gettext("The path is valid"));
+                    }
+                    self.lpc1768PathOk(response.result);
+                    self.lpc1768PathBroken(!response.result);
                 }
             })
         };
