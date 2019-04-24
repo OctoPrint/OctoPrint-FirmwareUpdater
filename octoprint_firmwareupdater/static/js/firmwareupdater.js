@@ -320,6 +320,10 @@ $(function() {
                                     message = gettext("Starting flash...");
                                     break;
                                 }
+                                case "waitforsd": {
+                                    message = gettext("Waiting for SD card to mount on host...");
+                                    break;
+                                }
                                 case "writing": {
                                     message = gettext("Writing memory...");
                                     break;
@@ -336,7 +340,7 @@ $(function() {
                                     message = gettext("Post-flash delay...");
                                     break;
                                 }
-                                    case "boardreset": {
+                                case "boardreset": {
                                         message = gettext("Resetting the board...");
                                         break;
                                 }
