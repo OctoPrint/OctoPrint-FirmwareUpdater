@@ -19,6 +19,10 @@ $(function() {
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
         self.configDisableBootloaderCheck = ko.observable();
+        self.configEnablePreflashCommandline = ko.observable();
+        self.configPreflashCommandline = ko.observable();
+        self.configEnablePostflashCommandline = ko.observable();
+        self.configPostflashCommandline = ko.observable();
 
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
@@ -369,8 +373,18 @@ $(function() {
         self.showPluginConfig = function() {
             // Load the general settings
             self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
+            self.configPreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_commandline());
+            self.configPostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_commandline());
             self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
             self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline() != 'false') {
+                self.configEnablePreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline());
+            }
+
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_commandline() != 'false') {
+                self.configEnablePostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_commandline());
+            }
 
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay() != 'false') {
                 self.configEnablePostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay());
@@ -430,6 +444,10 @@ $(function() {
                         bossac_disableverify: self.configBossacDisableVerification(),
                         bossac_commandline: self.configBossacCommandLine(),
                         lpc1768_path: self.configLpc1768Path(),
+                        enable_preflash_commandline: self.configEnablePreflashCommandline(),
+                        preflash_commandline: self.configPreflashCommandline(),
+                        enable_postflash_commandline: self.configEnablePostflashCommandline(),
+                        postflash_commandline: self.configPostflashCommandline(),
                         postflash_delay: self.configPostflashDelay(),
                         postflash_gcode: self.configPostflashGcode(),
                         enable_postflash_delay: self.configEnablePostflashDelay(),

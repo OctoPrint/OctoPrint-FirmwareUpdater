@@ -194,6 +194,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return True
 
 	def _flash_worker(self, method, firmware, printer_port):
+		# Run pre-flash commandline here
+		preflash_command = self._settings.get(["preflash_commandline"])
+		if preflash_command is not None and self._settings.get_boolean(["enable_preflash_commandline"]):
+			self._logger.info("Executing pre-flash commandline '{}'".format(preflash_command))
+			try:
+				r = os.system(preflash_command)
+			except:
+				e = sys.exc_info()[0]
+				self._logger.error("Error executing pre-flash commandline '{}'".format(preflash_command))
+			
+			self._logger.info("Pre-flash command '{}' returned: {}".format(preflash_command, r))
+
 		try:
 			self._logger.info("Firmware update started")
 
@@ -230,6 +242,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					self._logger.info(message)
 					self._console_logger.info(message)
 					self._send_status("success")
+
+					# Run post-flash commandline here
+					postflash_command = self._settings.get(["postflash_commandline"])
+					if postflash_command is not None and self._settings.get_boolean(["enable_postflash_commandline"]):
+						self._logger.info("Executing post-flash commandline '{}'".format(postflash_command))
+						try:
+							r = os.system(postflash_command)
+						except:
+							e = sys.exc_info()[0]
+							self._logger.error("Error executing post-flash commandline '{}'".format(postflash_command))
+						
+						self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
 
 					postflash_gcode = self._settings.get(["postflash_gcode"])
 					if postflash_gcode is not None and self._settings.get_boolean(["enable_postflash_gcode"]):
@@ -718,6 +742,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"postflash_delay": "0",
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,
+			"preflash_commandline": None,
+			"postflash_commandline": None,
+			"enable_preflash_commandline": None,
+			"enable_postflash_commandline": None,
 			"enable_postflash_delay": None,
 			"enable_postflash_gcode": None,
 			"disable_bootloadercheck": None
