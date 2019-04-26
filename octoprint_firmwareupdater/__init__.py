@@ -508,15 +508,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		lpc1768_path = self._settings.get(["lpc1768_path"])
 		working_dir = os.path.dirname(lpc1768_path)
 
-		# reset the board before we try to flash it - should ensure that it's mounted by usbmount
-		self._send_status("progress", subtype="boardreset")
-		self._logger.info(u"Pre-flash reset: attempting to reset the board")
-		if not self._reset_lpc1768(printer_port):
-			self._logger.error(u"Reset failed")
-			return False
-
-		# Short wait before we try to relese the SD card
-		#time.sleep(3)
+		if self._settings.get_boolean(["lpc1768_preflashreset"]):
+			self._send_status("progress", subtype="boardreset")
+			self._logger.info(u"Pre-flash reset: attempting to reset the board")
+			if not self._reset_lpc1768(printer_port):
+				self._logger.error(u"Reset failed")
+				return False
 
 		# Release the SD card
 		if not self._unmount_sd(printer_port):
@@ -528,6 +525,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		timeout = 60
 		interval = 1
 		sdstarttime = time.time()
+		self._logger.info(u"Waiting for SD card to be avaialble at '{}'".format(lpc1768_path))
 		self._send_status("progress", subtype="waitforsd")
 		while (time.time() < (sdstarttime + timeout) and not os.access(lpc1768_path, os.W_OK)):
 			self._logger.debug(u"Waiting for firmware folder path to become available [{}/{}]".format(count, int(timeout / interval)))
@@ -739,6 +737,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
 			"bossac_disableverify": None,
 			"lpc1768_path": None,
+			"lpc1768_preflashreset": True,
 			"postflash_delay": "0",
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,

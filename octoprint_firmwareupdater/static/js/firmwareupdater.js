@@ -60,6 +60,7 @@ $(function() {
 
         // Config settings for lpc1768
         self.configLpc1768Path = ko.observable();
+        self.configLpc1768ResetBeforeFlash = ko.observable();
 
         self.lpc1768PathBroken = ko.observable(false);
         self.lpc1768PathOk = ko.observable(false);
@@ -416,7 +417,9 @@ $(function() {
             
             // Load the lpc1768 settings
             self.configLpc1768Path(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path());
-            
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
+                self.configLpc1768ResetBeforeFlash(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset());
+            }
             self.configurationDialog.modal();
         };
 
@@ -444,6 +447,7 @@ $(function() {
                         bossac_disableverify: self.configBossacDisableVerification(),
                         bossac_commandline: self.configBossacCommandLine(),
                         lpc1768_path: self.configLpc1768Path(),
+                        lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
                         enable_preflash_commandline: self.configEnablePreflashCommandline(),
                         preflash_commandline: self.configPreflashCommandline(),
                         enable_postflash_commandline: self.configEnablePostflashCommandline(),

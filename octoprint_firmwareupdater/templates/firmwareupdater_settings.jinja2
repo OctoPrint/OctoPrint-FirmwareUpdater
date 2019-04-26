@@ -225,6 +225,15 @@
                                 <span class="help-block">{{ _('Customize the avrdude command line.') }}</span>
                             </div>
                         </div>
+                        <div class="control-group">
+                        <label class="control-label">{{ _('Disable bootloader warning') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
+                            </div>
+                            <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
+                        </div>
+                    </div>
                     </div>
                     <!-- End advanced avrdude options -->
 
@@ -252,15 +261,21 @@
                     </div>
                     <!-- End advanced bossac options-->
 
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Disable bootloader warning') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
+                    <!-- Advanced lpc1768 options -->
+                    <div data-bind="visible: showLpc1768Config">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Reset before flashing') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configLpc1768ResetBeforeFlash">
+                                </div>
+                                <span class="help-block">{{ _('If checked the board will be reset before a firmware update is attempted. Helps to ensure that the SD card is properly mounted.') }}</span>
                             </div>
-                            <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
                         </div>
                     </div>
+                    <!-- Advanced lpc1768 options -->
+
+                    <!-- End advanced bossac options-->
                     <hr>
                 </div>
                 <!-- End advanced options-->
