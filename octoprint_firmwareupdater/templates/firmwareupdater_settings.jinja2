@@ -88,6 +88,7 @@
                             <option></option>
                             <option value=avrdude>avrdude (Atmel AVR Family)</option>
                             <option value=bossac>bossac (Atmel SAM Family)</option>
+                            <option value=lpc1768>lpc1768 (LPC1768-based Boards)</option>
                         </select>
                     </div>
                 </div>
@@ -150,9 +151,25 @@
                 </div>
                 <!-- end bossac options -->
 
+                <!-- lpc1768 options for LPC1768 MCUs -->
+                <div data-bind="visible: showLpc1768Config">
+                    <div class="control-group" data-bind="css: {error: lpc1768PathBroken, success: lpc1768PathOk}">
+                        <label class="control-label">{{ _('Path to firmware folder') }}</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input type="text" class="input-block-level" data-bind='value: configLpc1768Path, valueUpdate: "afterkeydown"'>
+                                <button class="btn" type="button" data-bind="click: testLpc1768Path, enable: configLpc1768Path, css: {disabled: !configLpc1768Path()}">{{ _('Test') }}</button>
+                            </div>
+                            <span class="help-block" data-bind="visible: lpc1768PathBroken() || lpc1768PathOk, text: lpc1768PathText"></span>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <!-- end lpc1768 options -->
+
                 <!-- advanced options -->
 
-                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig())">
+                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config())">
                     <label data-bind="click: toggleAdvancedConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Advanced Settings
                     </label>
@@ -208,6 +225,15 @@
                                 <span class="help-block">{{ _('Customize the avrdude command line.') }}</span>
                             </div>
                         </div>
+                        <div class="control-group">
+                        <label class="control-label">{{ _('Disable bootloader warning') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
+                            </div>
+                            <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
+                        </div>
+                    </div>
                     </div>
                     <!-- End advanced avrdude options -->
 
@@ -235,66 +261,97 @@
                     </div>
                     <!-- End advanced bossac options-->
 
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Disable bootloader warning') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
+                    <!-- Advanced lpc1768 options -->
+                    <div data-bind="visible: showLpc1768Config">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Reset before flashing') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configLpc1768ResetBeforeFlash">
+                                </div>
+                                <span class="help-block">{{ _('If checked the board will be reset before a firmware update is attempted. Helps to ensure that the SD card is properly mounted.') }}</span>
                             </div>
-                            <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
                         </div>
                     </div>
+                    <!-- Advanced lpc1768 options -->
+
+                    <!-- End advanced bossac options-->
                     <hr>
                 </div>
                 <!-- End advanced options-->
 
-                <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig())">
+                <!-- Pre-flash and post-flash settings -->
+                <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config())">
                     <label data-bind="click: togglePostflashConfig" >
-                        <i class="icon-chevron-right icon-fixed-width"></i>Post-flash Settings
+                        <i class="icon-chevron-right icon-fixed-width"></i>Pre-Flash and Post-Flash Settings
                     </label>
                 </div>
                 <div data-bind="visible: showPostflashConfig">
                     <label data-bind="click: togglePostflashConfig" >
-                            <i class="icon-chevron-down icon-fixed-width"></i>Post-flash Settings
+                            <i class="icon-chevron-down icon-fixed-width"></i>Pre-Flash and Post-Flash Settings
                     </label>
+                    <!-- Pre-flash commandline -->
                     <div class="control-group">
-                        <label class="control-label">{{ _('Enable post-flash delay') }}</label>
+                        <label class="control-label">{{ _('Pre-flash command') }}</label>
                         <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: configEnablePreflashCommandline"> Enabled
+                            </label>
                             <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configEnablePostflashDelay">
+                                <input type="text" class="input-block-level" data-bind="value: configPreflashCommandline, enable: configEnablePreflashCommandline">
                             </div>
-                            <span class="help-block">{{ _('If enabled, the firmware update routine will include a post-flashing delay of the specified number of seconds.') }}</span>
+                            <span class="help-block">{{ _('System command line to execute before flashing.') }}</span>
                         </div>
                     </div>
+                    <!-- End pre-flash commandline -->
+                    
+                    <!-- Post-flash commandline -->
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Post-flash command') }}</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: configEnablePostflashCommandline"> Enabled
+                            </label>
+                            <div class="input">
+                                <input type="text" class="input-block-level" data-bind="value: configPostflashCommandline, enable: configEnablePostflashCommandline">
+                            </div>
+                            <span class="help-block">{{ _('System command line to execute after flashing.') }}</span>
+                        </div>
+                    </div>
+                    <!-- End post-flash commandline -->
+
+                    <!-- Post-flash delay -->
                     <div class="control-group">
                         <label class="control-label">{{ _('Post-flash delay') }}</label>
                         <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: configEnablePostflashDelay"> Enabled
+                            </label>
                             <div class="input-append">
                                 <input type="number" class="input-mini text-right" step=any min="0" max="180" data-bind="value: configPostflashDelay, enable: configEnablePostflashDelay">
-                                <span class="add-on">s</span>
+                                <span class="add-on">seconds</span>
                             </div>
-                            <span class="help-block">{{ _('Number of seconds to delay for in order to allow the controller to boot following flashing.') }}</span>
+                            <span class="help-block">{{ _('Give the board time to boot before allowing OctoPrint to reconnect.') }}</span>
                         </div>
                     </div>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Enable post-flash gcode') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configEnablePostflashGcode">
-                            </div>
-                            <span class="help-block">{{ _('If enabled, any gcode commands set below will be run the first time the printer connects after a firmware flash.') }}</span>
-                        </div>
-                    </div>
+                    <!-- End post-flash delay -->
+
+                    <!-- Post-flash gcode -->
                     <div class="control-group">
                         <label class="control-label">{{ _('Post-flash gcode') }}</label>
                         <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: configEnablePostflashGcode"> Enabled
+                            </label>
                             <div class="input">
                                 <input type="text" class="input-block-level" data-bind="value: configPostflashGcode, enable: configEnablePostflashGcode">
                             </div>
-                            <span class="help-block">{{ _('Gcode commands which will be run when the printer reconnects after firmware is flashed.  Separate multi commands with a semi colon.') }}</span>
+                            <span class="help-block">{{ _('Gcode commands which will be run when the printer reconnects after firmware is flashed. Separate multiple commands with a semi colon.') }}</span>
                         </div>
                     </div>
+                    <!-- End post-flash gcode -->
                 </div>
+                <!-- End pre-flash and post-flash settings -->
             </form>
         </div>
         <div class="modal-footer">

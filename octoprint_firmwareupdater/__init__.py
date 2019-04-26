@@ -11,6 +11,7 @@ import threading
 import time
 import re
 import serial
+import shutil
 from serial import SerialException
 
 import octoprint.plugin
@@ -49,8 +50,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def initialize(self):
 		# TODO: make method configurable via new plugin hook "octoprint.plugin.firmwareupdater.flash_methods",
 		# also include prechecks
-		self._flash_prechecks = dict(avrdude=self._check_avrdude, bossac=self._check_bossac)
-		self._flash_methods = dict(avrdude=self._flash_avrdude, bossac=self._flash_bossac)
+		self._flash_prechecks = dict(avrdude=self._check_avrdude, bossac=self._check_bossac, lpc1768=self._check_lpc1768)
+		self._flash_methods = dict(avrdude=self._flash_avrdude, bossac=self._flash_bossac, lpc1768=self._flash_lpc1768)
 
 		console_logging_handler = logging.handlers.RotatingFileHandler(self._settings.get_plugin_logfile_path(postfix="console"), maxBytes=2*1024*1024)
 		console_logging_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
@@ -193,6 +194,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		return True
 
 	def _flash_worker(self, method, firmware, printer_port):
+		# Run pre-flash commandline here
+		preflash_command = self._settings.get(["preflash_commandline"])
+		if preflash_command is not None and self._settings.get_boolean(["enable_preflash_commandline"]):
+			self._logger.info("Executing pre-flash commandline '{}'".format(preflash_command))
+			try:
+				r = os.system(preflash_command)
+			except:
+				e = sys.exc_info()[0]
+				self._logger.error("Error executing pre-flash commandline '{}'".format(preflash_command))
+			
+			self._logger.info("Pre-flash command '{}' returned: {}".format(preflash_command, r))
+
 		try:
 			self._logger.info("Firmware update started")
 
@@ -229,6 +242,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 					self._logger.info(message)
 					self._console_logger.info(message)
 					self._send_status("success")
+
+					# Run post-flash commandline here
+					postflash_command = self._settings.get(["postflash_commandline"])
+					if postflash_command is not None and self._settings.get_boolean(["enable_postflash_commandline"]):
+						self._logger.info("Executing post-flash commandline '{}'".format(postflash_command))
+						try:
+							r = os.system(postflash_command)
+						except:
+							e = sys.exc_info()[0]
+							self._logger.error("Error executing post-flash commandline '{}'".format(postflash_command))
+						
+						self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
 
 					postflash_gcode = self._settings.get(["postflash_gcode"])
 					if postflash_gcode is not None and self._settings.get_boolean(["enable_postflash_gcode"]):
@@ -476,6 +501,82 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		else:
 			return True
 
+	def _flash_lpc1768(self, firmware=None, printer_port=None):
+		assert(firmware is not None)
+		assert(printer_port is not None)
+
+		lpc1768_path = self._settings.get(["lpc1768_path"])
+		working_dir = os.path.dirname(lpc1768_path)
+
+		if self._settings.get_boolean(["lpc1768_preflashreset"]):
+			self._send_status("progress", subtype="boardreset")
+			self._logger.info(u"Pre-flash reset: attempting to reset the board")
+			if not self._reset_lpc1768(printer_port):
+				self._logger.error(u"Reset failed")
+				return False
+
+		# Release the SD card
+		if not self._unmount_sd(printer_port):
+			self._send_status("flasherror", message="Unable to unmount SD card")
+			return False	
+
+		# loop until the mount is available; timeout after 60s
+		count = 1
+		timeout = 60
+		interval = 1
+		sdstarttime = time.time()
+		self._logger.info(u"Waiting for SD card to be avaialble at '{}'".format(lpc1768_path))
+		self._send_status("progress", subtype="waitforsd")
+		while (time.time() < (sdstarttime + timeout) and not os.access(lpc1768_path, os.W_OK)):
+			self._logger.debug(u"Waiting for firmware folder path to become available [{}/{}]".format(count, int(timeout / interval)))
+			count = count + 1
+			time.sleep(interval)
+		
+		if not os.access(lpc1768_path, os.W_OK):
+			self._send_status("flasherror", message="Unable to access firmware folder")
+			self._logger.error(u"Firmware folder path is not writeable: {path}".format(path=lpc1768_path))
+			return False
+
+		self._logger.info(u"Firmware update folder '{}' available for writing after {} seconds".format(lpc1768_path, round((time.time() - sdstarttime),0)))
+
+		target_path = lpc1768_path + '/firmware.bin'
+		self._logger.info(u"Copying firmware to update folder '{}' -> '{}'".format(firmware, target_path))
+
+		self._send_status("progress", subtype="writing")
+
+		try:
+			shutil.copyfile(firmware, target_path)
+		except:
+			self._logger.exception(u"Flashing failed. Unable to copy file.")
+			self._send_status("flasherror")
+			return False
+
+		self._logger.info(u"Firmware update reset: attempting to reset the board")
+		if not self._reset_lpc1768(printer_port):
+			self._logger.error(u"Reset failed")
+			return False
+		
+		return True
+
+	def _check_lpc1768(self):
+		lpc1768_path = self._settings.get(["lpc1768_path"])
+		pattern = re.compile("^(\/[^\0/]+)+$")
+
+		if not pattern.match(lpc1768_path):
+			self._logger.error(u"Firmware folder path is not valid: {path}".format(path=lpc1768_path))
+			return False
+		elif lpc1768_path is None:
+			self._logger.error(u"Firmware folder path is not set.")
+			return False
+		if not os.path.exists(lpc1768_path):
+			self._logger.error(u"Firmware folder path does not exist: {path}".format(path=lpc1768_path))
+			return False
+		elif not os.path.isdir(lpc1768_path):
+			self._logger.error(u"Firmware folder path is not a folder: {path}".format(path=lpc1768_path))
+			return False
+		else:
+			return True
+
 	def _reset_1200(self, printer_port=None):
 		assert(printer_port is not None)
 		self._logger.info(u"Toggling '{port}' at 1200bps".format(port=printer_port))
@@ -496,6 +597,130 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		return True
 
+	def _reset_lpc1768(self, printer_port=None):
+		assert(printer_port is not None)
+		self._logger.info(u"Resetting LPC1768 at '{port}'".format(port=printer_port))
+		try:
+			ser = serial.Serial(port=printer_port, \
+								baudrate=9600, \
+								parity=serial.PARITY_NONE, \
+								stopbits=serial.STOPBITS_ONE , \
+								bytesize=serial.EIGHTBITS, \
+								timeout=2000)
+
+			# Marlin reset command
+			ser.write("M997\r")
+			# Smoothie reset command
+			ser.write("reset\r")
+			
+			ser.close()
+
+		except SerialException as ex:
+			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
+			self._send_status("flasherror", message="Board reset failed")
+			return False
+
+		if self._wait_for_lpc1768(printer_port):
+			return True
+		else:
+			self._logger.error(u"Board reset failed")
+			self._send_status("flasherror", message="Board reset failed")
+			return False
+
+	def _wait_for_lpc1768(self, printer_port=None):
+		assert(printer_port is not None)
+		self._logger.info(u"Waiting for LPC1768 at '{port}' to reset".format(port=printer_port))
+		
+		start = time.time()
+		timeout = 10
+		interval = 0.2
+		count = 1
+		connected = True
+		
+		loopstarttime = time.time()
+
+		while (time.time() < (loopstarttime + timeout) and connected):
+			self._logger.debug(u"Waiting for reset to init [{}/{}]".format(count, int(timeout / interval)))
+			count = count + 1
+			try:
+				ser = serial.Serial(port=printer_port, \
+									baudrate=9600, \
+									parity=serial.PARITY_NONE, \
+									stopbits=serial.STOPBITS_ONE , \
+									bytesize=serial.EIGHTBITS, \
+									timeout=2000)
+					
+				ser.close()
+				connected = True
+				time.sleep(interval)
+
+			except SerialException as ex:
+				time.sleep(interval)
+				connected = False
+
+		if connected:
+			self._logger.error(u"Timeout waiting for board reset to init")
+			return False
+
+		self._logger.info(u"LPC1768 at '{port}' is resetting".format(port=printer_port))
+
+		time.sleep(3)
+
+		timeout = 20
+		interval = 0.2
+		count = 1
+		connected = False
+
+		loopstarttime = time.time()
+		while (time.time() < (loopstarttime + timeout) and not connected):
+			self._logger.debug(u"Waiting for reset to complete [{}/{}]".format(count, int(timeout / interval)))
+			count = count + 1
+			try:
+				ser = serial.Serial(port=printer_port, \
+									baudrate=9600, \
+									parity=serial.PARITY_NONE, \
+									stopbits=serial.STOPBITS_ONE , \
+									bytesize=serial.EIGHTBITS, \
+									timeout=2000)
+					
+				ser.close()
+				connected = True
+				time.sleep(interval)
+
+			except SerialException as ex:
+				time.sleep(interval)
+				connected = False
+
+		if not connected:
+			self._logger.error(u"Timeout waiting for board reset to complete")
+			return False
+
+		end = time.time()
+		self._logger.info(u"LPC1768 at '{port}' reset in {duration} seconds".format(port=printer_port, duration=(round((end - start),2))))
+		return True
+
+	def _unmount_sd(self, printer_port=None):
+		assert(printer_port is not None)
+		self._logger.info(u"Release the firmware lock on the SD Card by sending 'M22' to '{port}'".format(port=printer_port))
+		try:
+			ser = serial.Serial(port=printer_port, \
+								baudrate=9600, \
+								parity=serial.PARITY_NONE, \
+								stopbits=serial.STOPBITS_ONE , \
+								bytesize=serial.EIGHTBITS, \
+								timeout=2000)
+
+			ser.write("M22\r")
+			time.sleep(1)
+			ser.close()
+
+		except SerialException as ex:
+			self._logger.exception(u"Card unmount failed: {error}".format(error=str(ex)))
+			self._send_status("flasherror", message="Card unmount failed")
+			return False
+
+		return True
+
 	#~~ SettingsPlugin API
 
 	def get_settings_defaults(self):
@@ -511,9 +736,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"bossac_path": None,
 			"bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
 			"bossac_disableverify": None,
+			"lpc1768_path": None,
+			"lpc1768_preflashreset": True,
 			"postflash_delay": "0",
 			"postflash_gcode": None,
 			"run_postflash_gcode": False,
+			"preflash_commandline": None,
+			"postflash_commandline": None,
+			"enable_preflash_commandline": None,
+			"enable_postflash_commandline": None,
 			"enable_postflash_delay": None,
 			"enable_postflash_gcode": None,
 			"disable_bootloadercheck": None

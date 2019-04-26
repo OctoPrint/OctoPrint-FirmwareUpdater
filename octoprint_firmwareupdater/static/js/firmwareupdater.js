@@ -12,12 +12,17 @@ $(function() {
         self.showAdvancedConfig = ko.observable(false);
         self.showAvrdudeConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
+        self.showLpc1768Config = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
         self.configDisableBootloaderCheck = ko.observable();
+        self.configEnablePreflashCommandline = ko.observable();
+        self.configPreflashCommandline = ko.observable();
+        self.configEnablePostflashCommandline = ko.observable();
+        self.configPostflashCommandline = ko.observable();
 
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
@@ -51,6 +56,17 @@ $(function() {
         self.bossacPathText = ko.observable();
         self.bossacPathHelpVisible = ko.computed(function() {
             return self.bossacPathBroken() || self.bossacPathOk();
+        });
+
+        // Config settings for lpc1768
+        self.configLpc1768Path = ko.observable();
+        self.configLpc1768ResetBeforeFlash = ko.observable();
+
+        self.lpc1768PathBroken = ko.observable(false);
+        self.lpc1768PathOk = ko.observable(false);
+        self.lpc1768PathText = ko.observable();
+        self.lpc1768PathHelpVisible = ko.computed(function() {
+            return self.lpc1768PathBroken() || self.lpc1768PathOk();
         });
 
         self.flashPort = ko.observable(undefined);
@@ -87,14 +103,21 @@ $(function() {
 
         self.configFlashMethod.subscribe(function(value) {
             if(value == 'avrdude') {
-                self.showBossacConfig(false);
                 self.showAvrdudeConfig(true);
-            } else if(value == 'bossac') {
-                self.showBossacConfig(true);
-                self.showAvrdudeConfig(false);
-            } else {
                 self.showBossacConfig(false);
+                self.showLpc1768Config(false);
+            } else if(value == 'bossac') {
                 self.showAvrdudeConfig(false);
+                self.showBossacConfig(true);
+                self.showLpc1768Config(false);
+            } else if(value == 'lpc1768'){
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(true);
+            } else {
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(false);
             }
          });
 
@@ -154,6 +177,10 @@ $(function() {
 
             if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "bossac" && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
                 alert = gettext("The bossac path is not configured.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "lpc1768" && !self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path()) {
+                alert = gettext("The lpc1768 firmware folder path is not configured.");
             }
 
             if (!self.flashPort()) {
@@ -298,6 +325,10 @@ $(function() {
                                     message = gettext("Starting flash...");
                                     break;
                                 }
+                                case "waitforsd": {
+                                    message = gettext("Waiting for SD card to mount on host...");
+                                    break;
+                                }
                                 case "writing": {
                                     message = gettext("Writing memory...");
                                     break;
@@ -313,6 +344,10 @@ $(function() {
                                 case "postflashdelay": {
                                     message = gettext("Post-flash delay...");
                                     break;
+                                }
+                                case "boardreset": {
+                                        message = gettext("Resetting the board...");
+                                        break;
                                 }
                                 case "reconnecting": {
                                     message = gettext("Reconnecting to printer...");
@@ -338,15 +373,28 @@ $(function() {
 
         self.showPluginConfig = function() {
             // Load the general settings
+            self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
+            self.configPreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_commandline());
+            self.configPostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_commandline());
             self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
+            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline() != 'false') {
+                self.configEnablePreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline());
+            }
+
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_commandline() != 'false') {
+                self.configEnablePostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_commandline());
+            }
+
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay() != 'false') {
                 self.configEnablePostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay());
             }
-            self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
+            
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
             }
-            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            
             if(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck() != 'false') {
                 self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
             }
@@ -366,6 +414,12 @@ $(function() {
             self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
             self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
             self.configBossacCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_commandline());
+            
+            // Load the lpc1768 settings
+            self.configLpc1768Path(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path());
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
+                self.configLpc1768ResetBeforeFlash(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset());
+            }
             self.configurationDialog.modal();
         };
 
@@ -392,6 +446,12 @@ $(function() {
                         bossac_path: self.configBossacPath(),
                         bossac_disableverify: self.configBossacDisableVerification(),
                         bossac_commandline: self.configBossacCommandLine(),
+                        lpc1768_path: self.configLpc1768Path(),
+                        lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
+                        enable_preflash_commandline: self.configEnablePreflashCommandline(),
+                        preflash_commandline: self.configPreflashCommandline(),
+                        enable_postflash_commandline: self.configEnablePostflashCommandline(),
+                        postflash_commandline: self.configPostflashCommandline(),
                         postflash_delay: self.configPostflashDelay(),
                         postflash_gcode: self.configPostflashGcode(),
                         enable_postflash_delay: self.configEnablePostflashDelay(),
@@ -522,6 +582,37 @@ $(function() {
                     }
                     self.avrdudeConfPathOk(response.result);
                     self.avrdudeConfPathBroken(!response.result);
+                }
+            })
+        };
+
+        self.testLpc1768Path = function() {
+            $.ajax({
+                url: API_BASEURL + "util/test",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    command: "path",
+                    path: self.configLpc1768Path(),
+                    check_type: "path",
+                    check_access: ["r", "w"],
+                    check_writable_dir: "true"
+                }),
+                contentType: "application/json; charset=UTF-8",
+                success: function(response) {
+                    if (!response.result) {
+                        if (!response.exists) {
+                            self.lpc1768PathText(gettext("The path doesn't exist"));
+                        } else if (!response.typeok) {
+                            self.lpc1768PathText(gettext("The path is not a folder"));
+                        } else if (!response.access) {
+                            self.lpc1768PathText(gettext("The path is not writeable"));
+                        }
+                    } else {
+                        self.lpc1768PathText(gettext("The path is valid"));
+                    }
+                    self.lpc1768PathOk(response.result);
+                    self.lpc1768PathBroken(!response.result);
                 }
             })
         };

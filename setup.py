@@ -14,7 +14,7 @@ plugin_package = "octoprint_firmwareupdater"
 plugin_name = "OctoPrint-FirmwareUpdater"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "1.2.0"
+plugin_version = "1.3.0"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -24,7 +24,7 @@ plugin_description = """Printer Firmware Updater"""
 plugin_author = "Gina Häußge and Ben Lye, based on work by Nicanor Romero Venier"
 
 # The plugin's author's mail address.
-plugin_author_email = "gina@octoprint.org"
+plugin_author_email = "ben@lye.co.nz"
 
 # The plugin's homepage URL. Can be overwritten within OctoPrint's internal data via __plugin_url__ in the plugin module
 plugin_url = "https://github.com/OctoPrint/OctoPrint-FirmwareUpdater"

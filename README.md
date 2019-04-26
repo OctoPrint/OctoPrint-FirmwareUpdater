@@ -4,7 +4,10 @@ This plugin can be used to flash pre-compiled firmware images to your printer fr
 
 <p align="center"><img  alt="Firmware Updater" src="extras/img/firmware-updater.png"></p>
 
-Works with boards with Atmel AVR family 8-bit MCUs (Atmega1280, Atmega1284p, and Atmega2560) MCUs, and Atmel SAM family 32-bit MCUs (Arduino DUE).
+## Works with
+* Atmel AVR family 8-bit MCUs (Atmega644, Atmega1280, Atmega1284p, and Atmega2560, etc.)
+* Atmel SAM family 32-bit MCUs (Arduino DUE, etc.)
+* LPC1768 boards (MKS SBASE, SKR v1.1 and v1.3, etc.)
 
 ## Setup
 
@@ -51,6 +54,53 @@ cd BOSSA-1.7.0
 sudo cp ~/BOSSA-1.7.0/bin/bossac /usr/local/bin/
 ```
 
+### LPC 1768 Installation
+Flashing an LPC1768 board requires that the host can mount the board's on-board SD card to a known mount point in the host filesystem.  
+
+There are several ways to do this, but using [usbmount](https://github.com/rbrito/usbmount) works well and is documented here.  It will mount the SD card to `/media/usb`.
+
+**Note:** The Marlin board configuration must have `USB_SD_ONBOARD` enabled so that the on-board SD card is presented to the host via the USB connection.  This seems to be the default configuration for Marlin's LPC1768 boards.  It is configured in the board's pins file.
+
+Once installed, usbmount requires some tweaking to make it work well on the Raspberry Pi.  The instructions below assume that you are running OctoPrint on a Raspberry Pi, as the user 'pi'.
+
+1. Install usbmount
+
+   `sudo apt-get install usbmount`
+
+2. Configure usbmount so that the mount has the correct permissions for the 'pi' user
+
+   `sudo nano /etc/usbmount/usbmount.conf`
+   
+   Find FS_MOUNTOPTIONS and change it to:
+   
+   `FS_MOUNTOPTIONS="-fstype=vfat,gid=pi,uid=pi,dmask=0022,fmask=0111`
+   
+3. Configure systemd-udevd so that the mount is accessible
+
+   `sudo systemctl edit systemd-udevd`
+   
+   Insert these lines then save and close the file:
+   ```
+   [Service]
+   MountFlags=shared
+   ```
+
+   Then run:
+   ```
+   sudo systemctl daemon-reload
+   sudo service systemd-udevd --full-restart
+   ```
+
+Once usbmount is installed and configured the LPC1768 on-board SD card should be mounted at `/media/usb` the next time it is plugged in or restarted.
+
+#### Troubleshooting LPC1768 Uploads
+The firmware upload will fail if the SD card is not accessible, either because it is not mounted on the host, or because the printer firmware has control over it.  
+
+Try:
+* Reset the board
+* Check that the 'Path to firmware folder' 'Test' button gives a successful result 
+* Use the OctoPrint terminal to send an `M22` command to release the SD card from the firmware
+
 ## Configuration
 
 In order to be able to flash firmware we need to select and configure a flash method.  Once the flash method is selected additional options will be available.
@@ -74,6 +124,9 @@ Typical MCU/programmer combinations are:
 ### BOSSAC Configuration
 <p align="center"><img  alt="Firmware Updater Settings" src="extras/img/bossac-config.png"></p>
 The only required setting is the path to the bossac binary.
+
+### LPC1768 Configuration
+The only required setting is the path to the firmware update folder.  If using usbmount it will probably be `/media/usb`.
 
 ### Customizing the Command Lines
 The command lines for avrdude and bossac can be customized by editing the string in the advanced settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
