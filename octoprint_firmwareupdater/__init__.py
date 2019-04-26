@@ -525,7 +525,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		timeout = 60
 		interval = 1
 		sdstarttime = time.time()
-		self._logger.info(u"Waiting for SD card to be avaialble at '{}'".format(lpc1768_path))
+		self._logger.info(u"Waiting for SD card to be available at '{}'".format(lpc1768_path))
 		self._send_status("progress", subtype="waitforsd")
 		while (time.time() < (sdstarttime + timeout) and not os.access(lpc1768_path, os.W_OK)):
 			self._logger.debug(u"Waiting for firmware folder path to become available [{}/{}]".format(count, int(timeout / interval)))
