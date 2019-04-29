@@ -9,6 +9,8 @@ This plugin can be used to flash pre-compiled firmware images to your printer fr
 * Atmel SAM family 32-bit MCUs (Arduino DUE, etc.)
 * LPC1768 boards (MKS SBASE, SKR v1.1 and v1.3, etc.)
 
+Please open a Github issue if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
+
 ## Setup
 
 Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wiki/Plugin:-Plugin-Manager)
@@ -178,3 +180,13 @@ Log messages can be found in the OctoPrint log `octoprint.log` and the Firmware 
 Both log files can be downloaded from OctoPrint's logging interface, found under 'Logging' in the settings page.
 
 If you have trouble using the plugin please check these logs for any error messages.  If you need help, please include both logs when reporting a problem.
+
+## Donations
+Donations to help with the cost of test hardware are gratefully received using any of the methods below.
+
+| Currency | Link |
+| --- | --- |
+| Bitcoin | [1GjUmcjnAxCr9jFPUtVrr6gPQz8FhYddZz](https://www.blockchain.com/btc/address/1GjUmcjnAxCr9jFPUtVrr6gPQz8FhYddZz) |
+| Bitcoin Cash | [bitcoincash:qzqys6mv9rgg7dxx0m4jzgqjezu9sryk2vmdexcr56](https://www.blockchain.com/bch/address/bitcoincash:qzqys6mv9rgg7dxx0m4jzgqjezu9sryk2vmdexcr56) |
+| Ethereum | [0xA1788874E851b425F65FF5bcB6180b0d9F50fB6d](https://www.blockchain.com/eth/address/0xA1788874E851b425F65FF5bcB6180b0d9F50fB6d) |
+| USD | [https://www.paypal.com/](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=PYRBY6KFWX5TJ&currency_code=USD&source=url) |
