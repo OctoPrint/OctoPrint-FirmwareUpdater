@@ -75,7 +75,7 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    
    Find FS_MOUNTOPTIONS and change it to:
    
-   `FS_MOUNTOPTIONS="-fstype=vfat,gid=pi,uid=pi,dmask=0022,fmask=0111`
+   `FS_MOUNTOPTIONS="-fstype=vfat,gid=pi,uid=pi,dmask=0022,fmask=0111"`
    
 3. Configure systemd-udevd so that the mount is accessible
 
