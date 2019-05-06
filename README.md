@@ -18,7 +18,7 @@ or manually using this URL:
 
     https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/archive/master.zip
 
-The appropriate flashing tool also needs to be installed.  For 8-bit MCUs the tools is **avrdude**, for 32-bit MCUs the tool is **bossac**.
+The appropriate flashing tool also needs to be installed. For 8-bit MCUs the tool is **avrdude**, for 32-bit MCUs the tool is **bossac**, for LPC1768 an external tool is not needed, but there is additional configuration to get make the on-board SD card accessible.
 
 ### AVRDUDE Installation
 
@@ -94,6 +94,11 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    ```
 
 Once usbmount is installed and configured the LPC1768 on-board SD card should be mounted at `/media/usb` the next time it is plugged in or restarted.
+
+#### Minimum Marlin Firmware Version
+Some boards (e.g. SKR v1.3) have been known to ship with older Marlin firmware which does not support the `M997` command, so must be updated conventionally one time before using the plugin. A board running too-old Marlin firmware will log 'Board reset failed' when attempting to flash from the plugin.
+
+If flashing an existing Marlin installation, the existing firmware must be newer than March 2nd, 2019 (i.e [this commit](https://github.com/MarlinFirmware/Marlin/pull/13281)) as that is when the `M997` was added to support resetting the board.
 
 #### Troubleshooting LPC1768 Uploads
 The firmware upload will fail if the SD card is not accessible, either because it is not mounted on the host, or because the printer firmware has control over it.  
