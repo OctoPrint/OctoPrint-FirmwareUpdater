@@ -510,6 +510,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		if self._settings.get_boolean(["lpc1768_preflashreset"]):
 			self._send_status("progress", subtype="boardreset")
+
+			unmount_command = 'sudo umount ' + lpc1768_path
+			self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
+			try:
+				r = os.system(unmount_command)
+			except:
+				e = sys.exc_info()[0]
+				self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+
 			self._logger.info(u"Pre-flash reset: attempting to reset the board")
 			if not self._reset_lpc1768(printer_port):
 				self._logger.error(u"Reset failed")
@@ -550,6 +559,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._logger.exception(u"Flashing failed. Unable to copy file.")
 			self._send_status("flasherror")
 			return False
+
+		unmount_command = 'sudo umount ' + lpc1768_path
+		self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
+		try:
+			r = os.system(unmount_command)
+		except:
+			e = sys.exc_info()[0]
+			self._logger.error("Error executing unmount command '{}'".format(unmount_command))
 
 		self._logger.info(u"Firmware update reset: attempting to reset the board")
 		if not self._reset_lpc1768(printer_port):
