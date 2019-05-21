@@ -13,6 +13,7 @@ $(function() {
         self.showAvrdudeConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
         self.showLpc1768Config = ko.observable(false);
+        self.showDfuConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
@@ -69,6 +70,17 @@ $(function() {
             return self.lpc1768PathBroken() || self.lpc1768PathOk();
         });
 
+        // Config settings for dfu-programmer
+        self.configDfuMcu = ko.observable();
+        self.configDfuPath = ko.observable();
+        self.configDfuCommandLine = ko.observable();
+        self.dfuPathBroken = ko.observable(false);
+        self.dfuPathOk = ko.observable(false);
+        self.dfuPathText = ko.observable();
+        self.dfuPathHelpVisible = ko.computed(function() {
+            return self.dfuPathBroken() || self.dfuPathOk();
+        });
+
         self.flashPort = ko.observable(undefined);
 
         self.firmwareFileName = ko.observable(undefined);
@@ -106,18 +118,27 @@ $(function() {
                 self.showAvrdudeConfig(true);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
+                self.showDfuConfig(false);
             } else if(value == 'bossac') {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(true);
                 self.showLpc1768Config(false);
+                self.showDfuConfig(false);
             } else if(value == 'lpc1768'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(true);
+                self.showDfuConfig(false);
+            } else if(value == 'dfuprogrammer'){
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(false);
+                self.showDfuConfig(true);
             } else {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
+                self.showDfuConfig(false);
             }
          });
 
@@ -183,7 +204,15 @@ $(function() {
                 alert = gettext("The lpc1768 firmware folder path is not configured.");
             }
 
-            if (!self.flashPort()) {
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer" && !self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_path()) {
+                alert = gettext("The dfu-programmer path is not configured.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer" && !self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_avrmcu()) {
+                alert = gettext("The AVR MCU type is not selected.");
+            }
+
+            if (!self.flashPort() &! self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer") {
                 alert = gettext("The printer port is not selected.");
             }
 
@@ -415,6 +444,11 @@ $(function() {
             self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
             self.configBossacCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_commandline());
             
+            // Load the dfu-programmer settings
+            self.configDfuPath(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_path());
+            self.configDfuMcu(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_avrmcu());
+            self.configDfuCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_commandline());
+            
             // Load the lpc1768 settings
             self.configLpc1768Path(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path());
             if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
@@ -446,6 +480,9 @@ $(function() {
                         bossac_path: self.configBossacPath(),
                         bossac_disableverify: self.configBossacDisableVerification(),
                         bossac_commandline: self.configBossacCommandLine(),
+                        dfuprog_path: self.configDfuPath(),
+                        dfuprog_avrmcu: self.configDfuMcu(),
+                        dfuprog_commandline: self.configDfuCommandLine(),
                         lpc1768_path: self.configLpc1768Path(),
                         lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
                         enable_preflash_commandline: self.configEnablePreflashCommandline(),
@@ -554,6 +591,48 @@ $(function() {
 
         self.resetBossacCommandLine = function() {
             self.configBossacCommandLine("{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R");
+        };
+
+        self.testDfuPath = function() {
+            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+
+            if (!filePathRegEx.test(self.configDfuPath())) {
+                self.dfuPathText(gettext("The path is not valid"));
+                self.dfuPathOk(false);
+                self.dfuPathBroken(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configDfuPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.dfuPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.dfuPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.dfuPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.dfuPathText(gettext("The path is valid"));
+                        }
+                        self.dfuPathOk(response.result);
+                        self.dfuPathBroken(!response.result);
+                    }
+                })
+            }
+        };
+
+        self.resetDfuCommandLine = function() {
+            self.configDfuCommandLine("sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10 --force");
         };
 
         self.testAvrdudeConf = function() {

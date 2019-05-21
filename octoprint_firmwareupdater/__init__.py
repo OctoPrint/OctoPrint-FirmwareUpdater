@@ -210,12 +210,16 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._logger.info("Firmware update started")
 
 			if not method in self._flash_methods:
-				self._logger.error("Unsupported flashing method: {}".format(method))
+				error_message = "Unsupported flashing method: {}".format(method)
+				self._logger.error(error_message)
+				self._send_status("flasherror", message=error_message)
 				return
 
 			flash_callable = self._flash_methods[method]
 			if not callable(flash_callable):
-				self._logger.error("Don't have a callable for flashing method {}: {!r}".format(method, flash_callable))
+				error_message = "Don't have a callable for flashing method {}: {!r}".format(method, flash_callable)
+				self._logger.error(error_message)
+				self._send_status("flasherror", message=error_message)
 				return
 
 			reconnect = None
@@ -743,6 +747,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"bossac_path": None,
 			"bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
 			"bossac_disableverify": None,
+			"dfuprog_path": None,
+			"dfuprog_avrmcu": None,
+			"dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10 --force",
 			"lpc1768_path": None,
 			"lpc1768_preflashreset": True,
 			"postflash_delay": "0",
