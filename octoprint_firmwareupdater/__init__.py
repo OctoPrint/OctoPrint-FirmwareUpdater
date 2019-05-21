@@ -617,23 +617,28 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def _reset_lpc1768(self, printer_port=None):
 		assert(printer_port is not None)
 		self._logger.info(u"Resetting LPC1768 at '{port}'".format(port=printer_port))
+
+		# Configure the port
 		try:
-			ser = serial.Serial(port=printer_port, \
-								baudrate=9600, \
-								parity=serial.PARITY_NONE, \
-								stopbits=serial.STOPBITS_ONE , \
-								bytesize=serial.EIGHTBITS, \
-								timeout=2000)
+			os.system('stty -F ' + printer_port + ' speed 115200 -echo > /dev/null')
+		except:
+			self._logger.exception(u"Error configuring serial port.")
+			self._send_status("flasherror", message="Board reset failed")
+			return False
 
-			# Marlin reset command
-			ser.write("M997\r")
-			# Smoothie reset command
-			ser.write("reset\r")
-			
-			ser.close()
-
-		except SerialException as ex:
-			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
+		# Smoothie reset command
+		try:
+			os.system('echo reset >> ' + printer_port)
+		except:
+			self._logger.exception(u"Error sending Smoothie 'reset' command.")
+			self._send_status("flasherror", message="Board reset failed")
+			return False
+  
+		# Marlin reset command
+		try:
+  			os.system('echo M997 >> ' + printer_port)
+		except:
+			self._logger.exception(u"Error sending Marlin 'M997' command.")
 			self._send_status("flasherror", message="Board reset failed")
 			return False
 
@@ -648,6 +653,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		assert(printer_port is not None)
 		self._logger.info(u"Waiting for LPC1768 at '{port}' to reset".format(port=printer_port))
 		
+		check_command = 'ls ' + printer_port + ' > /dev/null 2>&1'
 		start = time.time()
 		timeout = 10
 		interval = 0.2
@@ -659,19 +665,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		while (time.time() < (loopstarttime + timeout) and connected):
 			self._logger.debug(u"Waiting for reset to init [{}/{}]".format(count, int(timeout / interval)))
 			count = count + 1
-			try:
-				ser = serial.Serial(port=printer_port, \
-									baudrate=9600, \
-									parity=serial.PARITY_NONE, \
-									stopbits=serial.STOPBITS_ONE , \
-									bytesize=serial.EIGHTBITS, \
-									timeout=2000)
-					
-				ser.close()
+
+			if not os.system(check_command):
 				connected = True
 				time.sleep(interval)
 
-			except SerialException as ex:
+			else:
 				time.sleep(interval)
 				connected = False
 
@@ -692,19 +691,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		while (time.time() < (loopstarttime + timeout) and not connected):
 			self._logger.debug(u"Waiting for reset to complete [{}/{}]".format(count, int(timeout / interval)))
 			count = count + 1
-			try:
-				ser = serial.Serial(port=printer_port, \
-									baudrate=9600, \
-									parity=serial.PARITY_NONE, \
-									stopbits=serial.STOPBITS_ONE , \
-									bytesize=serial.EIGHTBITS, \
-									timeout=2000)
-					
-				ser.close()
+
+			if not os.system(check_command):
 				connected = True
 				time.sleep(interval)
-
-			except SerialException as ex:
+			
+			else:
 				time.sleep(interval)
 				connected = False
 
@@ -719,20 +711,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def _unmount_sd(self, printer_port=None):
 		assert(printer_port is not None)
 		self._logger.info(u"Release the firmware lock on the SD Card by sending 'M22' to '{port}'".format(port=printer_port))
+
 		try:
-			ser = serial.Serial(port=printer_port, \
-								baudrate=9600, \
-								parity=serial.PARITY_NONE, \
-								stopbits=serial.STOPBITS_ONE , \
-								bytesize=serial.EIGHTBITS, \
-								timeout=2000)
+			os.system('stty -F ' + printer_port + ' speed 115200 -echo > /dev/null')
+		except:
+			self._logger.exception(u"Error configuring serial port.")
+			self._send_status("flasherror", message="Card unmount failed")
+			return False
 
-			ser.write("M22\r")
-			time.sleep(1)
-			ser.close()
-
-		except SerialException as ex:
-			self._logger.exception(u"Card unmount failed: {error}".format(error=str(ex)))
+		try:
+			os.system('echo M22 >> ' + printer_port)
+		except:
+			self._logger.exception(u"Error sending 'M22' command.")
 			self._send_status("flasherror", message="Card unmount failed")
 			return False
 
