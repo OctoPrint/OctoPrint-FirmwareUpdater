@@ -74,6 +74,7 @@ $(function() {
         self.configDfuMcu = ko.observable();
         self.configDfuPath = ko.observable();
         self.configDfuCommandLine = ko.observable();
+        self.configDfuEraseCommandLine = ko.observable();
         self.dfuPathBroken = ko.observable(false);
         self.dfuPathOk = ko.observable(false);
         self.dfuPathText = ko.observable();
@@ -448,6 +449,7 @@ $(function() {
             self.configDfuPath(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_path());
             self.configDfuMcu(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_avrmcu());
             self.configDfuCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_commandline());
+            self.configDfuEraseCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_erasecommandline());
             
             // Load the lpc1768 settings
             self.configLpc1768Path(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path());
@@ -483,6 +485,7 @@ $(function() {
                         dfuprog_path: self.configDfuPath(),
                         dfuprog_avrmcu: self.configDfuMcu(),
                         dfuprog_commandline: self.configDfuCommandLine(),
+                        dfuprog_erasecommandline: self.configDfuEraseCommandLine(),
                         lpc1768_path: self.configLpc1768Path(),
                         lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
                         enable_preflash_commandline: self.configEnablePreflashCommandline(),
@@ -633,6 +636,10 @@ $(function() {
 
         self.resetDfuCommandLine = function() {
             self.configDfuCommandLine("sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10 --force");
+        };
+
+        self.resetDfuEraseCommandLine = function() {
+            self.configDfuEraseCommandLine("sudo {dfuprogrammer} {mcu} erase --debug-level 10");
         };
 
         self.testAvrdudeConf = function() {
