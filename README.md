@@ -124,11 +124,11 @@ Optional advanced settings are available for:
 AT90USB boards must be in **Boot** or **DFU** mode before they can be flashed.  This is done by placing or removing a jumper then resetting the board.
 
 For Printrboard:
-* Remove the BOOT jumper (for Rev D,E & F boards, install the BOOT jumper)
+* Remove the BOOT jumper (for Rev D, E & F boards, install the BOOT jumper)
 * Press and release the **Reset** button.
 * Replace the BOOT jumper onto the board (for Rev D, E & F boards, remove the BOOT jumper)
 
-The board will now be ready for flashing. Once flashing is complete the board reset by pressing the **Reset** button again.
+The board will now be ready for flashing. Once flashing is complete press the **Reset** button again to return to normal operation.
 
 ### LPC1768 Boards
 Flashing an LPC1768 board requires that the host can mount the board's on-board SD card to a known mount point in the host filesystem.  
