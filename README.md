@@ -6,17 +6,19 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
 ## Documentation Index
 1. [Supported Boards](#supported-boards)
 1. [Plugin Installation](#plugin-installation)
-1. [ATmega Boards](#atmega-boards)
-   1. [Avrdude Installation](#avrdude-installation)
-   1. [Avrdude Configuration](#avrdude-configuration)
-1. [AT90USB Boards](#at90usb-boards)
-   1. [Dfu-programmer Installation](#dfu-programmer-installation)
-   1. [Dfu-programmer Configuration](#dfu-programmer-configuration)
-1. [LPC1768 Boards](#lpc1768-boards)
-   1. [Usbmount Installation](#usbmount-installation)
-1. [SAM Boards](#sam-boards)
-   1. [Bossac Installation](#bossac-installation)
-   1. [Bossac Configuration](#bossac-configuration)
+1. [Plugin Configuration](#plugin-configuration)
+1. Board-Specific Configuration
+   1. [ATmega Boards](#atmega-boards)
+      1. [Avrdude Installation](#avrdude-installation)
+      1. [Avrdude Configuration](#avrdude-configuration)
+   1. [AT90USB Boards](#at90usb-boards)
+      1. [Dfu-programmer Installation](#dfu-programmer-installation)
+      1. [Dfu-programmer Configuration](#dfu-programmer-configuration)
+   1. [LPC1768 Boards](#lpc1768-boards)
+      1. [Usbmount Installation](#usbmount-installation)
+   1. [SAM Boards](#sam-boards)
+      1. [Bossac Installation](#bossac-installation)
+      1. [Bossac Configuration](#bossac-configuration)
 1. [Customizing the Command Lines](#customizing-the-command-lines)
 1. [Pre and Post Flash Settings](#pre-and-post-flash-settings)
 1. [Flashing](#flashing)
@@ -37,22 +39,32 @@ Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wik
 or manually using this URL:
     https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/archive/master.zip
 
-The appropriate flashing tool for the board type also needs to be installed and configured. For ATmega MCUs the tool is **avrdude**, for AT90USB MCUs the tools is **dfu-programmer**, for SAM MCUs the tool is **bossac**, for LPC1768 an external tool is not needed, but there is additional configuration required to make the on-board SD card accessible. 
+## Plugin Configuration
+The appropriate flashing tool for the board type needs to be selected. 
+
+| Board Family | Flashing Tool |
+| --- | --- | 
+| ATmega | avrdude |
+| AT90USB | dfu-programmer |
+| LPC1768 | lpc1768 |
+| SAM | bossac |
 
 Plugin settings vary depending on the flashing tool and are documented below.
 
-## ATmega Boards
+## Board-Specific Configuration
+
+### ATmega Boards
 To flash an ATmega-based board the tool `avrdude` needs to be installed on the OctoPrint host.
 
-### Avrdude Installation
-#### Raspberry Pi
+#### Avrdude Installation
+##### Raspberry Pi
 
 ```
 sudo apt-get update
 sudo apt-get install avrdude
 ```
 
-#### Ubuntu (12.04 - 14.04 - 15.04)
+##### Ubuntu (12.04 - 14.04 - 15.04)
 Information about the package needed can be found here [Ubuntu avrdude package](https://launchpad.net/ubuntu/+source/avrdude)
 
 ```
@@ -61,12 +73,10 @@ sudo apt-get update
 sudo apt-get install avrdude
 ```
 
-### Avrdude Configuration
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/avrdude-config.png"></p>
-
+#### Avrdude Configuration
 The minimum settings are:
-* Path to avrdude
 * AVR MCU Type
+* Path to avrdude
 * AVR Programmer Type
 
 Typical MCU/programmer combinations are:
@@ -77,10 +87,17 @@ Typical MCU/programmer combinations are:
 | Atmega2560 | wiring | RAMPS, RAMbo, etc. |
 | Atmega644p | arduino | Sanguinololu, Melzi |
 
-## AT90USB Boards
+Optional advanced settings are available for:
+* Baud rate - sets the speed for communication with the board
+* Avrdude config file - overrides the default config file with a custom one
+* Disabling write verification - speeds up flashing by not verifying the write operation
+* Customizing the avrdude command line
+* Disabling the bootloader warning - disables a warning which is shown the hex filename has 'bootloader' in it
+
+### AT90USB Boards
 To flash an AT90USB-based board the tool `dfu-programmer` needs to be installed on the OctoPrint host. 
 
-### Dfu-programmer Installation
+#### Dfu-programmer Installation
 A version of `dfu-programmer` can be installed via `apt-get install` but it is outdated.  Please build the latest version from [Github](https://github.com/dfu-programmer/dfu-programmer) using these commands:
 
 ```
@@ -95,30 +112,25 @@ sudo make install
 ```
 If there were no errors `dfu-programmer` should now be installed at /usr/local/bin/dfu-programmer.
 
-### Dfu-programmer Configuration
-Dfu-programmer instuctions....
+#### Dfu-programmer Configuration
+The minimum settings are:
+* AVR MCU Type
+* Path to dfu-programmer
 
-## SAM Boards
-To flash a SAM-based board the tool `bossac` needs to be installed on the OctoPrint host. 
+Optional advanced settings are available for:
+* Customizing the command lines for erasing and flashing the board
 
-### Bossac Installation
-Bossac cannot be installed using a package manager as the packaged version is out of date and will not work.  Installation from source is straight-forward.
+#### DFU Mode
+AT90USB boards must be in **Boot** or **DFU** mode before they can be flashed.  This is done by placing or removing a jumper then resetting the board.
 
-```
-cd ~/
-sudo apt-get install libwxgtk3.0-dev libreadline-dev
-wget https://github.com/shumatech/BOSSA/archive/1.7.0.zip
-unzip 1.7.0.zip
-cd BOSSA-1.7.0
-./arduino/make_package.sh
-sudo cp ~/BOSSA-1.7.0/bin/bossac /usr/local/bin/
-```
+For Printrboard:
+* Remove the BOOT jumper (for Rev D,E & F boards, install the BOOT jumper)
+* Press and release the **Reset** button.
+* Replace the BOOT jumper onto the board (for Rev D, E & F boards, remove the BOOT jumper)
 
-### Bossac Configuration
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/bossac-config.png"></p>
-The only required setting is the path to the bossac binary.
+The board will now be ready for flashing. Once flashing is complete the board reset by pressing the **Reset** button again.
 
-## LPC1768 Boards
+### LPC1768 Boards
 Flashing an LPC1768 board requires that the host can mount the board's on-board SD card to a known mount point in the host filesystem.  
 
 There are several ways to do this, but using [usbmount](https://github.com/rbrito/usbmount) works well and is documented below. It will mount the SD card to `/media/usb`.
@@ -127,7 +139,7 @@ There are several ways to do this, but using [usbmount](https://github.com/rbrit
 
 Once installed, usbmount requires some tweaking to make it work well on the Raspberry Pi.  The instructions below assume that you are running OctoPrint on a Raspberry Pi, as the user 'pi'.
 
-### Usbmount Installation
+#### Usbmount Installation
 1. Install usbmount
 
    `sudo apt-get install usbmount`
@@ -158,16 +170,42 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
 
 Once usbmount is installed and configured the LPC1768 on-board SD card should be mounted at `/media/usb` the next time it is plugged in or restarted.
 
-### LPC1768 Configuration
+#### LPC1768 Configuration
 The only required setting is the path to the firmware update folder.  If using usbmount it will probably be `/media/usb`.
 
-#### Minimum Marlin Firmware Version
+Optional advanced settings are available for:
+* Resetting the board prior to flashing - adds an extra board reset which can help ensure that the SD card is mounted correctly
+
+##### Minimum Marlin Firmware Version
 Some boards (e.g. SKR v1.3) have been known to ship with older Marlin firmware which does not support the `M997` command, so must be updated conventionally one time before using the plugin. A board running too-old Marlin firmware will log 'Board reset failed' when attempting to flash from the plugin.
 
 If flashing an existing Marlin installation, the existing firmware must be newer than March 2nd, 2019 (i.e [this commit](https://github.com/MarlinFirmware/Marlin/pull/13281)) as that is when the `M997` was added to support resetting the board.
 
-#### Troubleshooting LPC1768 Uploads
+##### Troubleshooting LPC1768 Uploads
 The firmware upload will fail if the SD card is not accessible, either because it is not mounted on the host, or because the printer firmware has control over it.  
+
+### SAM Boards
+To flash a SAM-based board the tool `bossac` needs to be installed on the OctoPrint host. 
+
+#### Bossac Installation
+Bossac cannot be installed using a package manager as the packaged version is out of date and will not work.  Installation from source is straight-forward.
+
+```
+cd ~/
+sudo apt-get install libwxgtk3.0-dev libreadline-dev
+wget https://github.com/shumatech/BOSSA/archive/1.7.0.zip
+unzip 1.7.0.zip
+cd BOSSA-1.7.0
+./arduino/make_package.sh
+sudo cp ~/BOSSA-1.7.0/bin/bossac /usr/local/bin/
+```
+
+#### Bossac Configuration
+The only required setting is the path to the bossac binary.
+
+Optional advanced settings are available for:
+* Disabling write verification - speeds up flashing by not verifying the write operation
+* Customizing the bossac command line
 
 ## Customizing the Command Lines
 The command lines for `avrdude`, `bossac`, and `dfu-programmer` can be customized by editing the string in the advanced settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
@@ -204,10 +242,14 @@ Erase: `{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R`
 Flash: 
 
 ## Pre and Post-flash Settings
-<p align="center"><img  alt="Firmware Updater Settings" src="extras/img/post-flash-config.png"></p>
+#### Pre-flash Command
+Specify a system command to run on the host prior to flashing.
+
+#### Pre-flash Command
+Specify a system command to run on the host after flashing.
 
 #### Post-flash Delay ####
-This setting can be used to insert a delay of up to 180s after the firmware has been uploaded, before OctoPrint will try to reconnect to the printer.  This can be useful if the board takes some time to restart.  A delay of 20-30s is usually enough.
+This setting can be used to insert a delay of up to 180s after the firmware has been uploaded.  This can be useful if the board takes some time to restart.  A delay of 20-30s is usually enough.
 
 #### Post-flash Gcode ####
 You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
