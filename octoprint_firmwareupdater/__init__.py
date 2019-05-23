@@ -8,42 +8,24 @@ import os
 import requests
 import tempfile
 import threading
-import time
-import re
-import serial
 import shutil
-from serial import SerialException
-
 import octoprint.plugin
 
 import octoprint.server.util.flask
 from octoprint.server import admin_permission, NO_CONTENT
 from octoprint.events import Events
 
+# import the flash methods
+from octoprint_firmwareupdater.methods import avrdude
+from octoprint_firmwareupdater.methods import bossac
+from octoprint_firmwareupdater.methods import dfuprog
+from octoprint_firmwareupdater.methods import lpc1768
+
 class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                             octoprint.plugin.TemplatePlugin,
                             octoprint.plugin.AssetPlugin,
                             octoprint.plugin.SettingsPlugin,
 							octoprint.plugin.EventHandlerPlugin):
-
-	AVRDUDE_WRITING = "writing flash"
-	AVRDUDE_VERIFYING = "reading on-chip flash data"
-	AVRDUDE_TIMEOUT = "timeout communicating with programmer"
-	AVRDUDE_ERROR = "ERROR:"
-	AVRDUDE_ERROR_SYNC = "not in sync"
-	AVRDUDE_ERROR_VERIFICATION = "verification error"
-	AVRDUDE_ERROR_DEVICE = "can't open device"
-
-	BOSSAC_ERASING = "Erase flash"
-	BOSSAC_WRITING = "bytes to flash"
-	BOSSAC_VERIFYING = "bytes of flash"
-	BOSSAC_NODEVICE = "No device found on"
-
-	DFUPROG_ERASING = "Erasing flash"
-	DFUPROG_WRITING = "Programming"
-	DFUPROG_VERIFYING = "Reading"
-	DFUPROG_VALIDATING = "Validating"
-	DFUPROG_NODEVICE = "no device present"
 
 	def __init__(self):
 		self._flash_thread = None
@@ -56,8 +38,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def initialize(self):
 		# TODO: make method configurable via new plugin hook "octoprint.plugin.firmwareupdater.flash_methods",
 		# also include prechecks
-		self._flash_prechecks = dict(avrdude=self._check_avrdude, bossac=self._check_bossac, dfuprogrammer=self._check_dfuprog, lpc1768=self._check_lpc1768)
-		self._flash_methods = dict(avrdude=self._flash_avrdude, bossac=self._flash_bossac, dfuprogrammer=self._flash_dfuprog, lpc1768=self._flash_lpc1768)
+		self._flash_prechecks = dict(avrdude=avrdude._check_avrdude, bossac=bossac._check_bossac, dfuprogrammer=dfuprog._check_dfuprog, lpc1768=lpc1768._check_lpc1768)
+		self._flash_methods = dict(avrdude=avrdude._flash_avrdude, bossac=bossac._flash_bossac, dfuprogrammer=dfuprog._flash_dfuprog, lpc1768=lpc1768._flash_lpc1768)
 
 		console_logging_handler = logging.handlers.RotatingFileHandler(self._settings.get_plugin_logfile_path(postfix="console"), maxBytes=2*1024*1024)
 		console_logging_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
@@ -116,7 +98,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		method = self._settings.get(["flash_method"])
 
 		if method in self._flash_prechecks:
-			if not self._flash_prechecks[method]():
+			if not self._flash_prechecks[method](self):
 				error_message = "Cannot flash firmware, flash method {} is not fully configured".format(method)
 				self._send_status("flasherror", subtype="method", message=error_message)
 				return flask.make_response(error_message, 400)
@@ -132,7 +114,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			uploaded_hex_path = flask.request.values[input_upload_path]
 
 			# create a temporary
-			import shutil
+			
 			try:
 				file_to_flash = tempfile.NamedTemporaryFile(mode='r+b', delete=False)
 				file_to_flash.close()
@@ -239,7 +221,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			self._send_status("progress", subtype="startingflash")
 
 			try:
-				if flash_callable(firmware=firmware, printer_port=printer_port):
+				if flash_callable(self, firmware=firmware, printer_port=printer_port):
 
 					postflash_delay = self._settings.get(["postflash_delay"])
 					if float(postflash_delay) > 0 and self._settings.get(["enable_postflash_delay"]):
@@ -293,581 +275,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		finally:
 			self._flash_thread = None
-
-	def _flash_avrdude(self, firmware=None, printer_port=None):
-		assert(firmware is not None)
-		assert(printer_port is not None)
-
-		avrdude_path = self._settings.get(["avrdude_path"])
-		avrdude_conf = self._settings.get(["avrdude_conf"])
-		avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
-		avrdude_programmer = self._settings.get(["avrdude_programmer"])
-		avrdude_baudrate = self._settings.get(["avrdude_baudrate"])
-		avrdude_disableverify = self._settings.get(["avrdude_disableverify"])
-
-		working_dir = os.path.dirname(avrdude_path)
-
-		avrdude_command = self._settings.get(["avrdude_commandline"])
-		avrdude_command = avrdude_command.replace("{avrdude}", avrdude_path)
-		avrdude_command = avrdude_command.replace("{mcu}", avrdude_avrmcu)
-		avrdude_command = avrdude_command.replace("{programmer}", avrdude_programmer)
-		avrdude_command = avrdude_command.replace("{port}", printer_port)
-		avrdude_command = avrdude_command.replace("{firmware}", firmware)
-
-		if avrdude_conf is not None and avrdude_conf != "":
-			avrdude_command = avrdude_command.replace("{conffile}", avrdude_conf)
-		else:
-			avrdude_command = avrdude_command.replace(" -C {conffile} ", " ")
-
-		if avrdude_baudrate is not None and avrdude_baudrate != "":
-			avrdude_command = avrdude_command.replace("{baudrate}", avrdude_baudrate)
-		else:
-			avrdude_command = avrdude_command.replace(" -b {baudrate} ", " ")
-
-		if avrdude_disableverify:
-			avrdude_command = avrdude_command.replace("{disableverify}", "-V")
-		else:
-			avrdude_command = avrdude_command.replace(" {disableverify} ", " ")
-
-		import sarge
-		self._logger.info(u"Running '{}' in {}".format(avrdude_command, working_dir))
-		self._console_logger.info(u"")
-		self._console_logger.info(avrdude_command)
-		try:
-			p = sarge.run(avrdude_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
-			p.wait_events()
-
-			while p.returncode is None:
-				output = p.stderr.read(timeout=0.5)
-				if not output:
-					p.commands[0].poll()
-					continue
-
-				for line in output.split("\n"):
-					if line.endswith("\r"):
-						line = line[:-1]
-					self._console_logger.info(u"> {}".format(line))
-
-				if self.AVRDUDE_WRITING in output:
-					self._logger.info(u"Writing memory...")
-					self._send_status("progress", subtype="writing")
-				elif self.AVRDUDE_VERIFYING in output:
-					self._logger.info(u"Verifying memory...")
-					self._send_status("progress", subtype="verifying")
-				elif self.AVRDUDE_TIMEOUT in output:
-					p.commands[0].kill()
-					p.close()
-					raise FlashException("Timeout communicating with programmer")
-				elif self.AVRDUDE_ERROR_DEVICE in output:
-					p.commands[0].kill()
-					p.close()
-					raise FlashException("Error opening serial device")
-				elif self.AVRDUDE_ERROR_VERIFICATION in output:
-					p.commands[0].kill()
-					p.close()
-					raise FlashException("Error verifying flash")
-				elif self.AVRDUDE_ERROR_SYNC in output:
-					p.commands[0].kill()
-					p.close()
-					raise FlashException("Avrdude says: 'not in sync" + output[output.find(self.AVRDUDE_ERROR_SYNC) + len(self.AVRDUDE_ERROR_SYNC):].strip() + "'")
-				elif self.AVRDUDE_ERROR in output:
-					raise FlashException("Avrdude error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
-
-			if p.returncode == 0:
-				return True
-			else:
-				raise FlashException("Avrdude returned code {returncode}".format(returncode=p.returncode))
-
-		except FlashException as ex:
-			self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))
-			self._send_status("flasherror", message=ex.reason)
-			return False
-		except:
-			self._logger.exception(u"Flashing failed. Unexpected error.")
-			self._send_status("flasherror")
-			return False
-
-	def _check_avrdude(self):
-		avrdude_path = self._settings.get(["avrdude_path"])
-		avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
-		avrdude_programmer = self._settings.get(["avrdude_programmer"])
-		pattern = re.compile("^(\/[^\0/]+)+$")
-
-		if not pattern.match(avrdude_path):
-			self._logger.error(u"Path to avrdude is not valid: {path}".format(path=avrdude_path))
-			return False
-		elif not os.path.exists(avrdude_path):
-			self._logger.error(u"Path to avrdude does not exist: {path}".format(path=avrdude_path))
-			return False
-		elif not os.path.isfile(avrdude_path):
-			self._logger.error(u"Path to avrdude is not a file: {path}".format(path=avrdude_path))
-			return False
-		elif not os.access(avrdude_path, os.X_OK):
-			self._logger.error(u"Path to avrdude is not executable: {path}".format(path=avrdude_path))
-			return False
-		elif not avrdude_avrmcu:
-			self._logger.error(u"AVR MCU type has not been selected.")
-			return False
-		elif not avrdude_programmer:
-			self._logger.error(u"AVR programmer has not been selected.")
-			return False
-		else:
-			return True
-
-	def _flash_bossac(self, firmware=None, printer_port=None):
-		assert(firmware is not None)
-		assert(printer_port is not None)
-
-		bossac_path = self._settings.get(["bossac_path"])
-		bossac_disableverify = self._settings.get(["bossac_disableverify"])
-
-		working_dir = os.path.dirname(bossac_path)
-
-		bossac_command = self._settings.get(["bossac_commandline"])
-		bossac_command = bossac_command.replace("{bossac}", bossac_path)
-		bossac_command = bossac_command.replace("{port}", printer_port)
-		bossac_command = bossac_command.replace("{firmware}", firmware)
-
-		if bossac_disableverify:
-			bossac_command = bossac_command.replace("{disableverify}", "-v")
-		else:
-			bossac_command = bossac_command.replace(" {disableverify} ", " -v ")
-
-		self._logger.info(u"Attempting to reset the board to SAM-BA")
-		if not self._reset_1200(printer_port):
-			self._logger.error(u"Reset failed")
-			return False
-
-		import sarge
-		self._logger.info(u"Running '{}' in {}".format(bossac_command, working_dir))
-		self._console_logger.info(u"")
-		self._console_logger.info(bossac_command)
-		try:
-			p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
-			p.wait_events()
-
-			while p.returncode is None:
-				output = p.stdout.read(timeout=0.5)
-				if not output:
-					p.commands[0].poll()
-					continue
-				
-				for line in output.split("\n"):
-					if line.endswith("\r"):
-						line = line[:-1]
-					self._console_logger.info(u"> {}".format(line))
-
-					if self.BOSSAC_ERASING in line:
-						self._logger.info(u"Erasing memory...")
-						self._send_status("progress", subtype="erasing")
-					elif self.BOSSAC_WRITING in line:
-						self._logger.info(u"Writing memory...")
-						self._send_status("progress", subtype="writing")
-					elif self.BOSSAC_VERIFYING in line:
-						self._logger.info(u"Verifying memory...")
-						self._send_status("progress", subtype="verifying")
-					elif self.AVRDUDE_ERROR_VERIFICATION in line:
-						raise FlashException("Error verifying flash")
-					elif self.AVRDUDE_ERROR in line:
-						raise FlashException("bossac error: " + output[output.find(self.AVRDUDE_ERROR) + len(self.AVRDUDE_ERROR):].strip())
-
-			if p.returncode == 0:
-				return True
-			else:
-				output = p.stderr.read(timeout=0.5)
-				for line in output.split("\n"):
-					if line.endswith("\r"):
-						line = line[:-1]
-					self._console_logger.info(u"> {}".format(line))
-
-					if self.BOSSAC_NODEVICE in line:
-						raise FlashException(line)
-
-				raise FlashException("bossac returned code {returncode}".format(returncode=p.returncode))
-
-		except FlashException as ex:
-			self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))
-			self._send_status("flasherror", message=ex.reason)
-			return False
-		except:
-			self._logger.exception(u"Flashing failed. Unexpected error.")
-			self._send_status("flasherror")
-			return False
-
-	def _check_bossac(self):
-		bossac_path = self._settings.get(["bossac_path"])
-		pattern = re.compile("^(\/[^\0/]+)+$")
-
-		if not pattern.match(bossac_path):
-			self._logger.error(u"Path to bossac is not valid: {path}".format(path=bossac_path))
-			return False
-		elif bossac_path is None:
-			self._logger.error(u"Path to bossac is not set.")
-			return False
-		if not os.path.exists(bossac_path):
-			self._logger.error(u"Path to bossac does not exist: {path}".format(path=bossac_path))
-			return False
-		elif not os.path.isfile(bossac_path):
-			self._logger.error(u"Path to bossac is not a file: {path}".format(path=bossac_path))
-			return False
-		elif not os.access(bossac_path, os.X_OK):
-			self._logger.error(u"Path to bossac is not executable: {path}".format(path=bossac_path))
-			return False
-		else:
-			return True
-
-	def _flash_dfuprog(self, firmware=None, printer_port=None):
-		assert(firmware is not None)
-
-		if not self._erase_dfuprog():
-			return False
-
-		dfuprog_path = self._settings.get(["dfuprog_path"])
-		dfuprog_avrmcu = self._settings.get(["dfuprog_avrmcu"])
-		working_dir = os.path.dirname(dfuprog_path)
-
-		dfuprog_command = self._settings.get(["dfuprog_commandline"])
-		dfuprog_command = dfuprog_command.replace("{dfuprogrammer}", dfuprog_path)
-		dfuprog_command = dfuprog_command.replace("{mcu}", dfuprog_avrmcu)
-		dfuprog_command = dfuprog_command.replace("{firmware}", firmware)
-
-		import sarge
-		self._logger.info(u"Running '{}' in {}".format(dfuprog_command, working_dir))
-		self._send_status("progress", subtype="writing")
-		self._console_logger.info(dfuprog_command)
-		try:
-			p = sarge.run(dfuprog_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
-			p.wait_events()
-
-			while p.returncode is None:
-				output = p.stderr.read(timeout=0.5)
-				if not output:
-					p.commands[0].poll()
-					continue
-
-				for line in output.split("\n"):
-					if line.endswith("\r"):
-						line = line[:-1]
-					self._console_logger.info(u"> {}".format(line))
-
-					if self.DFUPROG_WRITING in line:
-						self._logger.info(u"Writing memory...")
-						self._send_status("progress", subtype="writing")
-					if self.DFUPROG_VERIFYING in line:
-						self._logger.info(u"Verifying memory...")
-						self._send_status("progress", subtype="verifying")
-					elif self.DFUPROG_NODEVICE in line:
-						raise FlashException("No device found")
-
-			if p.returncode == 0:
-				return True
-			else:
-				raise FlashException("dfu-programmer returned code {returncode}".format(returncode=p.returncode))
-
-		except FlashException as ex:
-			self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))
-			self._send_status("flasherror", message=ex.reason)
-			return False
-		except:
-			self._logger.exception(u"Flashing failed. Unexpected error.")
-			self._send_status("flasherror")
-			return False
-
-	def _erase_dfuprog(self):
-		dfuprog_path = self._settings.get(["dfuprog_path"])
-		dfuprog_avrmcu = self._settings.get(["dfuprog_avrmcu"])
-		working_dir = os.path.dirname(dfuprog_path)
-
-		dfuprog_erasecommand = self._settings.get(["dfuprog_erasecommandline"])
-		dfuprog_erasecommand = dfuprog_erasecommand.replace("{dfuprogrammer}", dfuprog_path)
-		dfuprog_erasecommand = dfuprog_erasecommand.replace("{mcu}", dfuprog_avrmcu)
-
-		import sarge
-		self._logger.info(u"Running '{}' in {}".format(dfuprog_erasecommand, working_dir))
-		self._console_logger.info(dfuprog_erasecommand)
-		try:
-			p = sarge.run(dfuprog_erasecommand, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
-			p.wait_events()
-
-			while p.returncode is None:
-				output = p.stderr.read(timeout=0.5)
-				if not output:
-					p.commands[0].poll()
-					continue
-
-				for line in output.split("\n"):
-					if line.endswith("\r"):
-						line = line[:-1]
-					self._console_logger.info(u"> {}".format(line))
-
-					if self.DFUPROG_ERASING in line:
-						self._logger.info(u"Erasing memory...")
-						self._send_status("progress", subtype="erasing")
-					elif self.DFUPROG_NODEVICE in line:
-						raise FlashException("No device found")
-
-			if p.returncode == 0:
-				return True
-			else:
-				raise FlashException("dfu-programmer returned code {returncode}".format(returncode=p.returncode))
-
-		except FlashException as ex:
-			self._logger.error(u"Erasing failed. {error}.".format(error=ex.reason))
-			self._send_status("flasherror", message=ex.reason)
-			return False
-		except:
-			self._logger.exception(u"Erasing failed. Unexpected error.")
-			self._send_status("flasherror")
-			return False
-
-	def _check_dfuprog(self):
-		dfuprog_path = self._settings.get(["dfuprog_path"])
-		pattern = re.compile("^(\/[^\0/]+)+$")
-
-		if not pattern.match(dfuprog_path):
-			self._logger.error(u"Path to dfu-programmer is not valid: {path}".format(path=dfuprog_path))
-			return False
-		elif dfuprog_path is None:
-			self._logger.error(u"Path to dfu-programmer is not set.")
-			return False
-		if not os.path.exists(dfuprog_path):
-			self._logger.error(u"Path to dfu-programmer does not exist: {path}".format(path=dfuprog_path))
-			return False
-		elif not os.path.isfile(dfuprog_path):
-			self._logger.error(u"Path to dfu-programmer is not a file: {path}".format(path=dfuprog_path))
-			return False
-		elif not os.access(dfuprog_path, os.X_OK):
-			self._logger.error(u"Path to dfu-programmer is not executable: {path}".format(path=dfuprog_path))
-			return False
-		else:
-			return True
-
-	def _flash_lpc1768(self, firmware=None, printer_port=None):
-		assert(firmware is not None)
-		assert(printer_port is not None)
-
-		lpc1768_path = self._settings.get(["lpc1768_path"])
-		working_dir = os.path.dirname(lpc1768_path)
-
-		if self._settings.get_boolean(["lpc1768_preflashreset"]):
-			self._send_status("progress", subtype="boardreset")
-
-			unmount_command = 'sudo umount ' + lpc1768_path
-			self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
-			try:
-				r = os.system(unmount_command)
-			except:
-				e = sys.exc_info()[0]
-				self._logger.error("Error executing unmount command '{}'".format(unmount_command))
-
-			self._logger.info(u"Pre-flash reset: attempting to reset the board")
-			if not self._reset_lpc1768(printer_port):
-				self._logger.error(u"Reset failed")
-				return False
-
-		# Release the SD card
-		if not self._unmount_sd(printer_port):
-			self._send_status("flasherror", message="Unable to unmount SD card")
-			return False	
-
-		# loop until the mount is available; timeout after 60s
-		count = 1
-		timeout = 60
-		interval = 1
-		sdstarttime = time.time()
-		self._logger.info(u"Waiting for SD card to be available at '{}'".format(lpc1768_path))
-		self._send_status("progress", subtype="waitforsd")
-		while (time.time() < (sdstarttime + timeout) and not os.access(lpc1768_path, os.W_OK)):
-			self._logger.debug(u"Waiting for firmware folder path to become available [{}/{}]".format(count, int(timeout / interval)))
-			count = count + 1
-			time.sleep(interval)
-		
-		if not os.access(lpc1768_path, os.W_OK):
-			self._send_status("flasherror", message="Unable to access firmware folder")
-			self._logger.error(u"Firmware folder path is not writeable: {path}".format(path=lpc1768_path))
-			return False
-
-		self._logger.info(u"Firmware update folder '{}' available for writing after {} seconds".format(lpc1768_path, round((time.time() - sdstarttime),0)))
-
-		target_path = lpc1768_path + '/firmware.bin'
-		self._logger.info(u"Copying firmware to update folder '{}' -> '{}'".format(firmware, target_path))
-
-		self._send_status("progress", subtype="writing")
-
-		try:
-			shutil.copyfile(firmware, target_path)
-		except:
-			self._logger.exception(u"Flashing failed. Unable to copy file.")
-			self._send_status("flasherror")
-			return False
-
-		unmount_command = 'sudo umount ' + lpc1768_path
-		self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
-		try:
-			r = os.system(unmount_command)
-		except:
-			e = sys.exc_info()[0]
-			self._logger.error("Error executing unmount command '{}'".format(unmount_command))
-
-		self._logger.info(u"Firmware update reset: attempting to reset the board")
-		if not self._reset_lpc1768(printer_port):
-			self._logger.error(u"Reset failed")
-			return False
-		
-		return True
-
-	def _check_lpc1768(self):
-		lpc1768_path = self._settings.get(["lpc1768_path"])
-		pattern = re.compile("^(\/[^\0/]+)+$")
-
-		if not pattern.match(lpc1768_path):
-			self._logger.error(u"Firmware folder path is not valid: {path}".format(path=lpc1768_path))
-			return False
-		elif lpc1768_path is None:
-			self._logger.error(u"Firmware folder path is not set.")
-			return False
-		if not os.path.exists(lpc1768_path):
-			self._logger.error(u"Firmware folder path does not exist: {path}".format(path=lpc1768_path))
-			return False
-		elif not os.path.isdir(lpc1768_path):
-			self._logger.error(u"Firmware folder path is not a folder: {path}".format(path=lpc1768_path))
-			return False
-		else:
-			return True
-
-	def _reset_1200(self, printer_port=None):
-		assert(printer_port is not None)
-		self._logger.info(u"Toggling '{port}' at 1200bps".format(port=printer_port))
-		try:
-			ser = serial.Serial(port=printer_port, \
-								baudrate=1200, \
-								parity=serial.PARITY_NONE, \
-								stopbits=serial.STOPBITS_ONE , \
-								bytesize=serial.EIGHTBITS, \
-								timeout=2000)
-			time.sleep(1)
-			ser.close()
-			time.sleep(3)
-		except SerialException as ex:
-			self._logger.exception(u"Board reset failed: {error}".format(error=str(ex)))
-			self._send_status("flasherror", message="Board reset failed")
-			return False
-
-		return True
-
-	def _reset_lpc1768(self, printer_port=None):
-		assert(printer_port is not None)
-		self._logger.info(u"Resetting LPC1768 at '{port}'".format(port=printer_port))
-
-		# Configure the port
-		try:
-			os.system('stty -F ' + printer_port + ' speed 115200 -echo > /dev/null')
-		except:
-			self._logger.exception(u"Error configuring serial port.")
-			self._send_status("flasherror", message="Board reset failed")
-			return False
-
-		# Smoothie reset command
-		try:
-			os.system('echo reset >> ' + printer_port)
-		except:
-			self._logger.exception(u"Error sending Smoothie 'reset' command.")
-			self._send_status("flasherror", message="Board reset failed")
-			return False
-  
-		# Marlin reset command
-		try:
-  			os.system('echo M997 >> ' + printer_port)
-		except:
-			self._logger.exception(u"Error sending Marlin 'M997' command.")
-			self._send_status("flasherror", message="Board reset failed")
-			return False
-
-		if self._wait_for_lpc1768(printer_port):
-			return True
-		else:
-			self._logger.error(u"Board reset failed")
-			self._send_status("flasherror", message="Board reset failed")
-			return False
-
-	def _wait_for_lpc1768(self, printer_port=None):
-		assert(printer_port is not None)
-		self._logger.info(u"Waiting for LPC1768 at '{port}' to reset".format(port=printer_port))
-		
-		check_command = 'ls ' + printer_port + ' > /dev/null 2>&1'
-		start = time.time()
-		timeout = 10
-		interval = 0.2
-		count = 1
-		connected = True
-		
-		loopstarttime = time.time()
-
-		while (time.time() < (loopstarttime + timeout) and connected):
-			self._logger.debug(u"Waiting for reset to init [{}/{}]".format(count, int(timeout / interval)))
-			count = count + 1
-
-			if not os.system(check_command):
-				connected = True
-				time.sleep(interval)
-
-			else:
-				time.sleep(interval)
-				connected = False
-
-		if connected:
-			self._logger.error(u"Timeout waiting for board reset to init")
-			return False
-
-		self._logger.info(u"LPC1768 at '{port}' is resetting".format(port=printer_port))
-
-		time.sleep(3)
-
-		timeout = 20
-		interval = 0.2
-		count = 1
-		connected = False
-
-		loopstarttime = time.time()
-		while (time.time() < (loopstarttime + timeout) and not connected):
-			self._logger.debug(u"Waiting for reset to complete [{}/{}]".format(count, int(timeout / interval)))
-			count = count + 1
-
-			if not os.system(check_command):
-				connected = True
-				time.sleep(interval)
-			
-			else:
-				time.sleep(interval)
-				connected = False
-
-		if not connected:
-			self._logger.error(u"Timeout waiting for board reset to complete")
-			return False
-
-		end = time.time()
-		self._logger.info(u"LPC1768 at '{port}' reset in {duration} seconds".format(port=printer_port, duration=(round((end - start),2))))
-		return True
-
-	def _unmount_sd(self, printer_port=None):
-		assert(printer_port is not None)
-		self._logger.info(u"Release the firmware lock on the SD Card by sending 'M22' to '{port}'".format(port=printer_port))
-
-		try:
-			os.system('stty -F ' + printer_port + ' speed 115200 -echo > /dev/null')
-		except:
-			self._logger.exception(u"Error configuring serial port.")
-			self._send_status("flasherror", message="Card unmount failed")
-			return False
-
-		try:
-			os.system('echo M22 >> ' + printer_port)
-		except:
-			self._logger.exception(u"Error sending 'M22' command.")
-			self._send_status("flasherror", message="Card unmount failed")
-			return False
-
-		return True
 
 	#~~ SettingsPlugin API
 
@@ -937,12 +344,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			)
 		)
 
-
 class FlashException(Exception):
 	def __init__(self, reason, *args, **kwargs):
 		Exception.__init__(self, *args, **kwargs)
 		self.reason = reason
-
 
 __plugin_name__ = "Firmware Updater"
 
