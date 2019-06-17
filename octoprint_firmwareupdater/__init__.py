@@ -9,6 +9,7 @@ import requests
 import tempfile
 import threading
 import shutil
+import time
 import octoprint.plugin
 
 import octoprint.server.util.flask
@@ -223,7 +224,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			try:
 				if flash_callable(self, firmware=firmware, printer_port=printer_port):
 
-					postflash_delay = self._settings.get(["postflash_delay"])
+					postflash_delay = self._settings.get(["postflash_delay"]) or 0
 					if float(postflash_delay) > 0 and self._settings.get(["enable_postflash_delay"]):
 						self._logger.info("Post-flash delay: {}s".format(postflash_delay))
 						self._send_status("progress", subtype="postflashdelay")
