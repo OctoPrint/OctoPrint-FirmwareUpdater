@@ -135,7 +135,7 @@ Flashing an LPC1768 board requires that the host can mount the board's on-board 
 
 There are several ways to do this, but using [usbmount](https://github.com/rbrito/usbmount) works well and is documented below. It will mount the SD card to `/media/usb`.
 
-**Note:** The Marlin board configuration must have `USB_SD_ONBOARD` enabled so that the on-board SD card is presented to the host via the USB connection.  This seems to be the default configuration for Marlin's LPC1768 boards.  It is configured in the board's pins file.
+**Note:** The Marlin board configuration must have `SDCARD_CONNECTION ONBOARD` )previously `USB_SD_ONBOARD`) enabled so that the on-board SD card is presented to the host via the USB connection.  This seems to be the default configuration for Marlin's LPC1768 boards.  It is configured in the board's pins file.
 
 Once installed, usbmount requires some tweaking to make it work well on the Raspberry Pi.  The instructions below assume that you are running OctoPrint on a Raspberry Pi, as the user 'pi'.
 
