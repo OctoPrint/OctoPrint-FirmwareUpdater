@@ -91,6 +91,7 @@
                             <option value=bossac>bossac (Atmel SAM Family)</option>
                             <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
                             <option value=lpc1768>lpc1768 (LPC1768-based Boards)</option>
+                            <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
                         </select>
                     </div>
                 </div>
@@ -195,9 +196,25 @@
                 </div>
                 <!-- end avrdude options -->
 
+                <!-- stm32flash options for STM32 MCUs -->
+                <div data-bind="visible: showStm32flashConfig">
+                    <div class="control-group" data-bind="css: {error: stm32flashPathBroken, success: stm32flashPathOk}">
+                        <label class="control-label">{{ _('Path to stm32flash') }}</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input type="text" class="input-block-level" data-bind='value: configStm32flashPath, valueUpdate: "afterkeydown"'>
+                                <button class="btn" type="button" data-bind="click: testStm32flashPath, enable: configStm32flashPath, css: {disabled: !configStm32flashPath()}">{{ _('Test') }}</button>
+                            </div>
+                            <span class="help-block" data-bind="visible: stm32flashPathBroken() || stm32flashPathOk, text: stm32flashPathText"></span>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <!-- end stm32flash options -->
+
                 <!-- advanced options -->
 
-                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig())">
+                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
                     <label data-bind="click: toggleAdvancedConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Advanced Settings
                     </label>
@@ -327,12 +344,85 @@
                         </div>
                     </div>
                     <!-- End advanced bossac options-->
+
+                    <!-- Advanced stm32flash options -->
+                    <div data-bind="visible: showStm32flashConfig">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Verify while writing') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configStm32flashVerify">
+                                </div>
+                                <span class="help-block">{{ _('If checked memory will be verified as it get flashed. Otherwise memory won\'t be verified.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('BOOT0 pin') }}</label>
+                            <div class="controls">
+                                <select data-bind="value: configStm32flashBoot0Pin">
+                                    <option value="dtr">DTR</option>
+                                    <option value="rts">RTS</option>
+                                </select>
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configStm32flashBoot0Low"> Low
+                                </label>
+                                <span class="help-block">{{ _('Serial pin to enable bootloader') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Reset pin') }}</label>
+                            <div class="controls">
+                                <select data-bind="value: configStm32flashResetPin">
+                                    <option value="dtr">DTR</option>
+                                    <option value="rts">RTS</option>
+                                </select>
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configStm32flashResetLow"> Low
+                                </label>
+                                <span class="help-block">{{ _('Serial pin to reset MCU') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Start execution') }}</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configStm32flashExecute"> Enabled
+                                </label>
+                                <div class="input">
+                                    <input type="text" class="input-block-level" data-bind="value: configStm32flashExecuteAddress, enable: configStm32flashExecute, css: {disabled: !configStm32flashExecute()}">
+                                </div>
+                                <span class="help-block">{{ _('Address to execute after flashing.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Reset after flashing') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configStm32flashReset, disable: configStm32flashExecute">
+                                </div>
+                                <span class="help-block">{{ _('If checked MCU will be reset after flashing.') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End stm32flash options-->
                     <hr>
                 </div>
                 <!-- End advanced options-->
 
                 <!-- Pre-flash and post-flash settings -->
-                <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig())">
+                <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
                     <label data-bind="click: togglePostflashConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Pre-Flash and Post-Flash Settings
                     </label>

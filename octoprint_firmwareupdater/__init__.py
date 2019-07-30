@@ -21,6 +21,7 @@ from octoprint_firmwareupdater.methods import avrdude
 from octoprint_firmwareupdater.methods import bossac
 from octoprint_firmwareupdater.methods import dfuprog
 from octoprint_firmwareupdater.methods import lpc1768
+from octoprint_firmwareupdater.methods import stm32flash
 
 class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                             octoprint.plugin.TemplatePlugin,
@@ -39,8 +40,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def initialize(self):
 		# TODO: make method configurable via new plugin hook "octoprint.plugin.firmwareupdater.flash_methods",
 		# also include prechecks
-		self._flash_prechecks = dict(avrdude=avrdude._check_avrdude, bossac=bossac._check_bossac, dfuprogrammer=dfuprog._check_dfuprog, lpc1768=lpc1768._check_lpc1768)
-		self._flash_methods = dict(avrdude=avrdude._flash_avrdude, bossac=bossac._flash_bossac, dfuprogrammer=dfuprog._flash_dfuprog, lpc1768=lpc1768._flash_lpc1768)
+		self._flash_prechecks = dict(avrdude=avrdude._check_avrdude, bossac=bossac._check_bossac, dfuprogrammer=dfuprog._check_dfuprog, lpc1768=lpc1768._check_lpc1768, stm32flash=stm32flash._check_stm32flash)
+		self._flash_methods = dict(avrdude=avrdude._flash_avrdude, bossac=bossac._flash_bossac, dfuprogrammer=dfuprog._flash_dfuprog, lpc1768=lpc1768._flash_lpc1768, stm32flash=stm32flash._flash_stm32flash)
 
 		console_logging_handler = logging.handlers.RotatingFileHandler(self._settings.get_plugin_logfile_path(postfix="console"), maxBytes=2*1024*1024)
 		console_logging_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
@@ -296,6 +297,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"dfuprog_avrmcu": None,
 			"dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
 			"dfuprog_erasecommandline": "sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force",
+			"stm32flash_path": None,
+			"stm32flash_verify": True,
+			"stm32flash_boot0pin": "rts",
+			"stm32flash_boot0low": False,
+			"stm32flash_resetpin": "dtr",
+			"stm32flash_resetlow": True,
+			"stm32flash_execute": True,
+			"stm32flash_executeaddress": "0x8000000",
+			"stm32flash_reset": False,
 			"lpc1768_path": None,
 			"lpc1768_preflashreset": True,
 			"postflash_delay": "0",
