@@ -78,7 +78,7 @@ def _flash_stm32flash(self, firmware=None, printer_port=None):
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stderr.read(timeout=0.5)
+            output = p.stdout.read(timeout=0.5)
             if not output:
                 p.commands[0].poll()
                 continue
@@ -88,18 +88,24 @@ def _flash_stm32flash(self, firmware=None, printer_port=None):
                     line = line[:-1]
                 self._console_logger.info(u"> {}".format(line))
 
-            if "Writing" in output:
-                self._logger.info(u"Writing memory...")
-                self._send_status("progress", subtype="writing")
-            elif "Error" in output:
-                p.commands[0].kill()
-                p.close()
-                raise FlashException("stm32flash error " + output[output.find("Error") + len("Error"):].strip() + "'")
+                if "Write to memory" in line:
+                    self._logger.info(u"Writing memory...")
+                    self._send_status("progress", subtype="writing")
 
         if p.returncode == 0:
             return True
         else:
-            raise FlashException("stm32flash returned code {returncode}".format(returncode=p.returncode))
+            output = p.stderr.read(timeout=0.5)
+            for line in output.split("\n"):
+                if line.endswith("\r"):
+                    line = line[:-1]
+                self._console_logger.info(u"> {}".format(line))
+                if "Error" in line:
+                    raise FlashException("stm32flash error " + line[line.find("Error") + len("Error"):].strip() + "'")
+                elif "Failed to init device" in line:
+                    raise FlashException("Cannot enter bootloader, check your BOOT0/Reset pins settings and try again")
+                else:
+                    raise FlashException("stm32flash returned code {returncode} : {message}".format(returncode=p.returncode, message=line))
 
     except FlashException as ex:
         self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))
