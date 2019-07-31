@@ -14,6 +14,7 @@ $(function() {
         self.showBossacConfig = ko.observable(false);
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
+        self.showStm32flashConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
@@ -82,6 +83,23 @@ $(function() {
             return self.dfuPathBroken() || self.dfuPathOk();
         });
 
+        // Config settings for stm32flash
+        self.configStm32flashPath = ko.observable();
+        self.configStm32flashVerify = ko.observable(true);
+        self.configStm32flashBoot0Pin = ko.observable();
+        self.configStm32flashBoot0Low = ko.observable(true);
+        self.configStm32flashResetPin = ko.observable();
+        self.configStm32flashResetLow = ko.observable(true);
+        self.configStm32flashExecute = ko.observable();
+        self.configStm32flashExecuteAddress = ko.observable();
+        self.configStm32flashReset = ko.observable(false);
+        self.stm32flashPathBroken = ko.observable();
+        self.stm32flashPathOk = ko.observable(false);
+        self.stm32flashPathText = ko.observable();
+        self.stm32flashPathHelpVisible = ko.computed(function() {
+            return self.stm32flashPathBroken() || self.stm32flashPathOk();
+        });
+
         self.flashPort = ko.observable(undefined);
 
         self.firmwareFileName = ko.observable(undefined);
@@ -120,26 +138,37 @@ $(function() {
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
+                self.showStm32flashConfig(false);
             } else if(value == 'bossac') {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(true);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
+                self.showStm32flashConfig(false);
             } else if(value == 'lpc1768'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(true);
+                self.showStm32flashConfig(false);
                 self.showDfuConfig(false);
             } else if(value == 'dfuprogrammer'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(true);
+                self.showStm32flashConfig(false);
+            } else if(value == 'stm32flash'){
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(false);
+                self.showDfuConfig(false);
+                self.showStm32flashConfig(true);
             } else {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
+                self.showStm32flashConfig(false);
             }
          });
 
@@ -456,6 +485,17 @@ $(function() {
             if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
                 self.configLpc1768ResetBeforeFlash(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset());
             }
+
+            // Load the stm32flash settings
+            self.configStm32flashPath(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_path());
+            self.configStm32flashVerify(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_verify());
+            self.configStm32flashBoot0Pin(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_boot0pin());
+            self.configStm32flashBoot0Low(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_boot0low());
+            self.configStm32flashResetPin(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_resetpin());
+            self.configStm32flashResetLow(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_resetlow());
+            self.configStm32flashExecute(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_execute());
+            self.configStm32flashExecuteAddress(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_executeaddress());
+            self.configStm32flashReset(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_reset());
             self.configurationDialog.modal();
         };
 
@@ -486,6 +526,15 @@ $(function() {
                         dfuprog_avrmcu: self.configDfuMcu(),
                         dfuprog_commandline: self.configDfuCommandLine(),
                         dfuprog_erasecommandline: self.configDfuEraseCommandLine(),
+                        stm32flash_path : self.configStm32flashPath(),
+                        stm32flash_verify: self.configStm32flashVerify(),
+                        stm32flash_boot0pin : self.configStm32flashBoot0Pin(),
+                        stm32flash_boot0low : self.configStm32flashBoot0Low(),
+                        stm32flash_resetpin : self.configStm32flashResetPin(),
+                        stm32flash_resetlow : self.configStm32flashResetLow(),
+                        stm32flash_execute : self.configStm32flashExecute(),
+                        stm32flash_executeaddress : self.configStm32flashExecuteAddress(),
+                        stm32flash_reset: self.configStm32flashReset(),
                         lpc1768_path: self.configLpc1768Path(),
                         lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
                         enable_preflash_commandline: self.configEnablePreflashCommandline(),
@@ -642,6 +691,44 @@ $(function() {
 
         self.resetDfuEraseCommandLine = function() {
             self.configDfuEraseCommandLine("sudo {dfuprogrammer} {mcu} erase --debug-level 10");
+        };
+
+        self.testStm32flashPath = function() {
+            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+
+            if (!filePathRegEx.test(self.configStm32flashPath())) {
+                self.stm32flashPathText(gettext("The path is not valid"));
+                self.stm32flashPathOk(false);
+                self.stm32flashPathBroken(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configStm32flashPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.stm32flashPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.stm32flashPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.stm32flashPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.stm32flashPathText(gettext("The path is valid"));
+                        }
+                        self.stm32flashPathOk(response.result);
+                        self.stm32flashPathBroken(!response.result);
+                    }
+                })
+            }
         };
 
         self.testAvrdudeConf = function() {
