@@ -19,6 +19,9 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
    1. [SAM Boards](#sam-boards)
       1. [Bossac Installation](#bossac-installation)
       1. [Bossac Configuration](#bossac-configuration)
+   1. [STM32 Boards](#stm32-boards)
+      1. [STM32Flash Installation](#stm32flash-installation)
+      1. [STM32Flash Configuration](#stm32flash-configuration)
 1. [Customizing the Command Lines](#customizing-the-command-lines)
 1. [Pre and Post Flash Settings](#pre-and-post-flash-settings)
 1. [Flashing](#flashing)
@@ -31,6 +34,7 @@ The plugn supports a variety of boards, based on the MCU (processor) they have:
 * 'AT90USB' family 8-bit MCUs (Printrboard)
 * 'LPC1768' MCUs (MKS SBASE, SKR v1.1 and v1.3, etc.)
 * 'SAM' family 32-bit MCUs (Arduino DUE, etc.)
+* 'STM32' family 32-bits MCUs with embedded ST serial bootloader (FYSETC CHEETAH)
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
@@ -42,12 +46,13 @@ or manually using this URL:
 ## Plugin Configuration
 The appropriate flashing tool for the board type needs to be selected. 
 
-| Board Family | Flashing Tool |
-| --- | --- | 
-| ATmega | avrdude |
-| AT90USB | dfu-programmer |
-| LPC1768 | lpc1768 |
-| SAM | bossac |
+| Board Family | Flashing Tool  |
+| -----------: | :------------- | 
+| ATmega       | avrdude        |
+| AT90USB      | dfu-programmer |
+| LPC1768      | lpc1768        |
+| SAM          | bossac         |
+| STM32        | stm32flash     |
 
 Plugin settings vary depending on the flashing tool and are documented below.
 
@@ -206,6 +211,45 @@ The only required setting is the path to the bossac binary.
 Optional advanced settings are available for:
 * Disabling write verification - speeds up flashing by not verifying the write operation
 * Customizing the bossac command line
+
+#### STM32Flash Installation
+##### Install on Linux/RaspberryPi using apt-get
+
+```
+sudo apt-get update
+sudo apt-get install stm32flash
+```
+
+##### Install on macOS using brew
+```
+brew install stm32flash
+```
+
+##### Install on Windows
+You can install a Windows binary from https://sourceforge.net/projects/stm32flash/ however the plugin hasn't been tested on that platform.
+
+#### STM32Flash Configuration
+##### Firmware verification
+Unlike avrdude, verification is done during write process after each packet. Writing process is longer than other flashing methods, but there is no verification after the write. It is strongly recommended to keep it enabled.
+
+##### BOOT0/Reset pins
+When using ST serial bootloader, the boards needs to enter into bootloader mode by setting up the MCU BOOT0 input to HIGH and then proceeding with a MCU RESET input to LOW. 
+
+Such MCU inputs are generally connected to RTS/DTR signals of the USB-UART transceiver.  For example, FYSETC Cheetah uses RTS to set BOOT0, and DTR to reset.
+
+Please set STM32Flash BOOT0/Reset according to your board.
+
+##### Execution address
+Unlike other MCU, STM32 ones will remain in bootloader mode after resetting DTR line and realeasing UART. The bootloader needs an explicit command to jump at a given flash address.
+
+Please setup Execution address according to your board.
+
+##### Reset
+When setting Execution address, reset option is ignored by stm32flash. Setting Reset instead of Execution address will actually send an `Execute @ 0x00000000`, which is where the bootloader is located. You will then need to power cycle your board to execute firmware. This option is not recommended then. 
+
+
+
+
 
 ## Customizing the Command Lines
 The command lines for `avrdude`, `bossac`, and `dfu-programmer` can be customized by editing the string in the advanced settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
