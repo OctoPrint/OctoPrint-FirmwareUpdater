@@ -140,7 +140,7 @@ Flashing an LPC1768 board requires that the host can mount the board's on-board 
 
 There are several ways to do this, but using [usbmount](https://github.com/rbrito/usbmount) works well and is documented below. It will mount the SD card to `/media/usb`.
 
-**Note:** The Marlin board configuration must have `SDCARD_CONNECTION ONBOARD` )previously `USB_SD_ONBOARD`) enabled so that the on-board SD card is presented to the host via the USB connection.  This seems to be the default configuration for Marlin's LPC1768 boards.  It is configured in the board's pins file.
+**Note:** The Marlin board configuration must have `SDCARD_CONNECTION ONBOARD` (previously `USB_SD_ONBOARD`) enabled so that the on-board SD card is presented to the host via the USB connection.  This seems to be the default configuration for Marlin's LPC1768 boards.  It is configured in the board's pins file.
 
 Once installed, usbmount requires some tweaking to make it work well on the Raspberry Pi.  The instructions below assume that you are running OctoPrint on a Raspberry Pi, as the user 'pi'.
 
@@ -190,7 +190,7 @@ If flashing an existing Marlin installation, the existing firmware must be newer
 The firmware upload will fail if the SD card is not accessible, either because it is not mounted on the host, or because the printer firmware has control over it.  
 
 ### SAM Boards
-To flash a SAM-based board the tool `bossac` needs to be installed on the OctoPrint host. 
+To flash a SAM-based board the tool `bossac` needs to be installed on the OctoPrint host.
 
 #### Bossac Installation
 Bossac cannot be installed using a package manager as the packaged version is out of date and will not work.  Installation from source is straight-forward.
@@ -211,6 +211,9 @@ The only required setting is the path to the bossac binary.
 Optional advanced settings are available for:
 * Disabling write verification - speeds up flashing by not verifying the write operation
 * Customizing the bossac command line
+
+### STM32 Boards
+To flash an STM32-based board the tool `stm32flash` needs to be installed on the OctoPrint host.
 
 #### STM32Flash Installation
 ##### Install on Linux/RaspberryPi using apt-get
@@ -246,10 +249,6 @@ Please setup Execution address according to your board.
 
 ##### Reset
 When setting Execution address, reset option is ignored by stm32flash. Setting Reset instead of Execution address will actually send an `Execute @ 0x00000000`, which is where the bootloader is located. You will then need to power cycle your board to execute firmware. This option is not recommended then. 
-
-
-
-
 
 ## Customizing the Command Lines
 The command lines for `avrdude`, `bossac`, and `dfu-programmer` can be customized by editing the string in the advanced settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
