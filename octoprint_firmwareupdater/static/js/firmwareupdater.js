@@ -769,8 +769,7 @@ $(function() {
                 data: JSON.stringify({
                     command: "path",
                     path: self.configLpc1768Path(),
-                    check_type: "path",
-                    check_access: ["r", "w"],
+                    check_type: "dir",
                     check_writable_dir: "true"
                 }),
                 contentType: "application/json; charset=UTF-8",
