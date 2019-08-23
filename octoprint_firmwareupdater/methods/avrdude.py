@@ -10,11 +10,18 @@ AVRDUDE_ERROR_SYNC = "not in sync"
 AVRDUDE_ERROR_VERIFICATION = "verification error"
 AVRDUDE_ERROR_DEVICE = "can't open device"
 
+WINDOWS_PATTERN = "^[A-z]\:\\\\.+.exe$"
+POSIX_PATTERN = "^(\/[^\0/]+)+$"
+
 def _check_avrdude(self):
     avrdude_path = self._settings.get(["avrdude_path"])
     avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
     avrdude_programmer = self._settings.get(["avrdude_programmer"])
-    pattern = re.compile("^(\/[^\0/]+)+$")
+
+    if os.name == 'nt':
+       pattern = re.compile(WINDOWS_PATTERN)
+    else:
+       pattern = re.compile(POSIX_PATTERN)
 
     if not pattern.match(avrdude_path):
         self._logger.error(u"Path to avrdude is not valid: {path}".format(path=avrdude_path))
