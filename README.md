@@ -29,7 +29,7 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
 1. [Donations](#donations)
 
 ## Supported Boards
-The plugn supports a variety of boards, based on the MCU (processor) they have:
+The plugin supports a variety of boards, based on the MCU (processor) they have:
 * 'ATmega' family 8-bit MCUs (RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, many others)
 * 'AT90USB' family 8-bit MCUs (Printrboard)
 * 'LPC1768' MCUs (MKS SBASE, SKR v1.1 and v1.3, etc., also SKR Pro v1.1)
