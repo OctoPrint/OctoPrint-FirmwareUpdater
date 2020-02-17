@@ -173,6 +173,7 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    Insert these lines then save and close the file:
    ```
    [Service]
+   PrivateMounts=no
    MountFlags=shared
    ```
 
