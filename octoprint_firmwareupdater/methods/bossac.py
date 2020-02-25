@@ -61,11 +61,11 @@ def _flash_bossac(self, firmware=None, printer_port=None):
     self._console_logger.info(u"")
     self._console_logger.info(bossac_command)
     try:
-        p = sarge.run(bossac_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
+        p = sarge.run(bossac_command, cwd=working_dir, async_=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stdout.read(timeout=0.5)
+            output = p.stdout.read(timeout=0.5).decode('utf-8')
             if not output:
                 p.commands[0].poll()
                 continue
@@ -90,7 +90,7 @@ def _flash_bossac(self, firmware=None, printer_port=None):
         if p.returncode == 0:
             return True
         else:
-            output = p.stderr.read(timeout=0.5)
+            output = p.stderr.read(timeout=0.5).decode('utf-8')
             for line in output.split("\n"):
                 if line.endswith("\r"):
                     line = line[:-1]

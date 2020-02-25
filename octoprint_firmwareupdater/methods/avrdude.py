@@ -83,11 +83,11 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
     self._console_logger.info(u"")
     self._console_logger.info(avrdude_command)
     try:
-        p = sarge.run(avrdude_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+        p = sarge.run(avrdude_command, cwd=working_dir, async_=True, stdout=sarge.Capture(), stderr=sarge.Capture())
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stderr.read(timeout=0.5)
+            output = p.stderr.read(timeout=0.5).decode('utf-8')
             if not output:
                 p.commands[0].poll()
                 continue

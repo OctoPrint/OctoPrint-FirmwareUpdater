@@ -74,11 +74,11 @@ def _flash_stm32flash(self, firmware=None, printer_port=None):
     self._console_logger.info(stm32flash_command)
 
     try:
-        p = sarge.run(stm32flash_command, cwd=working_dir, async=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+        p = sarge.run(stm32flash_command, cwd=working_dir, async_=True, stdout=sarge.Capture(), stderr=sarge.Capture())
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stdout.read(timeout=0.5)
+            output = p.stdout.read(timeout=0.5).decode('utf-8')
             if not output:
                 p.commands[0].poll()
                 continue
@@ -95,7 +95,7 @@ def _flash_stm32flash(self, firmware=None, printer_port=None):
         if p.returncode == 0:
             return True
         else:
-            output = p.stderr.read(timeout=0.5)
+            output = p.stderr.read(timeout=0.5).decode('utf-8')
             for line in output.split("\n"):
                 if line.endswith("\r"):
                     line = line[:-1]
