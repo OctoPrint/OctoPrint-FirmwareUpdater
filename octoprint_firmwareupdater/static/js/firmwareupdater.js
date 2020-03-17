@@ -823,7 +823,9 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         FirmwareUpdaterViewModel,
+		
         ["settingsViewModel", "loginStateViewModel", "connectionViewModel", "printerStateViewModel"],
-        [document.getElementById("settings_plugin_firmwareupdater")]
+		
+        [document.getElementById("settings_plugin_firmwareupdater"), document.getElementById("settings_plugin_firmwareupdater_tab")]
     ]);
 });
