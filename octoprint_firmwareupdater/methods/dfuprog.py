@@ -50,11 +50,11 @@ def _flash_dfuprog(self, firmware=None, printer_port=None):
     self._send_status("progress", subtype="writing")
     self._console_logger.info(dfuprog_command)
     try:
-        p = sarge.run(dfuprog_command, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
+        p = sarge.run(dfuprog_command, cwd=working_dir, async_=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stderr.read(timeout=0.5)
+            output = p.stderr.read(timeout=0.5).decode('utf-8')
             if not output:
                 p.commands[0].poll()
                 continue
@@ -100,11 +100,11 @@ def _erase_dfuprog(self):
     self._logger.info(u"Running '{}' in {}".format(dfuprog_erasecommand, working_dir))
     self._console_logger.info(dfuprog_erasecommand)
     try:
-        p = sarge.run(dfuprog_erasecommand, cwd=working_dir, async=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
+        p = sarge.run(dfuprog_erasecommand, cwd=working_dir, async_=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stderr.read(timeout=0.5)
+            output = p.stderr.read(timeout=0.5).decode('utf-8')
             if not output:
                 p.commands[0].poll()
                 continue
