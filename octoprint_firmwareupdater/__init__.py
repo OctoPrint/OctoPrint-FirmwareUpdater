@@ -317,13 +317,16 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"enable_postflash_commandline": None,
 			"enable_postflash_delay": None,
 			"enable_postflash_gcode": None,
-			"disable_bootloadercheck": None
+			"disable_bootloadercheck": None,
+			"enabledTab": True
 		}
 
 	#~~ Asset API
 
 	def get_assets(self):
-		return dict(js=["js/firmwareupdater.js"])
+		return dict(
+		js=["js/firmwareupdater.js"],
+		css=["css/firmwareupdater.css"])
 
 	#~~ Extra methods
 

@@ -1,12 +1,14 @@
 $(function() {
     function FirmwareUpdaterViewModel(parameters) {
         var self = this;
+	    $('#tab_plugin_firmwareupdater_link').hide();
 
         self.settingsViewModel = parameters[0];
         self.loginState = parameters[1];
         self.connection = parameters[2];
         self.printerState = parameters[3];
-
+		self.enabled = ko.observable();
+        
         // General settings
         self.configFlashMethod = ko.observable();
         self.showAdvancedConfig = ko.observable(false);
@@ -119,6 +121,7 @@ $(function() {
 
         self.inSettingsDialog = false;
 
+
         self.connection.selectedPort.subscribe(function(value) {
             if (value === undefined) return;
             self.flashPort(value);
@@ -179,6 +182,14 @@ $(function() {
                 }
             }
          });
+		 
+		self.onBeforeBinding = function() {
+			self.enabled(self.settingsViewModel.settings.plugins.firmwareupdater.enabledTab());
+        }
+
+        self.onAfterBinding = function() {
+           _enable(self.enabled());
+        }
 
         self.onStartup = function() {
             self.selectFilePath = $("#settings_firmwareupdater_selectFilePath");
@@ -433,7 +444,8 @@ $(function() {
         self.showPluginConfig = function() {
             // Load the general settings
             self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
-            self.configPreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_commandline());
+			self.enabled(self.settingsViewModel.settings.plugins.firmwareupdater.enabledTab());
+			self.configPreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_commandline());
             self.configPostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_commandline());
             self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
             self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
@@ -500,9 +512,13 @@ $(function() {
         };
 
         self.onConfigClose = function() {
-            self._saveConfig();
-
-            self.configurationDialog.modal("hide");
+			self._saveConfig();
+			
+			self.showPopup("success", gettext("Reload Web Interface"), "Please reload the web interface if enabled/disabled the Tab.");
+			_enable(self.enabled());
+            self.enabled(self.settingsViewModel.settings.plugins.firmwareupdater.enabledTab());	
+			
+			self.configurationDialog.modal("hide");
             self.alertMessage(undefined);
             self.showAlert(false);
         };
@@ -545,7 +561,8 @@ $(function() {
                         postflash_gcode: self.configPostflashGcode(),
                         enable_postflash_delay: self.configEnablePostflashDelay(),
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
-                        disable_bootloadercheck: self.configDisableBootloaderCheck()
+                        disable_bootloadercheck: self.configDisableBootloaderCheck(),
+						enabledTab:	self.enabled()
                     }
                 }
             };
@@ -821,11 +838,16 @@ $(function() {
         };
     }
 
-    OCTOPRINT_VIEWMODELS.push([
-        FirmwareUpdaterViewModel,
-		
-        ["settingsViewModel", "loginStateViewModel", "connectionViewModel", "printerStateViewModel"],
-		
-        [document.getElementById("settings_plugin_firmwareupdater"), document.getElementById("settings_plugin_firmwareupdater_tab")]
-    ]);
+
+	function _enable(value) {
+        if (value)
+            $('#tab_plugin_firmwareupdater_link').show();
+        else
+            $('#tab_plugin_firmwareupdater_link').hide();
+    }
+	OCTOPRINT_VIEWMODELS.push({
+        construct: FirmwareUpdaterViewModel,
+        dependencies:["settingsViewModel", "loginStateViewModel", "connectionViewModel", "printerStateViewModel"],
+        elements: ["#settings_plugin_firmwareupdater","#settings_plugin_firmwareupdater_tab"]
+    });
 });
