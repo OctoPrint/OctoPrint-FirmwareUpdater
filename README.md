@@ -39,9 +39,6 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 ### Not-yet Supported Boards
 * SKR Mini E3 - waiting on more information, see [this issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103)
 
-#### Special Note for the SKR Pro v1.1 STM32 Board
-It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 board.**
-
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
 ## Plugin Installation
