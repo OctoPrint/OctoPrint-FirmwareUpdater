@@ -60,6 +60,16 @@ The appropriate flashing tool for the board type needs to be selected.
 | SAM          | bossac         |
 | STM32        | stm32flash     |
 
+#### Special Note for the Creality Ender 3
+
+The mainboard in the Ender 3 (and probably other devices) is flashed
+without a boot loader. The first time you want to upgrade its firmware,
+you have to use extra programming hardware ("burner") to install a bootloader.
+Alternately you can use the "ISP" programmer which they include with their
+[BL-Touch Add-on Kit](https://www.creality3dofficial.com/products/creality-bl-touch?_pos=8&_sid=07be62867&_ss=rell), which comes with a pinout card.
+Using this kit instead of using this plugin can avoid exceeding memory limits
+with custom builds of Marlin.
+
 #### Special Note for the SKR Pro v1.1 STM32 Board
 It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 board.**
 
