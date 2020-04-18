@@ -62,9 +62,9 @@ The appropriate flashing tool for the board type needs to be selected.
 The mainboard in the Ender 3 (and probably other devices) is flashed
 without a boot loader. The first time you want to upgrade its firmware,
 you have to use extra programming hardware ("burner") to install a bootloader.
-Alternately you can use the "ISP" programmer which they include with their
+Alternately you can use the "USB ISP" programmer which they include with their
 [BL-Touch Add-on Kit](https://www.creality3dofficial.com/products/creality-bl-touch?_pos=8&_sid=07be62867&_ss=rell), which comes with a pinout card.
-Using this kit instead of using this plugin can avoid exceeding memory limits
+Using their kit instead of using this plugin can avoid exceeding memory limits
 with custom builds of Marlin.
 
 #### Special Note for the SKR Pro v1.1 STM32 Board
