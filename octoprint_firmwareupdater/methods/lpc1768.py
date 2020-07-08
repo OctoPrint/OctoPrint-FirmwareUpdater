@@ -81,6 +81,17 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
         self._send_status("flasherror")
         return False
 
+    # On some systems there is a problem: if we unmount the SD card immediately, the file may not end up actually copied.
+    # The code block below helps.
+    self._logger.info(u"Synchronizing cached writes to SD card")
+    try:
+        r = os.system('sync')
+    except:
+        e = sys.exc_info()[0]
+        self._logger.error("Error executing 'sync' command")
+        return False
+    time.sleep(1)
+
     unmount_command = 'sudo umount ' + lpc1768_path
     self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
     try:
