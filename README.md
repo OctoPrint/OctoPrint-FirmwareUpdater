@@ -101,6 +101,16 @@ Typical MCU/programmer combinations are:
 | Atmega2560 | wiring | RAMPS, RAMbo, etc. |
 | Atmega644p | arduino | Sanguinololu, Melzi |
 
+To locate the install path on most Linux variants (including OctoPi):
+* Connect via SSH and run the following: `find /usr -name avrdude | grep avrdude`
+* You should see something like the following returned:
+   ```
+   pi@OctoPi_01:~ $ find /usr -name avrdude | grep avrdude
+   /usr/bin/avrdude
+   /usr/share/doc/avrdude
+   ```
+* You should then add the path that does not show "doc" in it to the plugin configuration page in OctoPrint.
+
 Optional advanced settings are available for:
 * Baud rate - sets the speed for communication with the board
 * Avrdude config file - overrides the default config file with a custom one
