@@ -39,9 +39,6 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 ### Not-yet Supported Boards
 * SKR Mini E3 - waiting on more information, see [this issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103)
 
-#### Special Note for the SKR Pro v1.1 STM32 Board
-It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 board.**
-
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
 ## Plugin Installation
@@ -62,6 +59,15 @@ The appropriate flashing tool for the board type needs to be selected.
 
 #### Special Note for the SKR Pro v1.1 STM32 Board
 It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 board.**
+
+#### Special Note for the Creality Ender 3
+The mainboard in the Ender 3 (and probably other devices) is flashed
+without a boot loader. The first time you want to upgrade its firmware,
+you have to use extra programming hardware ("burner") to install a bootloader.
+Alternately you can use the "USB ISP" programmer which they include with their
+[BL-Touch Add-on Kit](https://www.creality3dofficial.com/products/creality-bl-touch?_pos=8&_sid=07be62867&_ss=rell), which comes with a pinout card.
+Using their kit instead of using this plugin can avoid exceeding memory limits
+with custom builds of Marlin.
 
 Plugin settings vary depending on the flashing tool and are documented below.
 
@@ -100,6 +106,16 @@ Typical MCU/programmer combinations are:
 | Atmega1284p | arduino | Anet A series, Creality, Ender, etc. |
 | Atmega2560 | wiring | RAMPS, RAMbo, etc. |
 | Atmega644p | arduino | Sanguinololu, Melzi |
+
+To locate `avrdude` on most Linux variants (including OctoPi):
+* Connect via SSH and run the following: `which avrdude`
+* The output should be similar to:
+   ```
+   pi@octopi:~ $ which avrdude
+   /usr/bin/avrdude
+   pi@octopi:~ $
+   ```
+* Add the full path to avrdude in the plugin settings.
 
 Optional advanced settings are available for:
 * Baud rate - sets the speed for communication with the board
