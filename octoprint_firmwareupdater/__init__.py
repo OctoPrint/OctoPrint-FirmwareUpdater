@@ -116,7 +116,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			uploaded_hex_path = flask.request.values[input_upload_path]
 
 			# create a temporary
-			
+
 			try:
 				file_to_flash = tempfile.NamedTemporaryFile(mode='r+b', delete=False)
 				file_to_flash.close()
@@ -192,7 +192,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			except:
 				e = sys.exc_info()[0]
 				self._logger.error("Error executing pre-flash commandline '{}'".format(preflash_command))
-			
+
 			self._logger.info("Pre-flash command '{}' returned: {}".format(preflash_command, r))
 
 		try:
@@ -210,6 +210,20 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				self._logger.error(error_message)
 				self._send_status("flasherror", message=error_message)
 				return
+
+			preflash_gcode = self._settings.get(["preflash_gcode"])
+			if preflash_gcode is not None and self._settings.get_boolean(["enable_preflash_gcode"]):
+				if self._printer.is_operational():
+					self._logger.info("Sending pre-flash gcode commands: {}".format(preflash_gcode))
+					self._printer.commands(preflash_gcode.split(";"))
+
+					preflash_delay = self._settings.get(["preflash_delay"]) or 3
+					if float(preflash_delay) > 0 and self._settings.get(["enable_preflash_delay"]):
+						self._logger.info("Pre-flash delay: {}s".format(preflash_delay))
+						time.sleep(float(preflash_delay))
+
+				else:
+					self._logger.info("Printer not connected, not sending pre-flash gcode commands")
 
 			reconnect = None
 			if self._printer.is_operational():
@@ -245,7 +259,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						except:
 							e = sys.exc_info()[0]
 							self._logger.error("Error executing post-flash commandline '{}'".format(postflash_command))
-						
+
 						self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
 
 					postflash_gcode = self._settings.get(["postflash_gcode"])
@@ -309,14 +323,18 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"lpc1768_path": None,
 			"lpc1768_preflashreset": True,
 			"postflash_delay": "0",
+			"preflash_delay": "3",
 			"postflash_gcode": None,
+			"preflash_gcode": None,
 			"run_postflash_gcode": False,
 			"preflash_commandline": None,
 			"postflash_commandline": None,
 			"enable_preflash_commandline": None,
 			"enable_postflash_commandline": None,
 			"enable_postflash_delay": None,
+			"enable_preflash_delay": None,
 			"enable_postflash_gcode": None,
+			"enable_preflash_gcode": None,
 			"disable_bootloadercheck": None
 		}
 
