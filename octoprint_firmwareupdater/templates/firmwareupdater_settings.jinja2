@@ -433,7 +433,7 @@
                     </label>
                     <!-- Pre-flash commandline -->
                     <div class="control-group">
-                        <label class="control-label">{{ _('Pre-flash command') }}</label>
+                        <label class="control-label">{{ _('Pre-flash system command') }}</label>
                         <div class="controls">
                             <label class="checkbox">
                                 <input type="checkbox" data-bind="checked: configEnablePreflashCommandline"> Enabled
@@ -445,10 +445,41 @@
                         </div>
                     </div>
                     <!-- End pre-flash commandline -->
-                    
+
+                    <!-- Pre-flash gcode -->
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Pre-flash gcode') }}</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: configEnablePreflashGcode"> Enabled
+                            </label>
+                            <div class="input">
+                                <input type="text" class="input-block-level" data-bind="value: configPreflashGcode, enable: configEnablePreflashGcode">
+                            </div>
+                            <span class="help-block">{{ _('Gcode commands to run before blashing. <b>Pre-flash gcode commands will only run if the printer is connected.</b> Separate multiple commands with a semi colon.') }}</span>
+                        </div>
+                    </div>
+                    <!-- End pre-flash gcode -->
+
+                    <!-- Pre-flash gcode delay -->
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Pre-flash gcode delay') }}</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: configEnablePreflashDelay"> Enabled
+                            </label>
+                            <div class="input-append">
+                                <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configPreflashDelay, enable: configEnablePreflashDelay">
+                                <span class="add-on">seconds</span>
+                            </div>
+                            <span class="help-block">{{ _('Delay after sending pre-flash gcode. Allows time for code to complete before initiating flash.') }}</span>
+                        </div>
+                    </div>
+                    <!-- End pre-flash delay -->
+
                     <!-- Post-flash commandline -->
                     <div class="control-group">
-                        <label class="control-label">{{ _('Post-flash command') }}</label>
+                        <label class="control-label">{{ _('Post-flash system command') }}</label>
                         <div class="controls">
                             <label class="checkbox">
                                 <input type="checkbox" data-bind="checked: configEnablePostflashCommandline"> Enabled
@@ -463,7 +494,7 @@
 
                     <!-- Post-flash delay -->
                     <div class="control-group">
-                        <label class="control-label">{{ _('Post-flash delay') }}</label>
+                        <label class="control-label">{{ _('Post-flash command delay') }}</label>
                         <div class="controls">
                             <label class="checkbox">
                                 <input type="checkbox" data-bind="checked: configEnablePostflashDelay"> Enabled

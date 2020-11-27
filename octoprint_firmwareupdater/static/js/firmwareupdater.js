@@ -17,7 +17,9 @@ $(function() {
         self.showStm32flashConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
+        self.configEnablePreflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
+        self.configPreflashDelay = ko.observable();
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
         self.configDisableBootloaderCheck = ko.observable();
@@ -25,6 +27,8 @@ $(function() {
         self.configPreflashCommandline = ko.observable();
         self.configEnablePostflashCommandline = ko.observable();
         self.configPostflashCommandline = ko.observable();
+        self.configEnablePreflashGcode = ko.observable();
+        self.configPreflashGcode = ko.observable();
 
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
@@ -436,7 +440,9 @@ $(function() {
             self.configPreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_commandline());
             self.configPostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_commandline());
             self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
+            self.configPreflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_delay());
             self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
+            self.configPreflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_gcode());
 
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline() != 'false') {
                 self.configEnablePreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline());
@@ -449,11 +455,19 @@ $(function() {
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay() != 'false') {
                 self.configEnablePostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay());
             }
-            
+
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_delay() != 'false') {
+                self.configEnablePreflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_delay());
+            }
+
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
                 self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
             }
-            
+
+            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_gcode() != 'false') {
+                self.configEnablePreflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_gcode());
+            }
+
             if(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck() != 'false') {
                 self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
             }
@@ -473,13 +487,13 @@ $(function() {
             self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
             self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
             self.configBossacCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_commandline());
-            
+
             // Load the dfu-programmer settings
             self.configDfuPath(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_path());
             self.configDfuMcu(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_avrmcu());
             self.configDfuCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_commandline());
             self.configDfuEraseCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_erasecommandline());
-            
+
             // Load the lpc1768 settings
             self.configLpc1768Path(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path());
             if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
@@ -542,9 +556,13 @@ $(function() {
                         enable_postflash_commandline: self.configEnablePostflashCommandline(),
                         postflash_commandline: self.configPostflashCommandline(),
                         postflash_delay: self.configPostflashDelay(),
+                        preflash_delay: self.configPreflashDelay(),
                         postflash_gcode: self.configPostflashGcode(),
+                        preflash_gcode: self.configPreflashGcode(),
                         enable_postflash_delay: self.configEnablePostflashDelay(),
+                        enable_preflash_delay: self.configEnablePreflashDelay(),
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
+                        enable_preflash_gcode: self.configEnablePreflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck()
                     }
                 }
