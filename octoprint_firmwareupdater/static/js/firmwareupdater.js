@@ -6,9 +6,12 @@ $(function() {
         self.loginState = parameters[1];
         self.connection = parameters[2];
         self.printerState = parameters[3];
+        self.access = parameters[4];
 
         // General settings
         self.configFlashMethod = ko.observable();
+        self.configShowNavbarIcon = ko.observable();
+        self.showFirmwareUpdaterNavbarIcon = ko.observable(false);
         self.showAdvancedConfig = ko.observable(false);
         self.showAvrdudeConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
@@ -122,6 +125,17 @@ $(function() {
         self.configurationDialog = undefined;
 
         self.inSettingsDialog = false;
+
+        self.onAllBound = function(allViewModels) {
+            self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
+            if (self.loginState.isAdmin() && self.configShowNavbarIcon()) {
+                self.showFirmwareUpdaterNavbarIcon(true);
+            }
+        }
+
+        self.showFirmwareUpdater = function(){
+            self.settingsViewModel.show("#settings_plugin_firmwareupdater");
+        }
 
         self.connection.selectedPort.subscribe(function(value) {
             if (value === undefined) return;
@@ -437,6 +451,7 @@ $(function() {
         self.showPluginConfig = function() {
             // Load the general settings
             self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
+            self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             self.configPreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_commandline());
             self.configPostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_commandline());
             self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
@@ -526,6 +541,7 @@ $(function() {
                 plugins: {
                     firmwareupdater: {
                         flash_method: self.configFlashMethod(),
+                        enable_navbar: self.configShowNavbarIcon(),
                         avrdude_path: self.configAvrdudePath(),
                         avrdude_conf: self.configAvrdudeConfigFile(),
                         avrdude_avrmcu: self.configAvrdudeMcu(),
@@ -841,7 +857,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push([
         FirmwareUpdaterViewModel,
-        ["settingsViewModel", "loginStateViewModel", "connectionViewModel", "printerStateViewModel"],
-        [document.getElementById("settings_plugin_firmwareupdater")]
+        ["settingsViewModel", "loginStateViewModel", "connectionViewModel", "printerStateViewModel", "accessViewModel"],
+        ["#settings_plugin_firmwareupdater", "#navbar_plugin_firmwareupdater"]
     ]);
 });
