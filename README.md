@@ -311,16 +311,35 @@ Erase: `{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R`
 Flash: 
 
 ## Pre and Post-flash Settings
-#### Pre-flash Command
-Specify a system command to run on the host prior to flashing.
 
-#### Pre-flash Command
-Specify a system command to run on the host after flashing.
+The flash sequence is:
+1. Execute the pre-flash system command(s) on the host
+1. Send the pre-flash gcode commands(s) to the printer
+1. Pause for the pre-flash gcode delay
+1. Disconnect the printer
+1. Execute the firmware update
+1. Pause for the post-flash delay
+1. Execute the post-flash system command(s) on the host
+1. Reconnect the printer
+1. Send the post-flash gcode command(s) to the printer
+
+#### Pre-flash System Command
+Specify a system command or script to run on the host prior to flashing.  Multiple commands can be separated with a semicolon.
+
+#### Pre-flash Gcode
+Specify gcode commands to run on the printer prior to flashing.  Multiple commands can be separated with a semicolon.
+**Commands are only run if the printer is connected when flashing is initiated**
+
+#### Pre-flash Gcode Delay
+Delay after sending pre-flash gcode. Allows time for code to complete before initiating flash.
 
 #### Post-flash Delay ####
 This setting can be used to insert a delay of up to 180s after the firmware has been uploaded.  This can be useful if the board takes some time to restart.  A delay of 20-30s is usually enough.
 
-#### Post-flash Gcode ####
+#### Post-flash System Command
+Specify a system command or script to run on the host after flashing.  Multiple commands can be separated with a semicolon.
+
+#### Post-flash Gcode
 You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
 The post-flash code will run more or less immediately if the printer was connected before the flash started (so reconnects automatically when the flash finishes), or whenever the printer is manually reconnected after the firmware is flashed.
 
