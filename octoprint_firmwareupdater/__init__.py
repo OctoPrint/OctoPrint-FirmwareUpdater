@@ -297,6 +297,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 	def get_settings_defaults(self):
 		return {
 			"flash_method": None,
+			"enable_navbar": False,
 			"avrdude_path": None,
 			"avrdude_conf": None,
 			"avrdude_avrmcu": None,

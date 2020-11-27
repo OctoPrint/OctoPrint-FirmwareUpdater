@@ -212,6 +212,17 @@
                 </div>
                 <!-- end stm32flash options -->
 
+                <div class="control-group">
+                    <label class="control-label">{{ _('Enable navbar icon') }}</label>
+                    <div class="controls">
+                        <div class="input">
+                            <input type="checkbox" class="input-block-level" data-bind="checked: configShowNavbarIcon">
+                        </div>
+                        <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar.  (Reload after enabling/disabling.)') }}</span>
+                    </div>
+                </div>
+                <hr>
+
                 <!-- advanced options -->
 
                 <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
@@ -547,4 +558,3 @@
         </div>
     </div>
 </div>
-
