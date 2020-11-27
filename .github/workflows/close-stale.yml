@@ -1,0 +1,28 @@
+#
+# close-stale.yml
+# Close open issues after a period of inactivity
+#
+
+name: Close Stale Issues
+
+on:
+  schedule:
+  - cron: "22 1 * * *"
+
+jobs:
+  stale:
+    name: Close Stale Issues
+    if: github.repository == 'OctoPrint/OctoPrint-FirmwareUpdater'
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/stale@v3
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: >
+          This issue has been automatically marked as stale because it has not had any
+          recent activity. Please add a reply if you want to keep this issue active,
+          otherwise it will be automatically closed within 7 days.
+        days-before-stale: 90
+        days-before-close: 7

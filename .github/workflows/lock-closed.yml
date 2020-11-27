@@ -1,0 +1,31 @@
+#
+# lock-closed.yml
+# Lock closed issues after a period of inactivity
+#
+
+name: Lock Closed Issues
+
+on:
+  schedule:
+    - cron: '0 1/13 * * *'
+
+jobs:
+  lock:
+    name: Lock Closed Issues
+    if: github.repository == 'OctoPrint/OctoPrint-FirmwareUpdater'
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: dessant/lock-threads@v2
+      with:
+        github-token: ${{ github.token }}
+        process-only: 'issues'
+        issue-lock-inactive-days: '180'
+        issue-exclude-created-before: ''
+        issue-exclude-labels: 'no-locking'
+        issue-lock-labels: ''
+        issue-lock-comment: >
+          This issue has been automatically locked because there was no further activity
+          after it was closed. Please open a new issue for any related problems.
+        issue-lock-reason: ''
