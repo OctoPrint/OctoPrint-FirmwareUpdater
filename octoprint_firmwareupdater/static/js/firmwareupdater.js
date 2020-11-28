@@ -18,6 +18,7 @@ $(function() {
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
         self.showStm32flashConfig = ko.observable(false);
+        self.showCustomConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
         self.configEnablePreflashDelay = ko.observable();
@@ -109,6 +110,17 @@ $(function() {
             return self.stm32flashPathBroken() || self.stm32flashPathOk();
         });
 
+        // Config settings for custom command
+        self.configCustomCommandline = ko.observable();
+        self.configCustomWorkingDir = ko.observable();
+
+        self.customWorkingDirBroken = ko.observable(false);
+        self.customWorkingDirOk = ko.observable(false);
+        self.customWorkingDirText = ko.observable();
+        self.customWorkingDirHelpVisible = ko.computed(function() {
+            return self.customWorkingDirBroken() || self.customWorkingDirOk();
+        });
+
         self.flashPort = ko.observable(undefined);
 
         self.firmwareFileName = ko.observable(undefined);
@@ -160,36 +172,49 @@ $(function() {
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showCustomConfig(false);
             } else if(value == 'bossac') {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(true);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showCustomConfig(false);
             } else if(value == 'lpc1768'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(true);
                 self.showStm32flashConfig(false);
                 self.showDfuConfig(false);
+                self.showCustomConfig(false);
             } else if(value == 'dfuprogrammer'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(true);
                 self.showStm32flashConfig(false);
+                self.showCustomConfig(false);
             } else if(value == 'stm32flash'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(true);
+                self.showCustomConfig(false);
+            } else if(value == 'custom'){
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(false);
+                self.showDfuConfig(false);
+                self.showStm32flashConfig(false);
+                self.showCustomConfig(true);
             } else {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showCustomConfig(false);
             }
          });
 
@@ -530,6 +555,10 @@ $(function() {
             self.configStm32flashExecuteAddress(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_executeaddress());
             self.configStm32flashReset(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_reset());
 
+            // Load the custom command settings
+            self.configCustomCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.custom_commandline());
+            self.configCustomWorkingDir(self.settingsViewModel.settings.plugins.firmwareupdater.custom_workingdir());
+
             self.configurationDialog.modal();
         };
 
@@ -570,6 +599,8 @@ $(function() {
                         stm32flash_execute : self.configStm32flashExecute(),
                         stm32flash_executeaddress : self.configStm32flashExecuteAddress(),
                         stm32flash_reset: self.configStm32flashReset(),
+                        custom_commandline: self.configCustomCommandline(),
+                        custom_workingdir: self.configCustomWorkingDir(),
                         lpc1768_path: self.configLpc1768Path(),
                         lpc1768_unmount_command: self.configLpc1768UnmountCommand(),
                         lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
@@ -834,6 +865,33 @@ $(function() {
         self.resetLpc1768UnmountCommand = function() {
             self.configLpc1768UnmountCommand("sudo umount {mountpoint}");
         }
+        self.testCustomWorkingDir = function() {
+            $.ajax({
+                url: API_BASEURL + "util/test",
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    command: "path",
+                    path: self.configCustomWorkingDir(),
+                    check_type: "dir",
+                    check_writable_dir: "true"
+                }),
+                contentType: "application/json; charset=UTF-8",
+                success: function(response) {
+                    if (!response.result) {
+                        if (!response.exists) {
+                            self.customWorkingDirText(gettext("The path doesn't exist"));
+                        } else if (!response.typeok) {
+                            self.customWorkingDirText(gettext("The path is not a folder"));
+                        }
+                    } else {
+                        self.customWorkingDirText(gettext("The path is valid"));
+                    }
+                    self.customWorkingDirOk(response.result);
+                    self.customWorkingDirBroken(!response.result);
+                }
+            })
+        };
 
         self.onSettingsShown = function() {
             self.inSettingsDialog = true;

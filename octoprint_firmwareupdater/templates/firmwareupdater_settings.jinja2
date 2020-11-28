@@ -93,6 +93,7 @@
                             <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
                             <option value=lpc1768>lpc1768 (LPC1768-based Boards)</option>
                             <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
+                            <option value=custom>custom (system command or script)</option>
                         </select>
                     </div>
                 </div>
@@ -213,6 +214,30 @@
                     <hr>
                 </div>
                 <!-- end stm32flash options -->
+
+                <!-- custom command options -->
+                <div data-bind="visible: showCustomConfig">
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Custom command(s)') }}</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input type="text" class="input-block-level" data-bind='value: configCustomCommandline'>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group" data-bind="css: {error: customWorkingDirBroken, success: customWorkingDirOk}">
+                        <label class="control-label">{{ _('Working directory') }}</label>
+                        <div class="controls">
+                            <div class="input-append">
+                                <input type="text" class="input-block-level" data-bind='value: configCustomWorkingDir, valueUpdate: "afterkeydown"'>
+                                <button class="btn" type="button" data-bind="click: testCustomWorkingDir, enable: configCustomWorkingDir, css: {disabled: !configCustomWorkingDir()}">{{ _('Test') }}</button>
+                            </div>
+                            <span class="help-block" data-bind="visible: customWorkingDirBroken() || customWorkingDirOk, text: customWorkingDirText"></span>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <!-- end custom options -->
 
                 <div class="control-group">
                     <label class="control-label">{{ _('Enable navbar icon') }}</label>
