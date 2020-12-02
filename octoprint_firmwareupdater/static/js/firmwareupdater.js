@@ -114,6 +114,13 @@ $(function() {
         self.configCustomCommandline = ko.observable();
         self.configCustomWorkingDir = ko.observable();
 
+        self.customCommandlineBroken = ko.observable(false);
+        self.customCommandlineOk = ko.observable(false);
+        self.customCommandlineText = ko.observable();
+        self.customCommandlineHelpVisible = ko.computed(function() {
+            return self.customCommandlineBroken() || self.customCommandlineOk();
+        });
+
         self.customWorkingDirBroken = ko.observable(false);
         self.customWorkingDirOk = ko.observable(false);
         self.customWorkingDirText = ko.observable();
@@ -865,6 +872,45 @@ $(function() {
         self.resetLpc1768UnmountCommand = function() {
             self.configLpc1768UnmountCommand("sudo umount {mountpoint}");
         }
+
+        self.testCustomCommandline = function() {
+            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+
+            if (!filePathRegEx.test(self.configCustomCommandline())) {
+                self.customCommandlineText(gettext("The path is not valid"));
+                self.customCommandlineOk(false);
+                self.customCommandlineBroken(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configCustomCommandline(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.customCommandlineText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.customCommandlineText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.customCommandlineText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.customCommandlineText(gettext("The path is valid"));
+                        }
+                        self.customCommandlineOk(response.result);
+                        self.customCommandlineBroken(!response.result);
+                    }
+                })
+            }
+        };
+
         self.testCustomWorkingDir = function() {
             $.ajax({
                 url: API_BASEURL + "util/test",

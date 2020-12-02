@@ -217,12 +217,14 @@
 
                 <!-- custom command options -->
                 <div data-bind="visible: showCustomConfig">
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Custom command(s)') }}</label>
+                    <div class="control-group" data-bind="css: {error: customCommandlineBroken, success: customCommandlineOk}">
+                        <label class="control-label">{{ _('Custom command') }}</label>
                         <div class="controls">
                             <div class="input-append">
-                                <input type="text" class="input-block-level" data-bind='value: configCustomCommandline'>
+                                <input type="text" class="input-block-level" data-bind='value: configCustomCommandline, valueUpdate: "afterkeydown"'>
+                                <button class="btn" type="button" data-bind="click: testCustomCommandline, enable: configCustomCommandline, css: {disabled: !configCustomCommandline()}">{{ _('Test') }}</button>
                             </div>
+                            <span class="help-block" data-bind="visible: customCommandlineBroken() || customCommandlineOk, text: customCommandlineText"></span>
                         </div>
                     </div>
                     <div class="control-group" data-bind="css: {error: customWorkingDirBroken, success: customWorkingDirOk}">

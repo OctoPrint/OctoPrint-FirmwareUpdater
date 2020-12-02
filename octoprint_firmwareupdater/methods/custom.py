@@ -18,7 +18,7 @@ def _flash_custom(self, firmware=None, printer_port=None):
     assert(printer_port is not None)
 
     custom_commandline = self._settings.get(["custom_commandline"])
-    custom_commandline = custom_commandline.replace("{firmware}", avrdude_path)
+    custom_commandline = custom_commandline.replace("{firmware}", firmware)
     custom_commandline = custom_commandline.replace("{port}", printer_port)
 
     custom_workingdir = self._settings.get(["custom_workingdir"])
@@ -33,7 +33,7 @@ def _flash_custom(self, firmware=None, printer_port=None):
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stderr.read(timeout=0.5).decode('utf-8')
+            output = p.stdout.read(timeout=0.5).decode('utf-8')
             if not output:
                 p.commands[0].poll()
                 continue
