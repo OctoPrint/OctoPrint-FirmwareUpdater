@@ -104,6 +104,7 @@
                         <div class="controls">
                             <select data-bind="value: configAvrdudeMcu">
                                 <option value=></option>
+                                <option value=m328p>ATmega328p</option>
                                 <option value=m644p>ATmega644p</option>
                                 <option value=m1280>ATmega1280</option>
                                 <option value=m1284p>ATmega1284p</option>
@@ -326,6 +327,16 @@
                                     <input type="checkbox" data-bind="checked: configLpc1768ResetBeforeFlash">
                                 </div>
                                 <span class="help-block">{{ _('If checked the board will be reset before a firmware update is attempted. Helps to ensure that the SD card is properly mounted.') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Unmount command') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="text" class="input-block-level" data-bind='value: configLpc1768UnmountCommand'>
+                                    <button class="btn" type="button" data-bind="click: resetLpc1768UnmountCommand">{{ _('Reset') }}</button>
+                                </div>
+                                <span class="help-block"></span>
                             </div>
                         </div>
                     </div>
