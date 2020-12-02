@@ -32,13 +32,33 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
     if self._settings.get_boolean(["lpc1768_preflashreset"]):
         self._send_status("progress", subtype="boardreset")
 
-        unmount_command = 'sudo umount ' + lpc1768_path
-        self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
+        # Sync the filesystem to flush writes
+        self._logger.info(u"Synchronizing cached writes to SD card")
         try:
-            r = os.system(unmount_command)
+            r = os.system('sync')
         except:
             e = sys.exc_info()[0]
-            self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+            self._logger.error("Error executing 'sync' command")
+            return False
+        time.sleep(1)
+
+        unmount_command = self._settings.get(["lpc1768_unmount_command"])
+        if unmount_command:
+            unmount_command = unmount_command.replace("{mountpoint}", lpc1768_path)
+
+            self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
+            try:
+                r = os.system(unmount_command)
+            except:
+                e = sys.exc_info()[0]
+                self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+                self._send_status("flasherror", message="Unable to unmount SD card")
+                return False
+
+            if r != 0:
+                self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+                self._send_status("flasherror", message="Unable to unmount SD card")
+                return False
 
         self._logger.info(u"Pre-flash reset: attempting to reset the board")
         if not _reset_lpc1768(self, printer_port):
@@ -48,7 +68,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
     # Release the SD card
     if not _unmount_sd(self, printer_port):
         self._send_status("flasherror", message="Unable to unmount SD card")
-        return False	
+        return False
 
     # loop until the mount is available; timeout after 60s
     count = 1
@@ -61,7 +81,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
         self._logger.debug(u"Waiting for firmware folder path to become available [{}/{}]".format(count, int(timeout / interval)))
         count = count + 1
         time.sleep(interval)
-    
+
     if not os.access(lpc1768_path, os.W_OK):
         self._send_status("flasherror", message="Unable to access firmware folder")
         self._logger.error(u"Firmware folder path is not writeable: {path}".format(path=lpc1768_path))
@@ -81,8 +101,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
         self._send_status("flasherror")
         return False
 
-    # On some systems there is a problem: if we unmount the SD card immediately, the file may not end up actually copied.
-    # The code block below helps.
+    # Sync the filesystem to flush writes
     self._logger.info(u"Synchronizing cached writes to SD card")
     try:
         r = os.system('sync')
@@ -92,19 +111,29 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
         return False
     time.sleep(1)
 
-    unmount_command = 'sudo umount ' + lpc1768_path
-    self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
-    try:
-        r = os.system(unmount_command)
-    except:
-        e = sys.exc_info()[0]
-        self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+    unmount_command = self._settings.get(["lpc1768_unmount_command"])
+    if unmount_command:
+        unmount_command = unmount_command.replace("{mountpoint}", lpc1768_path)
+
+        self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
+        try:
+            r = os.system(unmount_command)
+        except:
+            e = sys.exc_info()[0]
+            self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+            self._send_status("flasherror", message="Unable to unmount SD card")
+            return False
+
+        if r != 0:
+            self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+            self._send_status("flasherror", message="Unable to unmount SD card")
+            return False
 
     self._logger.info(u"Firmware update reset: attempting to reset the board")
     if not _reset_lpc1768(self, printer_port):
         self._logger.error(u"Reset failed")
         return False
-    
+
     return True
 
 def _reset_lpc1768(self, printer_port=None):
@@ -145,14 +174,14 @@ def _reset_lpc1768(self, printer_port=None):
 def _wait_for_lpc1768(self, printer_port=None):
     assert(printer_port is not None)
     self._logger.info(u"Waiting for LPC1768 at '{port}' to reset".format(port=printer_port))
-    
+
     check_command = 'ls ' + printer_port + ' > /dev/null 2>&1'
     start = time.time()
     timeout = 10
     interval = 0.2
     count = 1
     connected = True
-    
+
     loopstarttime = time.time()
 
     while (time.time() < (loopstarttime + timeout) and connected):
@@ -188,7 +217,7 @@ def _wait_for_lpc1768(self, printer_port=None):
         if not os.system(check_command):
             connected = True
             time.sleep(interval)
-        
+
         else:
             time.sleep(interval)
             connected = False
