@@ -829,6 +829,10 @@ $(function() {
             })
         };
 
+        self.resetLpc1768UnmountCommand = function() {
+            self.configLpc1768UnmountCommand("sudo umount {mountpoint}");
+        }
+
         self.onSettingsShown = function() {
             self.inSettingsDialog = true;
         };
