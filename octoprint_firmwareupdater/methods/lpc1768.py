@@ -50,7 +50,10 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
                 self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
                 try:
-                    (r, o) = subprocess.getstatusoutput(unmount_command)
+                    p = subprocess.Popen(unmount_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                    out, err = p.communicate()
+                    r = p.returncode
+
                 except:
                     e = sys.exc_info()[0]
                     self._logger.error("Error executing unmount command '{}'".format(unmount_command))
@@ -59,7 +62,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
                 if r != 0:
                     self._logger.error("Error executing unmount command '{}'".format(unmount_command))
-                    self._logger.error("{}".format(o))
+                    self._logger.error("{}".format(err.strip()))
                     self._send_status("flasherror", message="Unable to unmount SD card")
                     return False
         else:
@@ -122,7 +125,10 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
         self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
         try:
-            (r, o) = subprocess.getstatusoutput(unmount_command)
+            p = subprocess.Popen(unmount_command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            out, err = p.communicate()
+            r = p.returncode
+
         except:
             e = sys.exc_info()[0]
             self._logger.error("Error executing unmount command '{}'".format(unmount_command))
@@ -131,7 +137,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
         if r != 0:
             self._logger.error("Error executing unmount command '{}'".format(unmount_command))
-            self._logger.error("{}".format(o))
+            self._logger.error("{}".format(err.strip()))
             self._send_status("flasherror", message="Unable to unmount SD card")
             return False
 
