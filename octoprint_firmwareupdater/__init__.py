@@ -370,6 +370,20 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				repo="OctoPrint-FirmwareUpdater",
 				current=self._plugin_version,
 
+				# stable branch
+				stable_branch=dict(
+					name="Stable", branch="master", comittish=["master"]
+				),
+
+				# release candidates
+				prerelease_branches=[
+					dict(
+						name="Release Candidate",
+						branch="rc",
+						comittish=["rc", "master"],
+					)
+				],
+
 				# update method: pip
 				pip="https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/archive/{target_version}.zip"
 			)
