@@ -2,6 +2,7 @@ import re
 import os
 import time
 import shutil
+import subprocess
 
 def _check_lpc1768(self):
     lpc1768_path = self._settings.get(["lpc1768_path"])
@@ -49,7 +50,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
                 self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
                 try:
-                    r = os.system(unmount_command)
+                    (r, o) = subprocess.getstatusoutput(unmount_command)
                 except:
                     e = sys.exc_info()[0]
                     self._logger.error("Error executing unmount command '{}'".format(unmount_command))
@@ -58,6 +59,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
                 if r != 0:
                     self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+                    self._logger.error("{}".format(o))
                     self._send_status("flasherror", message="Unable to unmount SD card")
                     return False
         else:
@@ -120,7 +122,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
         self._logger.info(u"Unmounting SD card: '{}'".format(unmount_command))
         try:
-            r = os.system(unmount_command)
+            (r, o) = subprocess.getstatusoutput(unmount_command)
         except:
             e = sys.exc_info()[0]
             self._logger.error("Error executing unmount command '{}'".format(unmount_command))
@@ -129,6 +131,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
 
         if r != 0:
             self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+            self._logger.error("{}".format(o))
             self._send_status("flasherror", message="Unable to unmount SD card")
             return False
 
