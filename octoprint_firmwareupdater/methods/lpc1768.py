@@ -63,10 +63,13 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
                     return False
 
                 if r != 0:
-                    self._logger.error("Error executing unmount command '{}'".format(unmount_command))
-                    self._logger.error("{}".format(err.strip()))
-                    self._send_status("flasherror", message="Unable to unmount SD card")
-                    return False
+                    if err.strip().endswith("not mounted."):
+                        self._logger.info("{}".format(err.strip()))
+                    else:
+                        self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+                        self._logger.error("{}".format(err.strip()))
+                        self._send_status("flasherror", message="Unable to unmount SD card")
+                        return False
         else:
             self._logger.info(u"SD card not mounted, skipping unmount")
 
@@ -139,10 +142,13 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
             return False
 
         if r != 0:
-            self._logger.error("Error executing unmount command '{}'".format(unmount_command))
-            self._logger.error("{}".format(err.strip()))
-            self._send_status("flasherror", message="Unable to unmount SD card")
-            return False
+            if err.strip().endswith("not mounted."):
+                self._logger.info("{}".format(err.strip()))
+            else:
+                self._logger.error("Error executing unmount command '{}'".format(unmount_command))
+                self._logger.error("{}".format(err.strip()))
+                self._send_status("flasherror", message="Unable to unmount SD card")
+                return False
 
     self._logger.info(u"Firmware update reset: attempting to reset the board")
     if not _reset_lpc1768(self, printer_port):
