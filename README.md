@@ -181,7 +181,7 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    Find FS_MOUNTOPTIONS and change it to:
    
    `FS_MOUNTOPTIONS="-fstype=vfat,gid=pi,uid=pi,dmask=0022,fmask=0111"`
-   
+
 3. Configure systemd-udevd so that the mount is accessible
 
    `sudo systemctl edit systemd-udevd`
@@ -198,8 +198,20 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    sudo systemctl daemon-reload
    sudo service systemd-udevd --full-restart
    ```
-
 Once usbmount is installed and configured the LPC1768 on-board SD card should be mounted at `/media/usb` the next time it is plugged in or restarted.
+
+#### Sudo rights
+The plugin needs to be able to unmount the SD card to reduce the risk of file system corruption.  The default command the plugin will use is `sudo umount /media/usb`.  You must be able to run this command at the command line without being prompted for a password.
+
+If your system is configured to allow `pi` to run all `sudo` commands without a password (the default) then you do not need to do anything further.
+
+If you need to enter a password when running `sudo` commands as `pi` you will need to create a new `sudoers` entry in order for the plugin to work correctly.
+1. Run `sudo nano /etc/sudoers.d/020_firmware_updater` to create a new file
+2. Paste this line into the new file:
+   `pi ALL=NOPASSWD: /bin/umount`
+3. Save and close the file
+   
+Otherwise, you can disable the unmount command entirely by clearing the **Unmount command** field in the plugin's advanced settings.
 
 #### LPC1768 Configuration
 The only required setting is the path to the firmware update folder.  If using usbmount it will probably be `/media/usb`.
