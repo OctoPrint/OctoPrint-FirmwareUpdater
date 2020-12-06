@@ -337,7 +337,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"enable_preflash_delay": None,
 			"enable_postflash_gcode": None,
 			"enable_preflash_gcode": None,
-			"disable_bootloadercheck": None
+			"disable_bootloadercheck": None,
+			"plugin_version": self._plugin_version
 		}
 
 	#~~ Asset API
