@@ -35,9 +35,7 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 * 'LPC1768' MCUs (MKS SBASE, SKR v1.1 and v1.3, etc., also SKR Pro v1.1)
 * 'SAM' family 32-bit MCUs (Arduino DUE, etc.)
 * 'STM32' family 32-bits MCUs with embedded ST serial bootloader (FYSETC Cheetah, **not** SKR Pro)
-
-### Not-yet Supported Boards
-* SKR Mini E3 - waiting on more information, see [this issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103)
+* 'STM32' family 32-bit MCUs which update from the SD card using the lpc1768 method (SKR Pro v1.1, SKR Mini E3 v2, etc.)
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
@@ -57,8 +55,8 @@ The appropriate flashing tool for the board type needs to be selected.
 | SAM          | bossac         |
 | STM32        | stm32flash     |
 
-#### Special Note for the SKR Pro v1.1 STM32 Board
-It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 board.**
+#### Special Note for the SKR Pro v1.1 and SKR Mini E3 v2 STM32 Boards
+It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 and Mini E3 v2 boards (and maybe others) to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 or SKR Mini E3 v2 boards.**  [Issue #103](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103) may contain useful information for configuring the required firmware options.
 
 #### Special Note for the Creality Ender 3
 The mainboard in the Ender 3 (and probably other devices) is flashed
@@ -181,7 +179,7 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    Find FS_MOUNTOPTIONS and change it to:
    
    `FS_MOUNTOPTIONS="-fstype=vfat,gid=pi,uid=pi,dmask=0022,fmask=0111"`
-   
+
 3. Configure systemd-udevd so that the mount is accessible
 
    `sudo systemctl edit systemd-udevd`
@@ -198,8 +196,20 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    sudo systemctl daemon-reload
    sudo service systemd-udevd --full-restart
    ```
-
 Once usbmount is installed and configured the LPC1768 on-board SD card should be mounted at `/media/usb` the next time it is plugged in or restarted.
+
+#### Sudo rights
+The plugin needs to be able to unmount the SD card to reduce the risk of file system corruption.  The default command the plugin will use is `sudo umount /media/usb`.  You must be able to run this command at the command line without being prompted for a password.
+
+If your system is configured to allow `pi` to run all `sudo` commands without a password (the default) then you do not need to do anything further.
+
+If you need to enter a password when running `sudo` commands as `pi` you will need to create a new `sudoers` entry in order for the plugin to work correctly.
+1. Run `sudo nano /etc/sudoers.d/020_firmware_updater` to create a new file
+2. Paste this line into the new file:
+   `pi ALL=NOPASSWD: /bin/umount`
+3. Save and close the file
+   
+Otherwise, you can disable the unmount command entirely by clearing the **Unmount command** field in the plugin's advanced settings.
 
 #### LPC1768 Configuration
 The only required setting is the path to the firmware update folder.  If using usbmount it will probably be `/media/usb`.
