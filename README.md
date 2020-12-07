@@ -35,9 +35,7 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 * 'LPC1768' MCUs (MKS SBASE, SKR v1.1 and v1.3, etc., also SKR Pro v1.1)
 * 'SAM' family 32-bit MCUs (Arduino DUE, etc.)
 * 'STM32' family 32-bits MCUs with embedded ST serial bootloader (FYSETC Cheetah, **not** SKR Pro)
-
-### Not-yet Supported Boards
-* SKR Mini E3 - waiting on more information, see [this issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103)
+* 'STM32' family 32-bit MCUs which update from the SD card using the lpc1768 method (SKR Pro v1.1, SKR Mini E3 v2, etc.)
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
@@ -57,8 +55,8 @@ The appropriate flashing tool for the board type needs to be selected.
 | SAM          | bossac         |
 | STM32        | stm32flash     |
 
-#### Special Note for the SKR Pro v1.1 STM32 Board
-It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 board.**
+#### Special Note for the SKR Pro v1.1 and SKR Mini E3 v2 STM32 Boards
+It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 and Mini E3 v2 boards (and maybe others) to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 or SKR Mini E3 v2 boards.**  [Issue #103](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103) may contain useful information for configuring the required firmware options.
 
 #### Special Note for the Creality Ender 3
 The mainboard in the Ender 3 (and probably other devices) is flashed
