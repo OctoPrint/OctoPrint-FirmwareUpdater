@@ -1,5 +1,6 @@
 import os
 import sarge
+import subprocess
 
 def _check_custom(self):
     custom_commandline = self._settings.get(["custom_commandline"])
@@ -29,11 +30,12 @@ def _flash_custom(self, firmware=None, printer_port=None):
     self._console_logger.info(u"")
     self._console_logger.info(custom_commandline)
     try:
-        p = sarge.run(custom_commandline, cwd=custom_workingdir, async_=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+        p = sarge.run(custom_commandline, cwd=custom_workingdir, async_=True, stdout=sarge.Capture(), stderr=subprocess.STDOUT)
         p.wait_events()
 
         while p.returncode is None:
             output = p.stdout.read(timeout=0.5).decode('utf-8')
+
             if not output:
                 p.commands[0].poll()
                 continue
@@ -45,31 +47,6 @@ def _flash_custom(self, firmware=None, printer_port=None):
 
             self._logger.info(u"Running custom command(s)...")
             self._send_status("progress", subtype="runningcustom")
-
-            # if AVRDUDE_WRITING in output:
-            #     self._logger.info(u"Writing memory...")
-            #     self._send_status("progress", subtype="writing")
-            # elif AVRDUDE_VERIFYING in output:
-            #     self._logger.info(u"Verifying memory...")
-            #     self._send_status("progress", subtype="verifying")
-            # elif AVRDUDE_TIMEOUT in output:
-            #     p.commands[0].kill()
-            #     p.close()
-            #     raise FlashException("Timeout communicating with programmer")
-            # elif AVRDUDE_ERROR_DEVICE in output:
-            #     p.commands[0].kill()
-            #     p.close()
-            #     raise FlashException("Error opening serial device")
-            # elif AVRDUDE_ERROR_VERIFICATION in output:
-            #     p.commands[0].kill()
-            #     p.close()
-            #     raise FlashException("Error verifying flash")
-            # elif AVRDUDE_ERROR_SYNC in output:
-            #     p.commands[0].kill()
-            #     p.close()
-            #     raise FlashException("Avrdude says: 'not in sync" + output[output.find(AVRDUDE_ERROR_SYNC) + len(AVRDUDE_ERROR_SYNC):].strip() + "'")
-            # elif AVRDUDE_ERROR in output:
-            #     raise FlashException("Avrdude error: " + output[output.find(AVRDUDE_ERROR) + len(AVRDUDE_ERROR):].strip())
 
         if p.returncode == 0:
             return True
