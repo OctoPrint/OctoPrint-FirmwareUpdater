@@ -337,7 +337,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"enable_preflash_delay": None,
 			"enable_postflash_gcode": None,
 			"enable_preflash_gcode": None,
-			"disable_bootloadercheck": None
+			"disable_bootloadercheck": None,
+			"plugin_version": self._plugin_version
 		}
 
 	#~~ Asset API
@@ -370,9 +371,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 				repo="OctoPrint-FirmwareUpdater",
 				current=self._plugin_version,
 
-				# stable branch
+				# stable releases
 				stable_branch=dict(
-					name="Stable", branch="master", comittish=["master"]
+					name="Stable",
+					branch="master",
+					comittish=["master"]
 				),
 
 				# release candidates
@@ -381,6 +384,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 						name="Release Candidate",
 						branch="rc",
 						comittish=["rc", "master"],
+					),
+					dict(
+						name="Development",
+						branch="devel",
+						comittish=["devel", "rc", "master"],
 					)
 				],
 
