@@ -32,6 +32,8 @@ $(function() {
         self.configPostflashCommandline = ko.observable();
         self.configEnablePreflashGcode = ko.observable();
         self.configPreflashGcode = ko.observable();
+        self.configSaveUrl = ko.observable();
+        self.configLastUrl = ko.observable();
         self.pluginVersion = ko.observable();
 
         // Config settings for avrdude
@@ -133,6 +135,13 @@ $(function() {
             if (self.loginState.isAdmin() && self.configShowNavbarIcon()) {
                 self.showFirmwareUpdaterNavbarIcon(true);
             }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
+                self.firmwareFileURL(self.settingsViewModel.settings.plugins.firmwareupdater.last_url());
+            } else {
+                self.firmwareFileURL("");
+            }
+
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater.plugin_version());
         }
 
@@ -322,6 +331,14 @@ $(function() {
                 return;
             }
 
+            console.log(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
+            console.log(self.firmwareFileURL());
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
+                console.log(self.firmwareFileURL());
+                self.configLastUrl(self.firmwareFileURL());
+                self._saveLastUrl();
+            }
+
             self.isBusy(true);
             self.showAlert(false);
             self.progressBarText("Flashing firmware...");
@@ -382,7 +399,11 @@ $(function() {
                         self.isBusy(false);
                         self.showAlert(false);
                         self.firmwareFileName("");
-                        self.firmwareFileURL("");
+                        if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
+                            self.firmwareFileURL(self.configLastUrl());
+                        } else {
+                            self.firmwareFileURL("");
+                        }
                         break;
                     }
                     case "success": {
@@ -390,7 +411,11 @@ $(function() {
                         self.isBusy(false);
                         self.showAlert(false);
                         self.firmwareFileName("");
-                        self.firmwareFileURL("");
+                        if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
+                            self.firmwareFileURL(self.configLastUrl());
+                        } else {
+                            self.firmwareFileURL("");
+                        }
                         break;
                     }
                     case "progress": {
@@ -461,6 +486,8 @@ $(function() {
             self.configPreflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_delay());
             self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
             self.configPreflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_gcode());
+            self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
+            self.configLastUrl(self.settingsViewModel.settings.plugins.firmwareupdater.last_url());
 
             if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline() != 'false') {
                 self.configEnablePreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline());
@@ -585,12 +612,24 @@ $(function() {
                         enable_preflash_delay: self.configEnablePreflashDelay(),
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
                         enable_preflash_gcode: self.configEnablePreflashGcode(),
-                        disable_bootloadercheck: self.configDisableBootloaderCheck()
+                        disable_bootloadercheck: self.configDisableBootloaderCheck(),
+                        save_url: self.configSaveUrl(),
                     }
                 }
             };
             self.settingsViewModel.saveData(data);
         };
+
+        self._saveLastUrl = function() {
+            var data = {
+                plugins: {
+                    firmwareupdater: {
+                        last_url: self.firmwareFileURL(),
+                    }
+                }
+            };
+            self.settingsViewModel.saveData(data);
+        }
 
         self.onConfigHidden = function() {
             self.avrdudePathBroken(false);
