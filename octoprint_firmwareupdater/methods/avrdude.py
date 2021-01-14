@@ -100,18 +100,13 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
     else:
         avrdude_command = avrdude_command.replace(" {disableverify} ", " ")
 
-
-    self._logger.info(u"Running '{}' in {}".format(avrdude_command, working_dir))
-    self._console_logger.info(u"")
-    self._console_logger.info(avrdude_command)
-
     if avrdude_programmer is not None and avrdude_programmer == "avr109":
         self._logger.info(u"Avrdude_programmer is avr109, check if Prusa MMU or CW1 to be flashed")
 
         target = TARGET_NO_PRUSA
 
         list_ports.comports()
-        
+
         try:
             app_port_name = list(list_ports.grep(USB_VID_PID_MMU_APP))[0][0]
             self._logger.info(u"MMU found {portname}".format(portname=app_port_name))
@@ -148,44 +143,48 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
                     f.close()
             except:
                 self._logger.info(u"Opening CW1 firmware file failed")
-                raise FlashException("Patching CW1 firmware file failed")                    
+                raise FlashException("Patching CW1 firmware file failed")
         except:
             self._logger.info(u"Target ist not CW1")
-                    
+
         if target != TARGET_NO_PRUSA:
             try:
                 ser = serial.Serial(printer_port, 1200, timeout = 1)
                 self._logger.info(u"Reset target")
-                time.sleep(0.05)    
+                time.sleep(0.05)
                 ser.close()
             except serial.SerialException:
                 self._logger.info(u"Serial port could not been serviced")
                 raise FlashException("Error resetting target")
-            
+
             time.sleep(3)
-        
+
             list_ports.comports()
-            
-            if target == TARGET_MMU: 
+
+            if target == TARGET_MMU:
                 try:
                     boot_port_name = list(list_ports.grep(USB_VID_PID_MMU_BOOT))[0][0]
                     self._logger.info(u"MMU in bootloader")
                     printer_port = boot_port_name
-                except:        
+                except:
                     self._logger.info(u"MMU not in bootloader")
                     raise FlashException("Reboot MMU to bootloader failed")
-            elif target == TARGET_CW1:        
+            elif target == TARGET_CW1:
                 try:
                     boot_port_name = list(list_ports.grep(USB_VID_PID_CW1_BOOT))[0][0]
                     self._logger.info(u"CW1 in bootloader")
                     printer_port = boot_port_name
-                except:        
+                except:
                     self._logger.info(u"CW1 not in bootloader")
                     raise FlashException("Reboot CW1 to bootloader failed")
 
     avrdude_command = avrdude_command.replace("{port}", printer_port)
     avrdude_command = avrdude_command.replace("{firmware}", firmware)
-        
+
+    self._logger.info(u"Running '{}' in {}".format(avrdude_command, working_dir))
+    self._console_logger.info(u"")
+    self._console_logger.info(avrdude_command)
+
     try:
         p = sarge.run(avrdude_command, cwd=working_dir, async_=True, stdout=sarge.Capture(), stderr=sarge.Capture())
         p.wait_events()
