@@ -116,6 +116,19 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
             app_port_name = list(list_ports.grep(USB_VID_PID_MMU_APP))[0][0]
             self._logger.info(u"MMU found {portname}".format(portname=app_port_name))
             target = TARGET_MMU
+            self._logger.info(u"Patch MMU2 firmware file if necessary")
+            try:
+                with open(firmware,"r+") as f:
+                    lines = f.readlines()
+                    f.seek(0)
+                    for i in lines:
+                        if i.strip("\n") != "; device = mm-control" and i != '\n':
+                            f.write(i)
+                    f.truncate()
+                    f.close()
+            except:
+                self._logger.info(u"Opening MMU2 firmware file failed")
+                raise FlashException("Patching MMU firmware file failed")
         except:
             self._logger.info(u"Target ist not MMU")
 
@@ -123,6 +136,19 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
             app_port_name = list(list_ports.grep(USB_VID_PID_CW1_APP))[0][0]
             self._logger.info(u"CW1 found {portname}".format(portname=app_port_name))
             target = TARGET_CW1
+            self._logger.info(u"Patch CW1 firmware file if necessary")
+            try:
+                with open(firmware,"r+") as f:
+                    lines = f.readlines()
+                    f.seek(0)
+                    for i in lines:
+                        if i.strip("\n") != "; device = cw1" and i != '\n':
+                            f.write(i)
+                    f.truncate()
+                    f.close()
+            except:
+                self._logger.info(u"Opening CW1 firmware file failed")
+                raise FlashException("Patching CW1 firmware file failed")                    
         except:
             self._logger.info(u"Target ist not CW1")
                     
@@ -145,19 +171,6 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
                     boot_port_name = list(list_ports.grep(USB_VID_PID_MMU_BOOT))[0][0]
                     self._logger.info(u"MMU in bootloader")
                     printer_port = boot_port_name
-                    self._logger.info(u"Patch MMU2 firmware file if necessary")
-                    try:
-                        with open(firmware,"r+") as f:
-                            lines = f.readlines()
-                            f.seek(0)
-                            for i in lines:
-                                if i.strip("\n") != "; device = mm-control" and i != '\n':
-                                    f.write(i)
-                            f.truncate()
-                            f.close()
-                    except:
-                        self._logger.info(u"Opening MMU2 firmware file failed")
-                        raise FlashException("Patching MMU firmware file failed")
                 except:        
                     self._logger.info(u"MMU not in bootloader")
                     raise FlashException("Reboot MMU to bootloader failed")
@@ -166,19 +179,6 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
                     boot_port_name = list(list_ports.grep(USB_VID_PID_CW1_BOOT))[0][0]
                     self._logger.info(u"CW1 in bootloader")
                     printer_port = boot_port_name
-                    self._logger.info(u"Patch CW1 firmware file if necessary")
-                    try:
-                        with open(firmware,"r+") as f:
-                            lines = f.readlines()
-                            f.seek(0)
-                            for i in lines:
-                                if i.strip("\n") != "; device = cw1" and i != '\n':
-                                    f.write(i)
-                            f.truncate()
-                            f.close()
-                    except:
-                        self._logger.info(u"Opening CW1 firmware file failed")
-                        raise FlashException("Patching CW1 firmware file failed")                    
                 except:        
                     self._logger.info(u"CW1 not in bootloader")
                     raise FlashException("Reboot CW1 to bootloader failed")
