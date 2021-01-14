@@ -569,6 +569,14 @@ $(function() {
         };
 
         self._saveConfig = function() {
+            var lastUrl;
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url() &! self.configSaveUrl()) {
+                self.firmwareFileURL("");
+                lastUrl = null;
+            } else {
+                lastUrl = self.configLastUrl();
+            }
+
             var data = {
                 plugins: {
                     firmwareupdater: {
@@ -614,6 +622,7 @@ $(function() {
                         enable_preflash_gcode: self.configEnablePreflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck(),
                         save_url: self.configSaveUrl(),
+                        last_url: lastUrl,
                     }
                 }
             };
