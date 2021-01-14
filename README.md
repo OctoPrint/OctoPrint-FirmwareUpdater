@@ -30,12 +30,41 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
 
 ## Supported Boards
 The plugin supports a variety of boards, based on the MCU (processor) they have:
-* 'ATmega' family 8-bit MCUs (RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, many others)
+* 'ATmega' family 8-bit MCUs (RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others)
 * 'AT90USB' family 8-bit MCUs (Printrboard)
 * 'LPC1768' MCUs (MKS SBASE, SKR v1.1 and v1.3, etc., also SKR Pro v1.1)
 * 'SAM' family 32-bit MCUs (Arduino DUE, etc.)
 * 'STM32' family 32-bits MCUs with embedded ST serial bootloader (FYSETC Cheetah, **not** SKR Pro)
 * 'STM32' family 32-bit MCUs which update from the SD card using the lpc1768 method (SKR Pro v1.1, SKR Mini E3 v2, etc.)
+
+## IMPORTANT: Additional requirements
+pyserial needs to be installed on the system
+
+```
+sudo apt-get update
+sudo apt-get install python-pip
+pip install pyserial
+```
+
+## Prusa MMU and CW1
+Original firmware files for Prusa MMU and CW1 have special in the begining of the file:
+
+For MMU these are:
+
+```
+1 ;device = mm-control   
+2 
+```
+
+and for CW1:
+
+```
+1 ;device = cw1   
+2 
+```
+
+Firmware updater now takes care about that, so modifying the files isn't necessary any more.
+
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
@@ -104,6 +133,7 @@ Typical MCU/programmer combinations are:
 | Atmega1284p | arduino | Anet A series, Creality, Ender, etc. |
 | Atmega2560 | wiring | RAMPS, RAMbo, etc. |
 | Atmega644p | arduino | Sanguinololu, Melzi |
+| Atmega32u4 | avr109 | Prusa MMU, Prusa CW1 |
 
 To locate `avrdude` on most Linux variants (including OctoPi):
 * Connect via SSH and run the following: `which avrdude`
