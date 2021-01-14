@@ -14,7 +14,7 @@ plugin_package = "octoprint_firmwareupdater"
 plugin_name = "OctoPrint-FirmwareUpdater"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "1.7.7b2"
+plugin_version = "1.7.7b3"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -44,7 +44,7 @@ plugin_requires = []
 plugin_additional_data = []
 
 # Any additional python packages you need to install with your plugin that are not contains in <plugin_package>.*
-plugin_addtional_packages = []
+plugin_addtional_packages = ["pyserial"]
 
 # Any python packages within <plugin_package>.* you do NOT want to install with your plugin
 plugin_ignored_packages = []
