@@ -85,9 +85,6 @@ def _flash_avrdude(self, firmware=None, printer_port=None):
     avrdude_command = avrdude_command.replace("{mcu}", avrdude_avrmcu)
     avrdude_command = avrdude_command.replace("{programmer}", avrdude_programmer)
 
-    avrdude_command = avrdude_command.replace("{firmware}", firmware)
-    
-
     if avrdude_conf is not None and avrdude_conf != "":
         avrdude_command = avrdude_command.replace("{conffile}", avrdude_conf)
     else:
