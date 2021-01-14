@@ -33,7 +33,7 @@ plugin_url = "https://github.com/OctoPrint/OctoPrint-FirmwareUpdater"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = []
+plugin_requires = ["pyserial>=3.5"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point
