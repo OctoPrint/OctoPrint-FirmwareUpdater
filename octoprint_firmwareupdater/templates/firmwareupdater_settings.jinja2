@@ -563,7 +563,9 @@
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" data-bind="click: onConfigHidden" aria-hidden="true">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" data-bind="click: onConfigClose" aria-hidden="true">{{ _('Save') }}</button>
+            <button class="btn btn-primary" data-bind="click: onConfigClose, enable: !saving(), css: {disabled: saving()}" aria-hidden="true">
+                <i class="fas fa-spinner fa-spin" data-bind="visible: saving" style="display: none;"></i>{{ _(' Save') }}
+            </button>
         </div>
     </div>
     <div id="BootLoaderWarning" class="modal hide fade">

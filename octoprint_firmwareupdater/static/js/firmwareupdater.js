@@ -124,6 +124,7 @@ $(function() {
         self.isBusy = ko.observable(false);
         self.fileFlashButtonText = ko.observable("");
         self.urlFlashButtonText = ko.observable("");
+        self.saving = ko.observable(false);
 
         self.selectFilePath = undefined;
         self.configurationDialog = undefined;
@@ -562,13 +563,10 @@ $(function() {
 
         self.onConfigClose = function() {
             self._saveConfig();
-
-            self.configurationDialog.modal("hide");
-            self.alertMessage(undefined);
-            self.showAlert(false);
         };
 
         self._saveConfig = function() {
+            self.saving(true);
             var lastUrl;
             if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url() &! self.configSaveUrl()) {
                 self.firmwareFileURL("");
@@ -626,7 +624,12 @@ $(function() {
                     }
                 }
             };
-            self.settingsViewModel.saveData(data);
+            self.settingsViewModel.saveData(data).done(function () {
+                self.configurationDialog.modal("hide");
+                self.alertMessage(undefined);
+                self.showAlert(false);
+                self.saving(false);
+            });
         };
 
         self._saveLastUrl = function() {
