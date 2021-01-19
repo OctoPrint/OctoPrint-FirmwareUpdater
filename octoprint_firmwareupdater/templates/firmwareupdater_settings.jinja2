@@ -71,8 +71,9 @@
             </ul>
             <p>No warranty is given, and no responsibility can be accepted if there are problems.  By using this plugin you accept the associated risks.</p>
             <i class="icon-book"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Documentation</h5>
-            <p>Documentation is available on <a target=_new href="https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/blob/master/README.md">Github</p>
+            <p>Documentation is available on <a target=_new href="https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/blob/master/README.md">Github</a></p>
          </div>
+         <div class="pull-right" style="font-size:12px; opacity:0.6">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
     </form>
 
     <div id="settings_plugin_firmwareupdater_configurationdialog" class="modal hide fade">
@@ -547,6 +548,7 @@
                 </div>
                 <!-- End pre-flash and post-flash settings -->
             </form>
+            <div class="pull-right" style="font-size:12px; opacity:0.6">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" data-bind="click: onConfigHidden" aria-hidden="true">{{ _('Cancel') }}</button>

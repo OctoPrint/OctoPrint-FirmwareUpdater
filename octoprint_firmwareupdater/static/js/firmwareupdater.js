@@ -32,6 +32,7 @@ $(function() {
         self.configPostflashCommandline = ko.observable();
         self.configEnablePreflashGcode = ko.observable();
         self.configPreflashGcode = ko.observable();
+        self.pluginVersion = ko.observable();
 
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
@@ -132,6 +133,7 @@ $(function() {
             if (self.loginState.isAdmin() && self.configShowNavbarIcon()) {
                 self.showFirmwareUpdaterNavbarIcon(true);
             }
+            self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater.plugin_version());
         }
 
         self.showFirmwareUpdater = function(){
