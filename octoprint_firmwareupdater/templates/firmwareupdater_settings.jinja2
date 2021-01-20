@@ -110,6 +110,7 @@
                                 <option value=m1280>ATmega1280</option>
                                 <option value=m1284p>ATmega1284p</option>
                                 <option value=m2560>ATmega2560</option>
+                                <option value=atmega32u4>ATmega32u4</option>
                             </select>
                         </div>
                     </div>
@@ -129,6 +130,7 @@
                             <select data-bind="value: configAvrdudeProgrammer">
                                 <option value=></option>
                                 <option value=arduino>arduino</option>
+                                <option value=avr109>avr109</option>
                                 <option value=usbasp>usbasp</option>
                                 <option value=stk500v2>stk500v2</option>
                                 <option value=wiring>wiring</option>
@@ -221,6 +223,15 @@
                             <input type="checkbox" class="input-block-level" data-bind="checked: configShowNavbarIcon">
                         </div>
                         <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar.  (Reload after enabling/disabling.)') }}</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">{{ _('Remember URL') }}</label>
+                    <div class="controls">
+                        <div class="input">
+                            <input type="checkbox" class="input-block-level" data-bind="checked: configSaveUrl">
+                        </div>
+                        <span class="help-block">{{ _('Last URL will be remembered when using \'Flash from URL\'.') }}</span>
                     </div>
                 </div>
                 <hr>
@@ -552,7 +563,9 @@
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" data-bind="click: onConfigHidden" aria-hidden="true">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" data-bind="click: onConfigClose" aria-hidden="true">{{ _('Save') }}</button>
+            <button class="btn btn-primary" style="border-color: #04c #04c #002a80;" data-bind="click: onConfigClose, enable: !saving(), css: {disabled: saving()}" aria-hidden="true">
+                <i class="fas fa-spinner fa-spin" data-bind="visible: saving" style="display: none;"></i>{{ _(' Save') }}
+            </button>
         </div>
     </div>
     <div id="BootLoaderWarning" class="modal hide fade">

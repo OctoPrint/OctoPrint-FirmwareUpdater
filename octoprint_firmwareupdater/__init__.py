@@ -338,6 +338,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"enable_postflash_gcode": None,
 			"enable_preflash_gcode": None,
 			"disable_bootloadercheck": None,
+			"save_url": False,
+			"last_url": None,
 			"plugin_version": self._plugin_version
 		}
 
