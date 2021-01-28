@@ -228,6 +228,10 @@ Once installed, usbmount requires some tweaking to make it work well on the Rasp
    ```
 Once usbmount is installed and configured the LPC1768 on-board SD card should be mounted at `/media/usb` the next time it is plugged in or restarted.
 
+**Important:** Do not modify the permissions on any of the /media/usb* directories!
+
+See [here](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/175#issuecomment-760949800) and [here](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/175#issuecomment-761111117) for the explanation of why this is important and a very bad idea.
+
 #### Sudo rights
 The plugin needs to be able to unmount the SD card to reduce the risk of file system corruption.  The default command the plugin will use is `sudo umount /media/usb`.  You must be able to run this command at the command line without being prompted for a password.
 
