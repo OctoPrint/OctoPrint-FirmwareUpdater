@@ -7,11 +7,23 @@ Flashing an LPC176x board requires that the host can mount the board's on-board 
 
 There are several ways to do this, but using [usbmount](https://github.com/rbrito/usbmount) works well and is documented below. It will mount the SD card to `/media/usb`.
 
-**Note:** The following options should be enabled in the Marlin firmware configuration in order for the board's SD card to be accessible by the OctoPrint host:
+### Marlin Firmware Options
+The following options should be enabled in the Marlin firmware configuration in order for the board's SD card to be accessible by the OctoPrint host:
+Configuration.h:
 ```
 #define SDSUPPORT
-#define SD_IGNORE_AT_STARTUP 
+```
+
+Configuration_adv.h:
+```
 #define SDCARD_CONNECTION ONBOARD
+```
+
+Optionally, if you do not routinely use the SD card in Marlin, you can prevent Marlin mounting the card at startup, which will make firmware flashing faster as the firmware's lock on the card does not have to be released.
+
+Configuration_adv.h:
+```
+#define SD_IGNORE_AT_STARTUP 
 ```
 
 Once installed, usbmount requires some tweaking to make it work well on the Raspberry Pi.  The instructions below assume that you are running OctoPrint on a Raspberry Pi, as the user 'pi'.
