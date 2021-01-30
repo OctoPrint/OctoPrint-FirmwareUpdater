@@ -111,7 +111,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
         shutil.copyfile(firmware, target_path)
     except:
         self._logger.exception(u"Flashing failed. Unable to copy file.")
-        self._send_status("flasherror")
+        self._send_status("flasherror", message="Unable to copy firmware file to firmware folder")
         return False
 
     # Sync the filesystem to flush writes
@@ -269,4 +269,5 @@ def _unmount_sd(self, printer_port=None):
         self._send_status("flasherror", message="Card unmount failed")
         return False
 
+    time.sleep(2)
     return True
