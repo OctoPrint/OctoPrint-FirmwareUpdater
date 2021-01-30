@@ -256,6 +256,13 @@ Some boards (e.g. SKR v1.3) have been known to ship with older Marlin firmware w
 
 If flashing an existing Marlin installation, the existing firmware must be newer than March 2nd, 2019 (i.e [this commit](https://github.com/MarlinFirmware/Marlin/pull/13281)) as that is when the `M997` was added to support resetting the board.
 
+The following options should be enabled in the Marlin firmware configuration in order for the board's SD card to be accessible by the OctoPrint host:
+```
+#define SDSUPPORT
+#define SD_IGNORE_AT_STARTUP 
+#define SDCARD_CONNECTION ONBOARD
+```
+
 ##### Troubleshooting LPC1768 Uploads
 The firmware upload will fail if the SD card is not accessible, either because it is not mounted on the host, or because the printer firmware has control over it.  
 
