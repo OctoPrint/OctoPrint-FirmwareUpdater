@@ -19,6 +19,7 @@ $(function() {
         self.showDfuConfig = ko.observable(false);
         self.showStm32flashConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
+        self.showPluginOptions = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
         self.configEnablePreflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
@@ -161,6 +162,10 @@ $(function() {
 
         self.togglePostflashConfig = function(){
             self.showPostflashConfig(!self.showPostflashConfig());
+        }
+
+        self.togglePluginOptions = function(){
+            self.showPluginOptions(!self.showPluginOptions());
         }
 
         self.configFlashMethod.subscribe(function(value) {
@@ -629,6 +634,9 @@ $(function() {
                 self.alertMessage(undefined);
                 self.showAlert(false);
                 self.saving(false);
+                self.showAdvancedConfig(false);
+                self.showPostflashConfig(false);
+                self.showPluginOptions(false);
             });
         };
 
@@ -650,6 +658,9 @@ $(function() {
             self.bossacPathBroken(false);
             self.bossacPathOk(false);
             self.bossacPathText("");
+            self.showAdvancedConfig(false);
+            self.showPostflashConfig(false);
+            self.showPluginOptions(false);
         };
 
         self.testAvrdudePath = function() {

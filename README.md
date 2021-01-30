@@ -1,30 +1,24 @@
 # OctoPrint Firmware Updater
 The Firmware Updater plugin can be used to flash pre-compiled firmware images to your printer from a local file or URL.
 
-<img alt="Firmware Updater" src="extras/img/firmware-updater.png">
+<p align="center">
+  <img alt="Firmware Updater" width="600" src="extras/img/firmware-updater.png">
+</p>
 
 ## Documentation Index
 1. [Supported Boards](#supported-boards)
 1. [Plugin Installation](#plugin-installation)
 1. [Plugin Configuration](#plugin-configuration)
-1. Board-Specific Configuration
-   1. [ATmega Boards](#atmega-boards)
-      1. [Avrdude Installation](#avrdude-installation)
-      1. [Avrdude Configuration](#avrdude-configuration)
-   1. [AT90USB Boards](#at90usb-boards)
-      1. [Dfu-programmer Installation](#dfu-programmer-installation)
-      1. [Dfu-programmer Configuration](#dfu-programmer-configuration)
-   1. [LPC1768 Boards](#lpc1768-boards)
-      1. [Usbmount Installation](#usbmount-installation)
-   1. [SAM Boards](#sam-boards)
-      1. [Bossac Installation](#bossac-installation)
-      1. [Bossac Configuration](#bossac-configuration)
-   1. [STM32 Boards](#stm32-boards)
-      1. [STM32Flash Installation](#stm32flash-installation)
-      1. [STM32Flash Configuration](#stm32flash-configuration)
-1. [Customizing the Command Lines](#customizing-the-command-lines)
-1. [Pre and Post Flash Settings](#pre-and-post-flash-settings)
-1. [Flashing](#flashing)
+   1. [ATmega Boards](doc/avrdude.md)
+   1. [AT90USB Boards](doc/dfuprog.md)
+   1. [LPC176x Boards](doc/lpc176x.md)
+   1. [SAM Boards](doc/bossac.md)
+   1. [STM32 Boards](doc/stm32flash.md)
+1. [Flashing Firmware](#flashing-firmware)
+1. [Advanced Options](#advanced-options)
+   1. [Customizing the Command Lines](#customizing-the-command-lines)
+   1. [Pre and Post Flash Settings](#pre-and-post-flash-settings)
+   1. [Plugin Options](#plugin-options)
 1. [Troubleshooting](#troubleshooting)
 1. [Donations](#donations)
 
@@ -32,39 +26,10 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
 The plugin supports a variety of boards, based on the MCU (processor) they have:
 * 'ATmega' family 8-bit MCUs (RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others)
 * 'AT90USB' family 8-bit MCUs (Printrboard)
-* 'LPC1768' MCUs (MKS SBASE, SKR v1.1 and v1.3, etc., also SKR Pro v1.1)
+* 'LPC1768' & 'LPC1769' MCUs (MKS SBASE, SKR v1.1, v1.3, v1.4, etc., also SKR Pro v1.1)
 * 'SAM' family 32-bit MCUs (Arduino DUE, etc.)
 * 'STM32' family 32-bits MCUs with embedded ST serial bootloader (FYSETC Cheetah, **not** SKR Pro)
-* 'STM32' family 32-bit MCUs which update from the SD card using the lpc1768 method (SKR Pro v1.1, SKR Mini E3 v2, etc.)
-
-## IMPORTANT: Additional requirements
-pyserial needs to be installed on the system
-
-```
-sudo apt-get update
-sudo apt-get install python-pip
-pip install pyserial
-```
-
-## Prusa MMU and CW1
-Original firmware files for Prusa MMU and CW1 have special in the begining of the file:
-
-For MMU these are:
-
-```
-1 ;device = mm-control   
-2 
-```
-
-and for CW1:
-
-```
-1 ;device = cw1   
-2 
-```
-
-Firmware updater now takes care about that, so modifying the files isn't necessary any more.
-
+* 'STM32' family 32-bit MCUs which update from the SD card using the lpc176x method (SKR Pro v1.1, SKR Mini E3 v2, etc.)
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
@@ -80,243 +45,34 @@ The appropriate flashing tool for the board type needs to be selected.
 | -----------: | :------------- | 
 | ATmega       | avrdude        |
 | AT90USB      | dfu-programmer |
-| LPC1768      | lpc1768        |
+| LPC176x      | lpc176x        |
 | SAM          | bossac         |
 | STM32        | stm32flash     |
 
 #### Special Note for the SKR Pro v1.1 and SKR Mini E3 v2 STM32 Boards
-It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 and Mini E3 v2 boards (and maybe others) to be flashed using the same copy-and-reset procedure as their LPC1768-based boards.  **Please follow the LPC1768 instructions for an SKR Pro v1.1 or SKR Mini E3 v2 boards.**  [Issue #103](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103) may contain useful information for configuring the required firmware options.
+It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 and Mini E3 v2 boards (and maybe others) to be flashed using the same copy-and-reset procedure as their LPC176x-based boards.  **Please follow the LPC176x instructions for an SKR Pro v1.1 or SKR Mini E3 v2 boards.**  [Issue #103](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103) may contain useful information for configuring the required firmware options.
 
 #### Special Note for the Creality Ender 3
-The mainboard in the Ender 3 (and probably other devices) is flashed
-without a boot loader. The first time you want to upgrade its firmware,
-you have to use extra programming hardware ("burner") to install a bootloader.
-Alternately you can use the "USB ISP" programmer which they include with their
-[BL-Touch Add-on Kit](https://www.creality3dofficial.com/products/creality-bl-touch?_pos=8&_sid=07be62867&_ss=rell), which comes with a pinout card.
-Using their kit instead of using this plugin can avoid exceeding memory limits
-with custom builds of Marlin.
+The mainboard in the Ender 3 (and probably other devices) is flashed without a boot loader. The first time you want to upgrade its firmware, you have to use extra programming hardware ("burner") to install a bootloader. Alternately you can use the "USB ISP" programmer which they include with their [BL-Touch Add-on Kit](https://www.creality3dofficial.com/products/creality-bl-touch?_pos=8&_sid=07be62867&_ss=rell), which comes with a pinout card. Using their kit instead of using this plugin can avoid exceeding memory limits with custom builds of Marlin.
 
-Plugin settings vary depending on the flashing tool and are documented below.
+### Board-Specific Configuration
+Plugin settings vary depending on the flashing tool and are documented on the page for each flash method. Follow the instructions on the appropriate page to install and configure any necessary tools:
+* [Atmega (AVR)](doc/avrdude.md)
+* [AT90USB](doc/dfuprog.md)
+* [LPC176x](doc/lpc176x.md)
+* [SAM](doc/bossac.md)
+* [STM32](doc/stm32flash.md)
 
-## Board-Specific Configuration
+## Flashing Firmware
+Once the plugin is configured, flashing firmware is a simple operation:
+1. Select the COM port to communicate with the board
+1. Select a firmware file, either located on the filesystem or via a URL
+1. Click the appropriate **Flash from** button
+1. Wait for the firmware update to complete
 
-### ATmega Boards
-To flash an ATmega-based board the tool `avrdude` needs to be installed on the OctoPrint host.
+## Advanced Options
 
-#### Avrdude Installation
-##### Raspberry Pi
-
-```
-sudo apt-get update
-sudo apt-get install avrdude
-```
-
-##### Ubuntu (12.04 - 14.04 - 15.04)
-Information about the package needed can be found here [Ubuntu avrdude package](https://launchpad.net/ubuntu/+source/avrdude)
-
-```
-sudo add-apt-repository ppa:pmjdebruijn/avrdude-release
-sudo apt-get update
-sudo apt-get install avrdude
-```
-
-#### Avrdude Configuration
-The minimum settings are:
-* AVR MCU Type
-* Path to avrdude
-* AVR Programmer Type
-
-Typical MCU/programmer combinations are:
-
-| AVR MCU | Programmer | Example Board |
-| --- | --- | --- |
-| Atmega1284p | arduino | Anet A series, Creality, Ender, etc. |
-| Atmega2560 | wiring | RAMPS, RAMbo, etc. |
-| Atmega644p | arduino | Sanguinololu, Melzi |
-| Atmega32u4 | avr109 | Prusa MMU, Prusa CW1 |
-
-To locate `avrdude` on most Linux variants (including OctoPi):
-* Connect via SSH and run the following: `which avrdude`
-* The output should be similar to:
-   ```
-   pi@octopi:~ $ which avrdude
-   /usr/bin/avrdude
-   pi@octopi:~ $
-   ```
-* Add the full path to avrdude in the plugin settings.
-
-Optional advanced settings are available for:
-* Baud rate - sets the speed for communication with the board
-* Avrdude config file - overrides the default config file with a custom one
-* Disabling write verification - speeds up flashing by not verifying the write operation
-* Customizing the avrdude command line
-* Disabling the bootloader warning - disables a warning which is shown the hex filename has 'bootloader' in it
-
-### AT90USB Boards
-To flash an AT90USB-based board the tool `dfu-programmer` needs to be installed on the OctoPrint host. 
-
-#### Dfu-programmer Installation
-A version of `dfu-programmer` can be installed via `apt-get install` but it is outdated.  Please build the latest version from [Github](https://github.com/dfu-programmer/dfu-programmer) using these commands:
-
-```
-cd ~
-sudo apt-get install autoconf libusb-1.0-0-dev
-git clone https://github.com/dfu-programmer/dfu-programmer.git
-cd dfu-programmer
-./bootstrap.sh
-./configure 
-make
-sudo make install
-```
-If there were no errors `dfu-programmer` should now be installed at /usr/local/bin/dfu-programmer.
-
-#### Dfu-programmer Configuration
-The minimum settings are:
-* AVR MCU Type
-* Path to dfu-programmer
-
-Optional advanced settings are available for:
-* Customizing the command lines for erasing and flashing the board
-
-#### DFU Mode
-AT90USB boards must be in **Boot** or **DFU** mode before they can be flashed.  This is done by placing or removing a jumper then resetting the board.
-
-For Printrboard:
-* Remove the BOOT jumper (for Rev D, E & F boards, install the BOOT jumper)
-* Press and release the **Reset** button.
-* Replace the BOOT jumper onto the board (for Rev D, E & F boards, remove the BOOT jumper)
-
-The board will now be ready for flashing. Once flashing is complete press the **Reset** button again to return to normal operation.
-
-### LPC1768 Boards
-Flashing an LPC1768 board requires that the host can mount the board's on-board SD card to a known mount point in the host filesystem.  
-
-There are several ways to do this, but using [usbmount](https://github.com/rbrito/usbmount) works well and is documented below. It will mount the SD card to `/media/usb`.
-
-**Note:** The Marlin board configuration must have `SDCARD_CONNECTION ONBOARD` (previously `USB_SD_ONBOARD`) enabled so that the on-board SD card is presented to the host via the USB connection.  This seems to be the default configuration for Marlin's LPC1768 boards.  It is configured in the board's pins file.
-
-Once installed, usbmount requires some tweaking to make it work well on the Raspberry Pi.  The instructions below assume that you are running OctoPrint on a Raspberry Pi, as the user 'pi'.
-
-#### Usbmount Installation
-1. Install usbmount
-
-   `sudo apt-get install usbmount`
-
-2. Configure usbmount so that the mount has the correct permissions for the 'pi' user
-
-   `sudo nano /etc/usbmount/usbmount.conf`
-   
-   Find FS_MOUNTOPTIONS and change it to:
-   
-   `FS_MOUNTOPTIONS="-fstype=vfat,gid=pi,uid=pi,dmask=0022,fmask=0111"`
-
-3. Configure systemd-udevd so that the mount is accessible
-
-   `sudo systemctl edit systemd-udevd`
-   
-   Insert these lines then save and close the file:
-   ```
-   [Service]
-   PrivateMounts=no
-   MountFlags=shared
-   ```
-
-   Then run:
-   ```
-   sudo systemctl daemon-reload
-   sudo service systemd-udevd --full-restart
-   ```
-Once usbmount is installed and configured the LPC1768 on-board SD card should be mounted at `/media/usb` the next time it is plugged in or restarted.
-
-#### Sudo rights
-The plugin needs to be able to unmount the SD card to reduce the risk of file system corruption.  The default command the plugin will use is `sudo umount /media/usb`.  You must be able to run this command at the command line without being prompted for a password.
-
-If your system is configured to allow `pi` to run all `sudo` commands without a password (the default) then you do not need to do anything further.
-
-If you need to enter a password when running `sudo` commands as `pi` you will need to create a new `sudoers` entry in order for the plugin to work correctly.
-1. Run `sudo nano /etc/sudoers.d/020_firmware_updater` to create a new file
-2. Paste this line into the new file:
-   `pi ALL=NOPASSWD: /bin/umount`
-3. Save and close the file
-   
-Otherwise, you can disable the unmount command entirely by clearing the **Unmount command** field in the plugin's advanced settings.
-
-#### LPC1768 Configuration
-The only required setting is the path to the firmware update folder.  If using usbmount it will probably be `/media/usb`.
-
-Optional advanced settings are available for:
-* Resetting the board prior to flashing - adds an extra board reset which can help ensure that the SD card is mounted correctly
-
-##### Minimum Marlin Firmware Version
-Some boards (e.g. SKR v1.3) have been known to ship with older Marlin firmware which does not support the `M997` command, so must be updated conventionally one time before using the plugin. A board running too-old Marlin firmware will log 'Board reset failed' when attempting to flash from the plugin.
-
-If flashing an existing Marlin installation, the existing firmware must be newer than March 2nd, 2019 (i.e [this commit](https://github.com/MarlinFirmware/Marlin/pull/13281)) as that is when the `M997` was added to support resetting the board.
-
-##### Troubleshooting LPC1768 Uploads
-The firmware upload will fail if the SD card is not accessible, either because it is not mounted on the host, or because the printer firmware has control over it.  
-
-### SAM Boards
-To flash a SAM-based board the tool `bossac` needs to be installed on the OctoPrint host.
-
-#### Bossac Installation
-Bossac cannot be installed using a package manager as the packaged version is out of date and will not work.  Installation from source is straight-forward.
-
-```
-cd ~/
-sudo apt-get install libwxgtk3.0-dev libreadline-dev
-wget https://github.com/shumatech/BOSSA/archive/1.7.0.zip
-unzip 1.7.0.zip
-cd BOSSA-1.7.0
-./arduino/make_package.sh
-sudo cp ~/BOSSA-1.7.0/bin/bossac /usr/local/bin/
-```
-
-#### Bossac Configuration
-The only required setting is the path to the bossac binary.
-
-Optional advanced settings are available for:
-* Disabling write verification - speeds up flashing by not verifying the write operation
-* Customizing the bossac command line
-
-### STM32 Boards
-To flash an STM32-based board the tool `stm32flash` needs to be installed on the OctoPrint host.
-
-#### STM32Flash Installation
-##### Install on Linux/RaspberryPi using apt-get
-
-```
-sudo apt-get update
-sudo apt-get install stm32flash
-```
-
-##### Install on macOS using brew
-```
-brew install stm32flash
-```
-
-##### Install on Windows
-You can install a Windows binary from https://sourceforge.net/projects/stm32flash/ however the plugin hasn't been tested on that platform.
-
-#### STM32Flash Configuration
-##### Firmware verification
-Unlike avrdude, verification is done during write process after each packet. Writing process is longer than other flashing methods, but there is no verification after the write. It is strongly recommended to keep it enabled.
-
-##### BOOT0/Reset pins
-When using ST serial bootloader, the boards needs to enter into bootloader mode by setting up the MCU BOOT0 input to HIGH and then proceeding with a MCU RESET input to LOW. 
-
-Such MCU inputs are generally connected to RTS/DTR signals of the USB-UART transceiver.  For example, FYSETC Cheetah uses RTS to set BOOT0, and DTR to reset.
-
-Please set STM32Flash BOOT0/Reset according to your board.
-
-##### Execution address
-Unlike other MCU, STM32 ones will remain in bootloader mode after resetting DTR line and realeasing UART. The bootloader needs an explicit command to jump at a given flash address.
-
-Please setup Execution address according to your board.
-
-##### Reset
-When setting Execution address, reset option is ignored by stm32flash. Setting Reset instead of Execution address will actually send an `Execute @ 0x00000000`, which is where the bootloader is located. You will then need to power cycle your board to execute firmware. This option is not recommended then. 
-
-## Customizing the Command Lines
+### Customizing the Command Lines
 The command lines for `avrdude`, `bossac`, and `dfu-programmer` can be customized by editing the string in the advanced settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
 
 | String | Description|
@@ -350,7 +106,7 @@ Command lines can be returned to the default by clicking the **Reset** button.
 Erase: `{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R`
 Flash: 
 
-## Pre and Post-flash Settings
+### Pre and Post-flash Settings
 
 The flash sequence is:
 1. Execute the pre-flash system command(s) on the host
@@ -363,32 +119,20 @@ The flash sequence is:
 1. Reconnect the printer
 1. Send the post-flash gcode command(s) to the printer
 
-#### Pre-flash System Command
-Specify a system command or script to run on the host prior to flashing.  Multiple commands can be separated with a semicolon.
+| Option | Description |
+| --- | --- |
+| Pre-flash System Command| Specify a system command or script to run on the host prior to flashing.  Multiple commands can be separated with a semicolon. |
+| Pre-flash Gcode | Specify gcode commands to run on the printer prior to flashing.  Multiple commands can be separated with a semicolon.  **Commands are only run if the printer is connected when flashing is initiated** |
+| Pre-flash Gcode Delay | Delay after sending pre-flash gcode. Allows time for code to complete before initiating flash. |
+| Post-flash Delay | This setting can be used to insert a delay of up to 180s after the firmware has been uploaded.  This can be useful if the board takes some time to restart.  A delay of 20-30s is usually enough. |
+| Post-flash System Command | Specify a system command or script to run on the host after flashing.  Multiple commands can be separated with a semicolon. |
+| Post-flash Gcode | You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.  The post-flash code will run more or less immediately if the printer was connected before the flash started (so reconnects automatically when the flash finishes), or whenever the printer is manually reconnected after the firmware is flashed. |
 
-#### Pre-flash Gcode
-Specify gcode commands to run on the printer prior to flashing.  Multiple commands can be separated with a semicolon.
-**Commands are only run if the printer is connected when flashing is initiated**
-
-#### Pre-flash Gcode Delay
-Delay after sending pre-flash gcode. Allows time for code to complete before initiating flash.
-
-#### Post-flash Delay ####
-This setting can be used to insert a delay of up to 180s after the firmware has been uploaded.  This can be useful if the board takes some time to restart.  A delay of 20-30s is usually enough.
-
-#### Post-flash System Command
-Specify a system command or script to run on the host after flashing.  Multiple commands can be separated with a semicolon.
-
-#### Post-flash Gcode
-You can use the post-flash gcode settings to run gcode commands after a successful firmware flash.
-The post-flash code will run more or less immediately if the printer was connected before the flash started (so reconnects automatically when the flash finishes), or whenever the printer is manually reconnected after the firmware is flashed.
-
-## Flashing
-Once the plugin is configured, flashing firmware is a simple operation:
-1. Select the COM port to communicate with the board
-1. Select a firmware file, either located on the filesystem or via a URL
-1. Click the appropriate **Flash from** button
-1. Wait for the firmware update to complete
+### Plugin Options
+| Option | Description |
+| --- | --- |
+| Enable Navbar Icon | Enables an icon in the OctoPrint Navbar which can be used to quickly access the Firmware Updater. |
+| Remember URL | The last URL will be remembered when using 'Flash from URL. |
 
 ## Troubleshooting
 Log messages can be found in the OctoPrint log `octoprint.log` and the Firmware Updater's console log `plugin_firmwareupdater_console.log`.  
