@@ -440,6 +440,14 @@ $(function() {
                                     message = gettext("Waiting for SD card to mount on host...");
                                     break;
                                 }
+                                case "copying": {
+                                    message = gettext("Copying firmware to SD card...");
+                                    break;
+                                }
+                                case "unmounting": {
+                                    message = gettext("Unmounting SD card...");
+                                    break;
+                                }
                                 case "writing": {
                                     message = gettext("Writing memory...");
                                     break;
