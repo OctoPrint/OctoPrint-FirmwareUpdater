@@ -1,5 +1,9 @@
 # Flashing a Board from the SD Card
 
+<p align="center">
+  <img alt="Firmware Updater" src="../extras/img/lpc176x.png">
+</p>
+
 This method applies to LPC1768 and LPC1769, and certain STM32 boards which have the required bootloader installed (e.g., SKR Pro v1.1, SKR Mini E3 v2).
 
 ## SD Card Mounting
