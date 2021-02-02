@@ -1,5 +1,9 @@
 # Flashing an AT90USB Board with DFU Programmer
 
+<p align="center">
+  <img alt="Firmware Updater" src="../extras/img/dfu-prog.png">
+</p>
+
 To flash an AT90USB-based board the tool `dfu-programmer` needs to be installed on the OctoPrint host. 
 
 ## Dfu-programmer Installation
