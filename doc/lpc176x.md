@@ -1,6 +1,6 @@
 # Flashing a Board from the SD Card
 
-This method applies to LPC1768 and LPC1769, and certain STM32 boards which have the required bootloader installed.
+This method applies to LPC1768 and LPC1769, and certain STM32 boards which have the required bootloader installed (e.g., SKR Pro v1.1, SKR Mini E3 v2).
 
 ## SD Card Mounting
 Flashing an LPC176x board requires that the host can mount the board's on-board SD card to a known mount point in the host filesystem.  
