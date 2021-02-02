@@ -19,7 +19,6 @@ $(function() {
         self.showDfuConfig = ko.observable(false);
         self.showStm32flashConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
-        self.showPluginOptions = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
         self.configEnablePreflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
@@ -162,10 +161,6 @@ $(function() {
 
         self.togglePostflashConfig = function(){
             self.showPostflashConfig(!self.showPostflashConfig());
-        }
-
-        self.togglePluginOptions = function(){
-            self.showPluginOptions(!self.showPluginOptions());
         }
 
         self.configFlashMethod.subscribe(function(value) {
@@ -440,14 +435,6 @@ $(function() {
                                     message = gettext("Waiting for SD card to mount on host...");
                                     break;
                                 }
-                                case "copying": {
-                                    message = gettext("Copying firmware to SD card...");
-                                    break;
-                                }
-                                case "unmounting": {
-                                    message = gettext("Unmounting SD card...");
-                                    break;
-                                }
                                 case "writing": {
                                     message = gettext("Writing memory...");
                                     break;
@@ -642,9 +629,6 @@ $(function() {
                 self.alertMessage(undefined);
                 self.showAlert(false);
                 self.saving(false);
-                self.showAdvancedConfig(false);
-                self.showPostflashConfig(false);
-                self.showPluginOptions(false);
             });
         };
 
@@ -666,9 +650,6 @@ $(function() {
             self.bossacPathBroken(false);
             self.bossacPathOk(false);
             self.bossacPathText("");
-            self.showAdvancedConfig(false);
-            self.showPostflashConfig(false);
-            self.showPluginOptions(false);
         };
 
         self.testAvrdudePath = function() {

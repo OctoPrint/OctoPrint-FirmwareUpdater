@@ -91,7 +91,7 @@
                             <option value=avrdude>avrdude (Atmel AVR Family)</option>
                             <option value=bossac>bossac (Atmel SAM Family)</option>
                             <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
-                            <option value=lpc1768>lpc176x (LPC176x Boards)</option>
+                            <option value=lpc1768>lpc1768 (LPC1768-based Boards)</option>
                             <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
                         </select>
                     </div>
@@ -138,6 +138,7 @@
                             </select>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end avrdude options -->
 
@@ -153,6 +154,7 @@
                             <span class="help-block" data-bind="visible: bossacPathBroken() || bossacPathOk, text: bossacPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end bossac options -->
 
@@ -168,6 +170,7 @@
                             <span class="help-block" data-bind="visible: lpc1768PathBroken() || lpc1768PathOk, text: lpc1768PathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end lpc1768 options -->
 
@@ -193,6 +196,7 @@
                             <span class="help-block" data-bind="visible: dfuPathBroken() || dfuPathOk, text: dfuPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end avrdude options -->
 
@@ -208,18 +212,40 @@
                             <span class="help-block" data-bind="visible: stm32flashPathBroken() || stm32flashPathOk, text: stm32flashPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end stm32flash options -->
+
+                <div class="control-group">
+                    <label class="control-label">{{ _('Enable navbar icon') }}</label>
+                    <div class="controls">
+                        <div class="input">
+                            <input type="checkbox" class="input-block-level" data-bind="checked: configShowNavbarIcon">
+                        </div>
+                        <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar.  (Reload after enabling/disabling.)') }}</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">{{ _('Remember URL') }}</label>
+                    <div class="controls">
+                        <div class="input">
+                            <input type="checkbox" class="input-block-level" data-bind="checked: configSaveUrl">
+                        </div>
+                        <span class="help-block">{{ _('Last URL will be remembered when using \'Flash from URL\'.') }}</span>
+                    </div>
+                </div>
                 <hr>
+
                 <!-- advanced options -->
+
                 <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
                     <label data-bind="click: toggleAdvancedConfig" >
-                        <i class="icon-chevron-right icon-fixed-width"></i>Advanced Flash Method Settings
+                        <i class="icon-chevron-right icon-fixed-width"></i>Advanced Settings
                     </label>
                 </div>
                 <div data-bind="visible: showAdvancedConfig">
                     <label data-bind="click: toggleAdvancedConfig" >
-                            <i class="icon-chevron-down icon-fixed-width"></i>Advanced Flash Method Settings
+                            <i class="icon-chevron-down icon-fixed-width"></i>Advanced Settings
                     </label>
 
                     <!-- Advanced avrdude options-->
@@ -269,14 +295,14 @@
                             </div>
                         </div>
                         <div class="control-group">
-                            <label class="control-label">{{ _('Disable bootloader warning') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
-                                </div>
-                                <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
+                        <label class="control-label">{{ _('Disable bootloader warning') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
                             </div>
+                            <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
                         </div>
+                    </div>
                     </div>
                     <!-- End advanced avrdude options -->
 
@@ -364,6 +390,9 @@
                                 <span class="help-block">{{ _('If checked memory will be verified as it get flashed. Otherwise memory won\'t be verified.') }}</span>
                             </div>
                         </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('BOOT0 pin') }}</label>
                             <div class="controls">
@@ -377,6 +406,9 @@
                                 <span class="help-block">{{ _('Serial pin to enable bootloader') }}</span>
                             </div>
                         </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('Reset pin') }}</label>
                             <div class="controls">
@@ -390,6 +422,9 @@
                                 <span class="help-block">{{ _('Serial pin to reset MCU') }}</span>
                             </div>
                         </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('Start execution') }}</label>
                             <div class="controls">
@@ -402,6 +437,9 @@
                                 <span class="help-block">{{ _('Address to execute after flashing.') }}</span>
                             </div>
                         </div>
+                    </div>
+
+                    <div data-bind="visible: showStm32flashConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('Reset after flashing') }}</label>
                             <div class="controls">
@@ -413,6 +451,7 @@
                         </div>
                     </div>
                     <!-- End stm32flash options-->
+                    <hr>
                 </div>
                 <!-- End advanced options-->
 
@@ -519,36 +558,6 @@
                     <!-- End post-flash gcode -->
                 </div>
                 <!-- End pre-flash and post-flash settings -->
-
-                <!-- Plugin Options -->
-                <div data-bind="visible: !showPluginOptions()">
-                    <label data-bind="click: togglePluginOptions" >
-                        <i class="icon-chevron-right icon-fixed-width"></i>Plugin Options
-                    </label>
-                </div>
-                <div data-bind="visible: showPluginOptions">
-                    <label data-bind="click: togglePluginOptions" >
-                            <i class="icon-chevron-down icon-fixed-width"></i>Plugin Options
-                    </label>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Enable navbar icon') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configShowNavbarIcon">
-                            </div>
-                            <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar.  (Reload after enabling/disabling.)') }}</span>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Remember URL') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configSaveUrl">
-                            </div>
-                            <span class="help-block">{{ _('Last URL will be remembered when using \'Flash from URL\'.') }}</span>
-                        </div>
-                    </div>
-                </div>
             </form>
             <div class="pull-right" style="font-size:12px; opacity:0.6">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
         </div>

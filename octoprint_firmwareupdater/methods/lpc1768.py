@@ -105,16 +105,14 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
     target_path = lpc1768_path + '/firmware.bin'
     self._logger.info(u"Copying firmware to update folder '{}' -> '{}'".format(firmware, target_path))
 
-    self._send_status("progress", subtype="copying")
+    self._send_status("progress", subtype="writing")
 
     try:
         shutil.copyfile(firmware, target_path)
     except:
         self._logger.exception(u"Flashing failed. Unable to copy file.")
-        self._send_status("flasherror", message="Unable to copy firmware file to firmware folder")
+        self._send_status("flasherror")
         return False
-
-    self._send_status("progress", subtype="unmounting")
 
     # Sync the filesystem to flush writes
     self._logger.info(u"Synchronizing cached writes to SD card")
@@ -152,7 +150,6 @@ def _flash_lpc1768(self, firmware=None, printer_port=None):
                 self._send_status("flasherror", message="Unable to unmount SD card")
                 return False
 
-    self._send_status("progress", subtype="boardreset")
     self._logger.info(u"Firmware update reset: attempting to reset the board")
     if not _reset_lpc1768(self, printer_port):
         self._logger.error(u"Reset failed")
@@ -272,5 +269,4 @@ def _unmount_sd(self, printer_port=None):
         self._send_status("flasherror", message="Card unmount failed")
         return False
 
-    time.sleep(2)
     return True
