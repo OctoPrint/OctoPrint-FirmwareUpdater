@@ -1,5 +1,9 @@
 # Flashing a SAM board with Bossac
 
+<p align="center">
+  <img alt="Firmware Updater" src="../extras/img/bossac.png">
+</p>
+
 To flash a SAM-based board the tool `bossac` needs to be installed on the OctoPrint host.
 
 ## Bossac Installation
