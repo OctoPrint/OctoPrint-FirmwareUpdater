@@ -1,7 +1,10 @@
 # Flashing an STM32 Board wth STM32Flash
-To flash an STM32-based board the tool `stm32flash` needs to be installed on the OctoPrint host.
+
+**Note:** STM32-based boards which can be updated from the SD card (e.g., SKR Pro, SKR Mini E3) should use the [lpc176x flash method](lpc176x.md).  This method described on this page is only for boards which are updated using stm32flash.
 
 ## STM32Flash Installation
+To flash an STM32-based board using stm32flash, the tool needs to be installed on the OctoPrint host.
+
 ### Install on Linux/RaspberryPi using apt-get
 
 ```
