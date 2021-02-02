@@ -1,7 +1,7 @@
 # Flashing an Atmega (AVR) Board with Avrdude
 
 <p align="center">
-  <img alt="Firmware Updater" width="400" src="../extras/img/avrdude.png">
+  <img alt="Firmware Updater" src="../extras/img/avrdude.png">
 </p>
 
 To flash an ATmega-based board the tool `avrdude` needs to be installed on the OctoPrint host.
