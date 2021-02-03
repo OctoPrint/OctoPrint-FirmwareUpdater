@@ -23,7 +23,7 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 | Description | Examples | Flash Method |
 | --- | --- | --- |
 | Atmel ATmega 8-bit MCUs | RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others | [avrdude](doc/avrdude.md) |
-| Atmel AT90USB 8-bit MCUs | Printrboard | [dfuprog](doc/dfu-prog.md) |
+| Atmel AT90USB 8-bit MCUs | Printrboard | [dfuprog](doc/dfuprog.md) |
 | NXP LPC176x 32-bit MCUs | MKS SBASE, SKR v1.1, v1.3, v1.4, v1.4 Turbo etc. | [lpc176x](doc/lpc176x.md) |
 | Atmel SAM 32-bit MCUs | Arduino DUE, etc. | [bossac](doc/bossac.md) |
 | STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) |
