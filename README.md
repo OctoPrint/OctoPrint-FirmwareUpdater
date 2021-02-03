@@ -1,4 +1,4 @@
-# OctoPrint Firmware Updater
+# OctoPrint Firmware Updater Plugin
 The Firmware Updater plugin can be used to flash pre-compiled firmware images to your printer from a local file or URL.
 
 <p align="center">
@@ -9,11 +9,6 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
 1. [Supported Boards](#supported-boards)
 1. [Plugin Installation](#plugin-installation)
 1. [Plugin Configuration](#plugin-configuration)
-   1. [ATmega Boards](doc/avrdude.md)
-   1. [AT90USB Boards](doc/dfuprog.md)
-   1. [LPC176x Boards](doc/lpc176x.md)
-   1. [SAM Boards](doc/bossac.md)
-   1. [STM32 Boards](doc/stm32flash.md)
 1. [Flashing Firmware](#flashing-firmware)
 1. [Advanced Options](#advanced-options)
    1. [Customizing the Command Lines](#customizing-the-command-lines)
@@ -24,12 +19,15 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
 
 ## Supported Boards
 The plugin supports a variety of boards, based on the MCU (processor) they have:
-* 'ATmega' family 8-bit MCUs (RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others)
-* 'AT90USB' family 8-bit MCUs (Printrboard)
-* 'LPC1768' & 'LPC1769' MCUs (MKS SBASE, SKR v1.1, v1.3, v1.4, etc., also SKR Pro v1.1)
-* 'SAM' family 32-bit MCUs (Arduino DUE, etc.)
-* 'STM32' family 32-bits MCUs with embedded ST serial bootloader (FYSETC Cheetah, **not** SKR Pro)
-* 'STM32' family 32-bit MCUs which update from the SD card using the lpc176x method (SKR Pro v1.1, SKR Mini E3 v2, etc.)
+
+| Description | Examples | Flash Method |
+| --- | --- | --- |
+| Atmel ATmega 8-bit MCUs | RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others | [avrdude](doc/avrdude.md) |
+| Atmel AT90USB 8-bit MCUs | Printrboard | [dfuprog](doc/dfuprog.md) |
+| NXP LPC176x 32-bit MCUs | MKS SBASE, SKR v1.1, v1.3, v1.4, v1.4 Turbo etc. | [lpc176x](doc/lpc176x.md) |
+| Atmel SAM 32-bit MCUs | Arduino DUE, etc. | [bossac](doc/bossac.md) |
+| STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) |
+| STM32 32-bit MCUs (ST Bootloader) | FYSETC Cheetah | [stm32flash](doc/stm32flash.md) |
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
@@ -38,30 +36,28 @@ Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wik
 or manually using this URL:
     https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/archive/master.zip
 
+Using OctoPrint's Software Update plugin you can choose one of three Release Channels to follow:
+
+| Release Channel | Description |
+| --- | --- |
+| Stable (Recommended) | Updated least frequently, features are stable |
+| Release Candidate | Updated when new features are ready for testing |
+| Development | Updated frequently, may be unstable, used for beta-testing new features |
+
+If you report a bug or request a new feature you will probalby be asked to test development or RC builds.
+
 ## Plugin Configuration
-The appropriate flashing tool for the board type needs to be selected. 
+The appropriate flashing tool for the board type needs to be selected.  See the table in the [supported boards](#supported-boards) section to choose the appropriate method.
 
-| Board Family | Flashing Tool  |
-| -----------: | :------------- | 
-| ATmega       | avrdude        |
-| AT90USB      | dfu-programmer |
-| LPC176x      | lpc176x        |
-| SAM          | bossac         |
-| STM32        | stm32flash     |
-
-#### Special Note for the SKR Pro v1.1 and SKR Mini E3 v2 STM32 Boards
-It seems that SKR have included a custom bootloader which enables their STM32-based SKR Pro v1.1 and Mini E3 v2 boards (and maybe others) to be flashed using the same copy-and-reset procedure as their LPC176x-based boards.  **Please follow the LPC176x instructions for an SKR Pro v1.1 or SKR Mini E3 v2 boards.**  [Issue #103](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/103) may contain useful information for configuring the required firmware options.
-
-#### Special Note for the Creality Ender 3
-The mainboard in the Ender 3 (and probably other devices) is flashed without a boot loader. The first time you want to upgrade its firmware, you have to use extra programming hardware ("burner") to install a bootloader. Alternately you can use the "USB ISP" programmer which they include with their [BL-Touch Add-on Kit](https://www.creality3dofficial.com/products/creality-bl-touch?_pos=8&_sid=07be62867&_ss=rell), which comes with a pinout card. Using their kit instead of using this plugin can avoid exceeding memory limits with custom builds of Marlin.
+**Note:** If your board is updated by copying a file named `firmware.bin` to the SD card and resetting the board, you should use the **lpc176x** method.  This applies to SKR Pro v1.1 or SKR Mini E3 v2 boards and probably others.
 
 ### Board-Specific Configuration
 Plugin settings vary depending on the flashing tool and are documented on the page for each flash method. Follow the instructions on the appropriate page to install and configure any necessary tools:
-* [Atmega (AVR)](doc/avrdude.md)
-* [AT90USB](doc/dfuprog.md)
-* [LPC176x](doc/lpc176x.md)
-* [SAM](doc/bossac.md)
-* [STM32](doc/stm32flash.md)
+* [Atmega (AVR) based boards](doc/avrdude.md)
+* [AT90USB based boards](doc/dfuprog.md)
+* [LPC176x and other boards which are updated from the SD card](doc/lpc176x.md)
+* [SAM based boards](doc/bossac.md)
+* [STM32 based boards which do not update from the SD card](doc/stm32flash.md)
 
 ## Flashing Firmware
 Once the plugin is configured, flashing firmware is a simple operation:
@@ -71,7 +67,6 @@ Once the plugin is configured, flashing firmware is a simple operation:
 1. Wait for the firmware update to complete
 
 ## Advanced Options
-
 ### Customizing the Command Lines
 The command lines for `avrdude`, `bossac`, and `dfu-programmer` can be customized by editing the string in the advanced settings for the flash method.  Text in braces (`{}`) will be substituted for preconfigured values if present.
 
