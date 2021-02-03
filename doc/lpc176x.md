@@ -102,9 +102,13 @@ Alternatively, you can disable the unmount command entirely by clearing the **Un
 If you need to enter a password when running `sudo` commands as `pi` you will need to create a new `sudoers` entry in order for the plugin to work correctly.
 
 1. Run this command in an SSH prompt on your OctoPrint host to create a new sudo rule file:
+
    `sudo nano /etc/sudoers.d/020_firmware_updater`
+   
 2. Paste this line into the new file:
+
    `pi ALL=NOPASSWD: /bin/umount`
+   
 3. Save and close the file
 
 ## LPC176x Configuration
@@ -113,11 +117,12 @@ If you need to enter a password when running `sudo` commands as `pi` you will ne
 </p>
 
 ### Required Settings
-The only required setting is the path to the firmware update folder.  If using usbmount it will probably be `/media/usb`.
+The only required setting is the path to the firmware update folder.  If using usbmount it will be `/media/usb`.
 
 ### Optional Settings
 Optional advanced settings are available for:
 * Resetting the board prior to flashing - adds an extra board reset which can help ensure that the SD card is mounted correctly
+* Configuring the unmount command - clear the command line to disable it
 
 ## Troubleshooting
 ### Board reset failed
