@@ -39,7 +39,7 @@ The minimum settings are:
 * AVR MCU Type
 * Path to dfu-programmer
 
-### Optional Settings Settings
+### Optional Settings
 | Option | Description |
 | --- | --- |
 | Erase command line | The command used to erase the board prior to flashing. |
