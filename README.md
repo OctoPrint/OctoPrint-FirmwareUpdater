@@ -22,12 +22,12 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 
 | Description | Examples | Flash Method |
 | --- | --- | --- |
-| Atmel ATmega 8-bit MCUs | RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others | avrdude |
-| Atmel AT90USB 8-bit MCUs | Printrboard | at90usb |
-| NXP LPC176x 32-bit MCUs | MKS SBASE, SKR v1.1, v1.3, v1.4, v1.4 Turbo etc. | lpc176x |
-| Atmel SAM 32-bit MCUs | Arduino DUE, etc. | dfu-programmer |
-| STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | lpc176x |
-| STM32 32-bit MCUs (ST Bootloader) | FYSETC Cheetah | stm32flash |
+| Atmel ATmega 8-bit MCUs | RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others | [avrdude](doc/avrdude.md) |
+| Atmel AT90USB 8-bit MCUs | Printrboard | [dfuprog](doc/dfu-prog.md) |
+| NXP LPC176x 32-bit MCUs | MKS SBASE, SKR v1.1, v1.3, v1.4, v1.4 Turbo etc. | [lpc176x](doc/lpc176x.md) |
+| Atmel SAM 32-bit MCUs | Arduino DUE, etc. | [bossac](doc/bossac.md) |
+| STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) |
+| STM32 32-bit MCUs (ST Bootloader) | FYSETC Cheetah | [stm32flash](doc/stm32flash.md) |
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
