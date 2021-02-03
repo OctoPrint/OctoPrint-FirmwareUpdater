@@ -120,9 +120,10 @@ If you need to enter a password when running `sudo` commands as `pi` you will ne
 The only required setting is the path to the firmware update folder.  If using usbmount it will be `/media/usb`.
 
 ### Optional Settings
-Optional advanced settings are available for:
-* Resetting the board prior to flashing - adds an extra board reset which can help ensure that the SD card is mounted correctly
-* Configuring the unmount command - clear the command line to disable it
+| Option | Description |
+| --- | --- |
+| Reset before flashing | Adds an extra board reset prior to flashing - can help ensure that the SD card is mounted correctly. |
+| Unmount command | The command used to unmount the SD card prior to resetting the board.  Clear the command line to disable it |
 
 ## Troubleshooting
 ### Board reset failed
