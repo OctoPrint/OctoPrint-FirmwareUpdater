@@ -40,8 +40,10 @@ The minimum settings are:
 * Path to dfu-programmer
 
 ### Optional Settings Settings
-Optional advanced settings are available for:
-* Customizing the command lines for erasing and flashing the board
+| Option | Description |
+| --- | --- |
+| Erase command line | The command used to erase the board prior to flashing. |
+| Flash command line | The command used to flash the firmware to the board. |
 
 ## Hardware Notes
 AT90USB boards must be in **Boot** or **DFU** mode before they can be flashed.  This is done by placing or removing a jumper then resetting the board.
