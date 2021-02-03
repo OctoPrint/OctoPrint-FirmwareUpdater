@@ -65,12 +65,13 @@ To locate `avrdude` on most Linux variants (including OctoPi):
 * Add the full path to avrdude in the plugin settings.
 
 ### Optional Settings
-Optional advanced settings are available for:
-* Baud rate - sets the speed for communication with the board
-* Avrdude config file - overrides the default config file with a custom one
-* Disabling write verification - speeds up flashing by not verifying the write operation
-* Customizing the avrdude command line
-* Disabling the bootloader warning - disables a warning which is shown the hex filename has 'bootloader' in it
+| Option | Description |
+| --- | --- |
+| avrdude Baud Rate| Speed for communication with the board.  'Default' is strongly recommended. |
+| avrdude config file | Can be used to override the default config file with a custom one. |
+| Disable write verification | Speed up flashing by not verifying the write operation.  Not recommended! |
+| Command line | Customize the avrdude command line, e.g. to specify an MCU or programmer which is not listed. |
+| Disabling bootloader warning | Disables a warning which is shown the hex filename has 'bootloader' in it. |
 
 ## Hardware Notes
 ### Creality Ender
