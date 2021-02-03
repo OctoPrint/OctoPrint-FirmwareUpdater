@@ -55,7 +55,11 @@ Optional advanced settings are available for:
 * Customizing the avrdude command line
 * Disabling the bootloader warning - disables a warning which is shown the hex filename has 'bootloader' in it
 
-## Prusa MMU and CW1
+## Hardware Notes
+### Creality Ender 3 with Atmega Mainboard
+The Atmega-based mainboard in the Ender 3 (and probably other devices) is supplied without a bootloader.  The first time you want to upgrade its firmware you have to use extra programming hardware (a USBasp) to install a bootloader.  Alternately you can use the "USB ISP" programmer which they include with their [BL-Touch Add-on Kit](https://www.creality3dofficial.com/products/creality-bl-touch?_pos=8&_sid=07be62867&_ss=rell), which comes with a pinout card.
+
+### Prusa MMU and CW1
 Original firmware files for Prusa MMU and CW1 have special in the begining of the file:
 
 For MMU these are:
@@ -73,4 +77,3 @@ and for CW1:
 ```
 
 The Firmware Updater plugin will automatically detect these headers and handle the files accordingly.
-
