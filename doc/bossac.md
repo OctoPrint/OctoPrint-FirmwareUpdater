@@ -34,6 +34,7 @@ sudo cp ~/BOSSA-1.7.0/bin/bossac /usr/local/bin/
 The only required setting is the path to the bossac binary.
 
 ### Optional Settings
-Optional advanced settings are available for:
-* Disabling write verification - speeds up flashing by not verifying the write operation
-* Customizing the bossac command line
+| Option | Description |
+| --- | --- |
+| Disable write verification | Speed up flashing by not verifying the write operation. Not recommended. |
+| Flash command line | The command used to flash the firmware to the board. |
