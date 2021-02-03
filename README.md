@@ -1,4 +1,4 @@
-# OctoPrint Firmware Updater
+# OctoPrint Firmware Updater Plugin
 The Firmware Updater plugin can be used to flash pre-compiled firmware images to your printer from a local file or URL.
 
 <p align="center">
