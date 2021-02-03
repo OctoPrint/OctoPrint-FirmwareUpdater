@@ -178,7 +178,9 @@
                 <!-- marlinbft options for -->
                 <div data-bind="visible: showMarlinBftConfig">
                     <div>
-                        <p>Here there be dragons!</p>
+                        <i class="icon-warning-sign"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Warning!</h5>
+                        <p>The Marlin Binary File Transfer protocol is still in an <a href="https://github.com/MarlinFirmware/Marlin/pull/14817" target="_new">unfinished / experimental state</a>.  Changes in Marlin may break this method at any time.</p>
+                        <p>That said, it works quite well.</p>
                     </div>
                     <hr>
                 </div>
@@ -227,7 +229,7 @@
                 <!-- end stm32flash options -->
 
                 <!-- advanced options -->
-                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
+                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig() || showMarlinBftConfig())">
                     <label data-bind="click: toggleAdvancedConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Advanced Flash Method Settings
                     </label>
@@ -343,7 +345,41 @@
                     </div>
                     <!-- Advanced lpc1768 options -->
 
-                     <!-- Advanced dfu-programmer options -->
+                    <!-- Advanced marlinbft options -->
+                    <div data-bind="visible: showMarlinBftConfig">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Wait after connect') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configMarlinBftWaitAfterConnect">
+                                    <span class="add-on">seconds</span>
+                                </div>
+                                <span class="help-block">{{ _('Some boards reset after getting the command to start binary transfer mode. A value of 3 seconds is normal for when this wait is required.  Default is 0s') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Communication timeout') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="number" class="input-mini text-right" step=any min="0" max="10000" data-bind="value: configMarlinBftTimeout">
+                                    <span class="add-on">milliseconds</span>
+                                </div>
+                                <span class="help-block">{{ _('Protocol communication timeout.  Default is 1000ms') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Verbose progress logging') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
+                                </div>
+                                <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Advanced marlinbft options -->
+
+                    <!-- Advanced dfu-programmer options -->
                     <div data-bind="visible: showDfuConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('Erase command line') }}</label>

@@ -116,8 +116,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 		if method in self._flash_prechecks:
 			if not self._flash_prechecks[method](self):
-				error_message = "Cannot flash firmware, flash method {} is not fully configured".format(method)
-				self._send_status("flasherror", subtype="method", message=error_message)
+				if method == "marlinbft":
+					error_message = "Marlin BINARY_FILE_TRANSFER capability is not supported"
+				else:
+					error_message = "Cannot flash firmware, flash method {} is not fully configured".format(method)
+					self._send_status("flasherror", subtype="method", message=error_message)
 				return flask.make_response(error_message, 400)
 
 		file_to_flash = None
@@ -339,6 +342,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 			"lpc1768_path": None,
 			"lpc1768_unmount_command": "sudo umount {mountpoint}",
 			"lpc1768_preflashreset": True,
+			"marlinbft_waitafterconnect": 0,
+			"marlinbft_timeout": 1000,
+			"marlinbft_progresslogging": False,
+			"marlinbft_hascapability": False,
 			"postflash_delay": "0",
 			"preflash_delay": "3",
 			"postflash_gcode": None,
@@ -365,6 +372,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
 	#~~ Extra methods
 
+	def _send_capability(self, capability, enabled):
+		self._plugin_manager.send_plugin_message(self._identifier, dict(type="capability",
+		                                                                capability=capability,
+		                                                                enabled=enabled))	
+
 	def _send_status(self, status, subtype=None, message=None):
 		self._plugin_manager.send_plugin_message(self._identifier, dict(type="status",
 		                                                                status=status,
@@ -372,6 +384,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		                                                                message=message))
 
 	#~~ Hooks
+
+    ##~~ capabilites hook
+	def firmware_capability_hook(self, comm_instance, capability, enabled, already_defined):
+		del comm_instance, already_defined
+		if capability.lower() == "BINARY_FILE_TRANSFER".lower():
+			self._logger.info("Setting BINARY_FILE_TRANSFER capability to %s" % (enabled))
+			self._settings.set_boolean(["marlinbft_hascapability"], enabled)
+			self._settings.save()
+			self._send_capability("BINARY_FILE_TRANSFER", enabled)
 
 	def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
 		return [("POST", r"/flash", 1000 * 1024)]
@@ -430,5 +451,6 @@ def __plugin_load__():
 
 	__plugin_hooks__ = {
 		"octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
+		"octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook
 	}

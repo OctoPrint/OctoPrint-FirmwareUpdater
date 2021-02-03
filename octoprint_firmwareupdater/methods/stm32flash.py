@@ -25,7 +25,7 @@ def _check_stm32flash(self):
     else:
         return True
 
-def _flash_stm32flash(self, firmware=None, printer_port=None):
+def _flash_stm32flash(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
 

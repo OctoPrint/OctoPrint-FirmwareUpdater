@@ -1,66 +1,113 @@
-import re
 import os
 import time
 import shutil
 import subprocess
 import sys
-import copy
 import binproto2 as mbp
 
-def _check_marlinbft(self):
-    # TODO: Figure out how to check for the Marlin BFT capability
-    return True
+current_baudrate = None
 
-def _flash_marlinbft(self, firmware=None, printer_port=None):
+def _check_marlinbft(self):
+    self._logger.info("Marlin BINARY_FILE_TRANSFER capability is %s" % (self._settings.get_boolean(["marlinbft_hascapability"])))
+    if not self._settings.get_boolean(["marlinbft_hascapability"]):
+        self._logger.error("Marlin BINARY_FILE_TRANSFER capability is not supported")
+        self._send_status("flasherror", subtype="nobftcap")
+        return False
+    elif not self._printer.is_operational():
+        self._logger.error("Printer is not connected")
+        self._send_status("flasherror", subtype="notconnected")
+        return False
+    else:
+        global current_baudrate
+        _, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
+        return True
+
+def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
+    assert(current_baudrate is not None)
 
-    self._logger.info(u"Transfering file to printer using Marlin BFT '{}' -> /firmware.bin".format(firmware))
-    self._send_status("progress", subtype="sending")
+    # Get the settings
+    bft_waitafterconnect = self._settings.get_int(["marlinbft_waitafterconnect"])
+    bft_timeout = self._settings.get_int(["marlinbft_timeout"])
+    bft_verbose = self._settings.get_boolean(["marlinbft_progresslogging"])
+
+    # Loggging
+    if bft_verbose:
+        transfer_logger = self._logger
+    else:
+        transfer_logger = None
 
     try:
         # Open the binary protocol connection
-        protocol = mbp.Protocol(printer_port, 115200, 512, 1000, self._logger)
+        self._logger.info("Current Baud: %s" % current_baudrate)
+
+        self._logger.info(u"Initializing Marlin BFT protocol")
+        self._send_status("progress", subtype="bftinit")
+        protocol = mbp.Protocol(printer_port, current_baudrate, 512, bft_timeout, self._logger)
+        
+        # Wait after connect protocol
+        if bft_waitafterconnect > 0:
+            self._logger.info("waiting %ss after protocol connect" % bft_waitafterconnect)
+            time.sleep(bft_waitafterconnect)
 
         # Make sure temperature auto-reporting is disabled
         protocol.send_ascii("M155 S0")
 
         # Connect
+        self._logger.info(u"Connecting to printer at '{}' using Marlin BFT protocol".format(printer_port))
+        self._send_status("progress", subtype="bftconnect")
         protocol.connect()
-
+      
         # Copy the file
-        filetransfer = mbp.FileTransferProtocol(protocol, None)
+        self._logger.info(u"Transfering file to printer using Marlin BFT '{}' -> /firmware.bin".format(firmware))
+        self._send_status("progress", subtype="sending")
+        filetransfer = mbp.FileTransferProtocol(protocol, logger=transfer_logger)
         filetransfer.copy(firmware, 'firmware.bin', True, False)
-
-        self._logger.info(u"Transfer complete")
+        self._logger.info(u"Binary file transfer complete")
 
         # Disconnect
         protocol.disconnect()
+
+        # Display a message on the LCD
+        protocol.send_ascii("M117 Resetting...")
+
+    except mbp.exceptions.ConnectionLost:
+        self._logger.exception(u"Flashing failed. Unable to connect to printer.")
+        self._send_status("flasherror", message="Unable to open binary file transfer connection")
+        return False
+    
+    except mbp.exceptions.FatalError:
+        self._logger.exception(u"Flashing failed. Too many retries.")
+        self._send_status("flasherror", message="Unable to transfer firmware file to printer - too many retries")
+        return False
 
     except:
         self._logger.exception(u"Flashing failed. Unable to transfer file.")
         self._send_status("flasherror", message="Unable to transfer firmware file to printer")
         return False
-
+    
     finally:
         if (protocol):
             protocol.shutdown()
 
     self._send_status("progress", subtype="boardreset")
     self._logger.info(u"Firmware update reset: attempting to reset the board")
-    if not _reset_board(self, printer_port):
+    if not _reset_board(self, printer_port, current_baudrate):
         self._logger.error(u"Reset failed")
         return False
 
     return True
 
-def _reset_board(self, printer_port=None):
+def _reset_board(self, printer_port=None, current_baudrate=None):
     assert(printer_port is not None)
+    assert(current_baudrate is not None)
+
     self._logger.info(u"Resetting printer at '{port}'".format(port=printer_port))
 
     # Configure the port
     try:
-        os.system('stty -F ' + printer_port + ' speed 115200 -echo > /dev/null')
+        os.system('stty -F ' + printer_port + ' speed ' + str(current_baudrate) + ' -echo > /dev/null')
     except:
         self._logger.exception(u"Error configuring serial port.")
         self._send_status("flasherror", message="Board reset failed")
