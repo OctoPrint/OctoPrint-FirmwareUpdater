@@ -18,6 +18,7 @@ $(function() {
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
         self.showStm32flashConfig = ko.observable(false);
+        self.showMarlinBftConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.showPluginOptions = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
@@ -175,36 +176,49 @@ $(function() {
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'bossac') {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(true);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'lpc1768'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(true);
                 self.showStm32flashConfig(false);
                 self.showDfuConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'dfuprogrammer'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(true);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'stm32flash'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(true);
+                self.showMarlinBftConfig(false);
+            } else if(value == 'marlinbft'){
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(false);
+                self.showDfuConfig(false);
+                self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(true);
             } else {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             }
          });
 
@@ -442,6 +456,10 @@ $(function() {
                                 }
                                 case "copying": {
                                     message = gettext("Copying firmware to SD card...");
+                                    break;
+                                }
+                                case "sending": {
+                                    message = gettext("Sending firmware to printer...");
                                     break;
                                 }
                                 case "unmounting": {

@@ -86,12 +86,13 @@
                 <div class="control-group">
                     <label class="control-label">{{ _('Flash method') }}</label>
                     <div class="controls">
-	                    <select data-bind="value: configFlashMethod">
+	                    <select style="width:285px;" data-bind="value: configFlashMethod">
                             <option></option>
                             <option value=avrdude>avrdude (Atmel AVR Family)</option>
                             <option value=bossac>bossac (Atmel SAM Family)</option>
                             <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
                             <option value=lpc1768>lpc176x (LPC176x Boards)</option>
+                            <option value=marlinbft>marlinbft (Marlin Binary File Transfer)</option>
                             <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
                         </select>
                     </div>
@@ -138,6 +139,7 @@
                             </select>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end avrdude options -->
 
@@ -153,6 +155,7 @@
                             <span class="help-block" data-bind="visible: bossacPathBroken() || bossacPathOk, text: bossacPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end bossac options -->
 
@@ -168,8 +171,18 @@
                             <span class="help-block" data-bind="visible: lpc1768PathBroken() || lpc1768PathOk, text: lpc1768PathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end lpc1768 options -->
+
+                <!-- marlinbft options for -->
+                <div data-bind="visible: showMarlinBftConfig">
+                    <div>
+                        <p>Here there be dragons!</p>
+                    </div>
+                    <hr>
+                </div>
+                <!-- end marlinbft options -->
 
                 <!-- dfu-programmer options -->
                 <div data-bind="visible: showDfuConfig">
@@ -193,6 +206,7 @@
                             <span class="help-block" data-bind="visible: dfuPathBroken() || dfuPathOk, text: dfuPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end avrdude options -->
 
@@ -208,9 +222,10 @@
                             <span class="help-block" data-bind="visible: stm32flashPathBroken() || stm32flashPathOk, text: stm32flashPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end stm32flash options -->
-                <hr>
+
                 <!-- advanced options -->
                 <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
                     <label data-bind="click: toggleAdvancedConfig" >
