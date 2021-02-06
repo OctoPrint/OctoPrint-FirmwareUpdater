@@ -14,7 +14,7 @@ plugin_package = "octoprint_firmwareupdater"
 plugin_name = "OctoPrint-FirmwareUpdater"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "1.8.0"
+plugin_version = "1.8.1b0"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -33,7 +33,7 @@ plugin_url = "https://github.com/OctoPrint/OctoPrint-FirmwareUpdater"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["pyserial>=3.5"]
+plugin_requires = ["pyserial>=3.5","marlin-binary-protocol>=0.0.7"]
 
 ### --------------------------------------------------------------------------------------------------------------------
 ### More advanced options that you usually shouldn't have to touch follow after this point

@@ -30,7 +30,7 @@ def _check_dfuprog(self):
     else:
         return True
 
-def _flash_dfuprog(self, firmware=None, printer_port=None):
+def _flash_dfuprog(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
 
     if not _erase_dfuprog(self):
