@@ -36,7 +36,16 @@ $(function() {
         self.configPreflashGcode = ko.observable();
         self.configSaveUrl = ko.observable();
         self.configLastUrl = ko.observable();
+        self.configDisableFileFilter = ko.observable();
         self.pluginVersion = ko.observable();
+
+        self.filterFileTypes = ko.computed(function() {
+            if (self.configDisableFileFilter()) {
+                return null;
+            } else {
+                return '.hex,.bin';
+            }
+        });
 
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
@@ -151,6 +160,7 @@ $(function() {
             }
 
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hascapability());
+            self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater.plugin_version());
         }
 
@@ -589,6 +599,10 @@ $(function() {
                 self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
             }
 
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter() != 'false') {
+                self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
+            }
+
             // Load the avrdude settings
             self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
             self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
@@ -699,6 +713,7 @@ $(function() {
                         enable_preflash_gcode: self.configEnablePreflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck(),
                         save_url: self.configSaveUrl(),
+                        disable_filefilter: self.configDisableFileFilter(),
                         last_url: lastUrl,
                     }
                 }
