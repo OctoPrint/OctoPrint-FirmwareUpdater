@@ -23,7 +23,7 @@
                         <span class="span3">
                             <span class="btn input-group-btn fileinput-button">
                                 <span>{{ _('Browse...') }}</span>
-                                <input id="settings_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: ".hex,.bin" }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
+                                <input id="settings_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: filterFileTypes }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
                             </span>
                         </span>
                         <span class="span9">
@@ -597,6 +597,15 @@
                                 <input type="checkbox" class="input-block-level" data-bind="checked: configSaveUrl">
                             </div>
                             <span class="help-block">{{ _('Last URL will be remembered when using \'Flash from URL\'.') }}</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Disable file filter') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableFileFilter">
+                            </div>
+                            <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'. (For compatibility browsers which do not support the \'accept\' attribute.)') }}</span>
                         </div>
                     </div>
                 </div>
