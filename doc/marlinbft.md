@@ -2,6 +2,8 @@
 
 Binary File ransfer is an alternative method to transfer the `firmware.bin` file to a printer that can be flashed from the SD card.
 
+**WARNING:** This feature is based on the experimental Marlin [Binary File Transfer Protocol](https://github.com/MarlinFirmware/Marlin/pull/14817).  It works well, but the protocol will undergo changes before it goes final, which **will** break it.  When that happens I will update the plugin, but it may not happen immediately.
+
 ## Table of Contents
 1. [Warnings and Caveats](#warnings-and-caveats)
 1. [Installation](#installation)
