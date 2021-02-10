@@ -1,4 +1,4 @@
-# Flashing an LPC176x or STM32 board using Marlin's Binary File Transfer
+# Flashing an LPC176x or STM32 board using Binary File Transfer
 
 Binary File ransfer is an alternative method to transfer the `firmware.bin` file to a printer that can be flashed from the SD card.
 
