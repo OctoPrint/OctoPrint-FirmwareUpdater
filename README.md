@@ -24,9 +24,9 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 | --- | --- | --- |
 | Atmel ATmega 8-bit MCUs | RAMPS, Sanguinololu, Melzi, Anet, Creality, Ender, Prusa MMU, Prusa CW1 many others | [avrdude](doc/avrdude.md) |
 | Atmel AT90USB 8-bit MCUs | Printrboard | [dfuprog](doc/dfuprog.md) |
-| NXP LPC176x 32-bit MCUs | MKS SBASE, SKR v1.1, v1.3, v1.4, v1.4 Turbo etc. | [lpc176x](doc/lpc176x.md) |
+| NXP LPC176x 32-bit MCUs | MKS SBASE, SKR v1.1, v1.3, v1.4, v1.4 Turbo etc. | [lpc176x](doc/lpc176x.md) or [marlinbft](doc/marlinbft.md) |
 | Atmel SAM 32-bit MCUs | Arduino DUE, etc. | [bossac](doc/bossac.md) |
-| STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) |
+| STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) or [marlinbft](doc/marlinbft.md) |
 | STM32 32-bit MCUs (ST Bootloader) | FYSETC Cheetah | [stm32flash](doc/stm32flash.md) |
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
@@ -55,7 +55,9 @@ The appropriate flashing tool for the board type needs to be selected.  See the 
 Plugin settings vary depending on the flashing tool and are documented on the page for each flash method. Follow the instructions on the appropriate page to install and configure any necessary tools:
 * [Atmega (AVR) based boards](doc/avrdude.md)
 * [AT90USB based boards](doc/dfuprog.md)
-* [LPC176x and other boards which are updated from the SD card](doc/lpc176x.md)
+* LPC176x and other boards which are updated from the SD card
+  * Option 1 - [File copy using SD mount](doc/lpc176x.md)
+  * Option 2 - [File transfer using serial protocol](doc/marlinbft.md)
 * [SAM based boards](doc/bossac.md)
 * [STM32 based boards which do not update from the SD card](doc/stm32flash.md)
 
