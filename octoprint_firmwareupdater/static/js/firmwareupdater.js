@@ -445,6 +445,10 @@ $(function() {
                                         message = gettext("Printer does not report support for the Marlin Binary File Transfer protocol.");
                                         break;
                                     }
+                                    case "nobinproto2": {
+                                        message = gettext("Python package 'marlin-binary-protocol' is not installed.");
+                                        break;
+                                    }
                                     case "already_flashing": {
                                         message = gettext("Already flashing.");
                                     }

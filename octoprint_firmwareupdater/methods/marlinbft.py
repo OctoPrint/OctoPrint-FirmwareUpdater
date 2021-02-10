@@ -1,15 +1,26 @@
 import os
 import time
-import shutil
-import subprocess
-import sys
-import binproto2 as mbp
+
+binproto2_installed = True
+try:
+    import binproto2 as mbp
+except:
+    binproto2_installed = False
 
 current_baudrate = None
 
+def _check_binproto2(self):
+    global binproto2_installed
+    return binproto2_installed
+
 def _check_marlinbft(self):
-    self._logger.info("Marlin BINARY_FILE_TRANSFER capability is %s" % (self._settings.get_boolean(["marlinbft_hascapability"])))
-    if not self._settings.get_boolean(["marlinbft_hascapability"]):
+    self._logger.info("Python package 'marlin-binary-protocol' is installed: %s" % (_check_binproto2(self)))
+    self._logger.info("Marlin BINARY_FILE_TRANSFER capability is enabled: %s" % (self._settings.get_boolean(["marlinbft_hascapability"])))
+
+    if not _check_binproto2(self):
+        self._logger.error("Python package 'marlin-binary-protocol' is not installed")
+        self._send_status("flasherror", subtype="nobinproto2")
+    elif not self._settings.get_boolean(["marlinbft_hascapability"]):
         self._logger.error("Marlin BINARY_FILE_TRANSFER capability is not supported")
         self._send_status("flasherror", subtype="nobftcap")
         return False

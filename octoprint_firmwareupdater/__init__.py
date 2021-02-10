@@ -67,6 +67,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 		self._console_logger.setLevel(logging.DEBUG)
 		self._console_logger.propagate = False
 
+		self._logger.info("Python binproto2 package installed: {}".format(marlinbft._check_binproto2(self)))
+
 	# Event handler
 	def on_event(self, event, payload):
 		#self._logger.info("Got event: {}".format(event))
