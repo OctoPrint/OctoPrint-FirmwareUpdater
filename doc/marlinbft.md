@@ -30,18 +30,27 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 ### Marlin Binary Protocol Package
 The plugin currently uses the `marlin-binary-protocol` package to implement the transfer protocol.  This package has dependencies on `heatshrink`, which is hard to install automatically due to compatibility issues with Python2 and Python3.  For this reason the marlin-binary-protocol package and the heatshrink dependency need to be installed manually using `pip`.
 
-NB: If you are running OctoPrint in a VirtualEnv you need to run the appropriate `pip` commands below inside that environment.
+NB: If you are running OctoPrint in a VirtualEnv you need to run the appropriate `pip` commands below inside that environment.  Depending on your system, the command you use to restart OctoPrint may also be different.
 
 #### Python 2
 1. Install `marlin-binary-protocol` - the dependencies just work
-    `pip install marlin-binary-protocol`
 
+    `pip install marlin-binary-protocol`
+1. Restart OctoPrint
+
+   `sudo service octoprint restart`
+   
 #### Python3
 1. Install a Python 3 compatible version of `heatshrink` to satisfy `marlin-binary-protocol`
+
     `pip3 install https://github.com/p3p/pyheatshrink/releases/download/0.3.3/pyheatshrink-pip.zip`
 1. Install `marlin-binary-protocol`
-    `pip3 install marlin-binary-protocol`
 
+    `pip3 install marlin-binary-protocol`
+1. Restart OctoPrint
+
+   `sudo service octoprint restart`
+   
 ## Marlin Configuration
 The line following line must be uncommented in `Configuration_adv.h`:
 
