@@ -11,6 +11,8 @@ current_baudrate = None
 
 def _check_binproto2(self):
     global binproto2_installed
+    self._settings.set_boolean(["marlinbft_hasbinproto2package"], binproto2_installed)
+    self._settings.save()
     return binproto2_installed
 
 def _check_marlinbft(self):

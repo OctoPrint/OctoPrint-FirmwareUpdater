@@ -97,6 +97,7 @@ $(function() {
         self.configMarlinBftTimeout = ko.observable();
         self.configMarlinBftProgressLogging = ko.observable();
         self.marlinbftHasCapability = ko.observable();
+        self.marlinbftHasBinProto2Package = ko.observable();
 
         // Config settings for dfu-programmer
         self.configDfuMcu = ko.observable();
@@ -160,6 +161,7 @@ $(function() {
             }
 
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hascapability());
+            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hasbinproto2package());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater.plugin_version());
         }
@@ -310,6 +312,10 @@ $(function() {
             
             if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && !self.printerState.isReady()) {
                 alert = gettext("The printer is not connected.");
+            }
+            
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasBinProto2Package()) {
+                alert = gettext("The marlin-binary-protocol Python package is not installed.");
             }
 
             if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasCapability()) {
@@ -640,6 +646,7 @@ $(function() {
             self.configMarlinBftWaitAfterConnect(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_waitafterconnect());
             self.configMarlinBftTimeout(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_timeout());
             self.configMarlinBftProgressLogging(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_progresslogging());
+            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hasbinproto2package());
 
             // Load the stm32flash settings
             self.configStm32flashPath(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_path());
