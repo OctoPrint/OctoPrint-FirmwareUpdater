@@ -21,7 +21,7 @@ plugin_version = "1.8.1b2"
 plugin_description = """Printer Firmware Updater"""
 
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
-plugin_author = "Gina Häußge and Ben Lye, based on work by Nicanor Romero Venier"
+plugin_author = "Ben Lye and Gina Häußge, based on work by Nicanor Romero Venier"
 
 # The plugin's author's mail address.
 plugin_author_email = "ben@lye.co.nz"
