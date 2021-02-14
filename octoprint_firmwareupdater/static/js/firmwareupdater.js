@@ -18,6 +18,7 @@ $(function() {
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
         self.showStm32flashConfig = ko.observable(false);
+        self.showMarlinBftConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.showPluginOptions = ko.observable(false);
         self.configEnablePostflashDelay = ko.observable();
@@ -35,7 +36,16 @@ $(function() {
         self.configPreflashGcode = ko.observable();
         self.configSaveUrl = ko.observable();
         self.configLastUrl = ko.observable();
+        self.configDisableFileFilter = ko.observable();
         self.pluginVersion = ko.observable();
+
+        self.filterFileTypes = ko.computed(function() {
+            if (self.configDisableFileFilter()) {
+                return null;
+            } else {
+                return '.hex,.bin';
+            }
+        });
 
         // Config settings for avrdude
         self.configAvrdudeMcu = ko.observable();
@@ -75,13 +85,19 @@ $(function() {
         self.configLpc1768Path = ko.observable();
         self.configLpc1768ResetBeforeFlash = ko.observable();
         self.configLpc1768UnmountCommand = ko.observable();
-
         self.lpc1768PathBroken = ko.observable(false);
         self.lpc1768PathOk = ko.observable(false);
         self.lpc1768PathText = ko.observable();
         self.lpc1768PathHelpVisible = ko.computed(function() {
             return self.lpc1768PathBroken() || self.lpc1768PathOk();
         });
+
+        // Config settings for marlinbft
+        self.configMarlinBftWaitAfterConnect = ko.observable();
+        self.configMarlinBftTimeout = ko.observable();
+        self.configMarlinBftProgressLogging = ko.observable();
+        self.marlinbftHasCapability = ko.observable();
+        self.marlinbftHasBinProto2Package = ko.observable();
 
         // Config settings for dfu-programmer
         self.configDfuMcu = ko.observable();
@@ -144,6 +160,9 @@ $(function() {
                 self.firmwareFileURL("");
             }
 
+            self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hascapability());
+            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hasbinproto2package());
+            self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater.plugin_version());
         }
 
@@ -175,36 +194,49 @@ $(function() {
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'bossac') {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(true);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'lpc1768'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(true);
                 self.showStm32flashConfig(false);
                 self.showDfuConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'dfuprogrammer'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(true);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             } else if(value == 'stm32flash'){
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(true);
+                self.showMarlinBftConfig(false);
+            } else if(value == 'marlinbft'){
+                self.showAvrdudeConfig(false);
+                self.showBossacConfig(false);
+                self.showLpc1768Config(false);
+                self.showDfuConfig(false);
+                self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(true);
             } else {
                 self.showAvrdudeConfig(false);
                 self.showBossacConfig(false);
                 self.showLpc1768Config(false);
                 self.showDfuConfig(false);
                 self.showStm32flashConfig(false);
+                self.showMarlinBftConfig(false);
             }
          });
 
@@ -277,6 +309,18 @@ $(function() {
             if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer" && !self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_avrmcu()) {
                 alert = gettext("The AVR MCU type is not selected.");
             }
+            
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && !self.printerState.isReady()) {
+                alert = gettext("The printer is not connected.");
+            }
+            
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasBinProto2Package()) {
+                alert = gettext("The marlin-binary-protocol Python package is not installed.");
+            }
+
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasCapability()) {
+                alert = gettext("The printer does not support Binary File Transfer.");
+            }
 
             if (!self.flashPort() &! self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer") {
                 alert = gettext("The printer port is not selected.");
@@ -337,10 +381,7 @@ $(function() {
                 return;
             }
 
-            console.log(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
-            console.log(self.firmwareFileURL());
             if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
-                console.log(self.firmwareFileURL());
                 self.configLastUrl(self.firmwareFileURL());
                 self._saveLastUrl();
             }
@@ -368,124 +409,161 @@ $(function() {
 
             var message;
 
-            if (data.type === "status") {
-                switch (data.status) {
-                    case "flasherror": {
-                        if (data.message) {
-                            message = gettext(data.message);
-                        } else {
-                            message = gettext("Unknown error");
-                        }
-
-                        if (data.subtype) {
-                            switch (data.subtype) {
-                                case "busy": {
-                                    message = gettext("Printer is busy.");
-                                    break;
-                                }
-                                case "port": {
-                                    message = gettext("Printer port is not available.");
-                                    break;
-                                }
-                                case "method": {
-                                    message = gettext("Flash method is not properly configured.");
-                                    break;
-                                }
-                                case "hexfile": {
-                                    message = gettext("Cannot read file to flash.");
-                                    break;
-                                }
-                                case "already_flashing": {
-                                    message = gettext("Already flashing.");
-                                }
+            switch (data.type) {
+                case "capability": {
+                    if (data.capability == "BINARY_FILE_TRANSFER") {
+                        self.marlinbftHasCapability(data.enabled);
+                    }
+                    break;
+                }
+                case "status": {
+                    switch (data.status) {
+                        case "flasherror": {
+                            if (data.message) {
+                                message = gettext(data.message);
+                            } else {
+                                message = gettext("Unknown error");
                             }
-                        }
 
-                        self.showPopup("error", gettext("Flashing failed"), message);
-                        self.isBusy(false);
-                        self.showAlert(false);
-                        self.firmwareFileName("");
-                        if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
-                            self.firmwareFileURL(self.configLastUrl());
-                        } else {
-                            self.firmwareFileURL("");
-                        }
-                        break;
-                    }
-                    case "success": {
-                        self.showPopup("success", gettext("Flashing successful"), "");
-                        self.isBusy(false);
-                        self.showAlert(false);
-                        self.firmwareFileName("");
-                        if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
-                            self.firmwareFileURL(self.configLastUrl());
-                        } else {
-                            self.firmwareFileURL("");
-                        }
-                        break;
-                    }
-                    case "progress": {
-                        if (data.subtype) {
-                            switch (data.subtype) {
-                                case "disconnecting": {
-                                    message = gettext("Disconnecting printer...");
-                                    break;
-                                }
-                                case "startingflash": {
-                                    self.isBusy(true);
-                                    message = gettext("Starting flash...");
-                                    break;
-                                }
-                                case "waitforsd": {
-                                    message = gettext("Waiting for SD card to mount on host...");
-                                    break;
-                                }
-                                case "copying": {
-                                    message = gettext("Copying firmware to SD card...");
-                                    break;
-                                }
-                                case "unmounting": {
-                                    message = gettext("Unmounting SD card...");
-                                    break;
-                                }
-                                case "writing": {
-                                    message = gettext("Writing memory...");
-                                    break;
-                                }
-                                case "erasing": {
-                                    message = gettext("Erasing memory...");
-                                    break;
-                                }
-                                case "verifying": {
-                                    message = gettext("Verifying memory...");
-                                    break;
-                                }
-                                case "postflashdelay": {
-                                    message = gettext("Post-flash delay...");
-                                    break;
-                                }
-                                case "boardreset": {
-                                        message = gettext("Resetting the board...");
+                            if (data.subtype) {
+                                switch (data.subtype) {
+                                    case "busy": {
+                                        message = gettext("Printer is busy.");
                                         break;
-                                }
-                                case "reconnecting": {
-                                    message = gettext("Reconnecting to printer...");
-                                    break;
+                                    }
+                                    case "port": {
+                                        message = gettext("Printer port is not available.");
+                                        break;
+                                    }
+                                    case "method": {
+                                        message = gettext("Flash method is not properly configured.");
+                                        break;
+                                    }
+                                    case "hexfile": {
+                                        message = gettext("Cannot read file to flash.");
+                                        break;
+                                    }
+                                    case "notconnected": {
+                                        message = gettext("Printer is not connected.");
+                                        break;
+                                    }
+                                    case "nobftcap": {
+                                        message = gettext("Printer does not report support for the Marlin Binary File Transfer protocol.");
+                                        break;
+                                    }
+                                    case "nobinproto2": {
+                                        message = gettext("Python package 'marlin-binary-protocol' is not installed.");
+                                        break;
+                                    }
+                                    case "already_flashing": {
+                                        message = gettext("Already flashing.");
+                                    }
                                 }
                             }
-                        }
 
-                        if (message) {
-                            self.progressBarText(message);
+                            self.showPopup("error", gettext("Flashing failed"), message);
+                            self.isBusy(false);
+                            self.showAlert(false);
+                            self.firmwareFileName("");
+                            if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
+                                self.firmwareFileURL(self.configLastUrl());
+                            } else {
+                                self.firmwareFileURL("");
+                            }
+                            break;
                         }
-                        break;
+                        case "success": {
+                            self.showPopup("success", gettext("Flashing successful"), "");
+                            self.isBusy(false);
+                            self.showAlert(false);
+                            self.firmwareFileName("");
+                            if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
+                                self.firmwareFileURL(self.configLastUrl());
+                            } else {
+                                self.firmwareFileURL("");
+                            }
+                            break;
+                        }
+                        case "progress": {
+                            if (data.subtype) {
+                                switch (data.subtype) {
+                                    case "disconnecting": {
+                                        message = gettext("Disconnecting printer...");
+                                        break;
+                                    }
+                                    case "startingflash": {
+                                        self.isBusy(true);
+                                        message = gettext("Starting flash...");
+                                        break;
+                                    }
+                                    case "waitforsd": {
+                                        message = gettext("Waiting for SD card to mount on host...");
+                                        break;
+                                    }
+                                    case "copying": {
+                                        message = gettext("Copying firmware to SD card...");
+                                        break;
+                                    }
+                                    case "bftinit": {
+                                        message = gettext("Initializing file transfer protocol...");
+                                        break;
+                                    }
+                                    case "bftconnect": {
+                                        message = gettext("Connecting file transfer protocol...");
+                                        break;
+                                    }
+                                    case "finishing": {
+                                        message = gettext("Finishing up...");
+                                        break;
+                                    }
+                                    case "sending": {
+                                        message = gettext("Sending firmware to printer...");
+                                        break;
+                                    }
+                                    case "unmounting": {
+                                        message = gettext("Unmounting SD card...");
+                                        break;
+                                    }
+                                    case "writing": {
+                                        message = gettext("Writing memory...");
+                                        break;
+                                    }
+                                    case "erasing": {
+                                        message = gettext("Erasing memory...");
+                                        break;
+                                    }
+                                    case "verifying": {
+                                        message = gettext("Verifying memory...");
+                                        break;
+                                    }
+                                    case "postflashdelay": {
+                                        message = gettext("Post-flash delay...");
+                                        break;
+                                    }
+                                    case "boardreset": {
+                                            message = gettext("Resetting the board...");
+                                            break;
+                                    }
+                                    case "reconnecting": {
+                                        message = gettext("Reconnecting to printer...");
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (message) {
+                                self.progressBarText(message);
+                            }
+                            break;
+                        }
+                        case "info": {
+                            self.alertType("alert-info");
+                            self.alertMessage(data.status_description);
+                            self.showAlert(true);
+                            break;
+                        }
                     }
-                    case "info": {
-                        self.alertType("alert-info");
-                        self.alertMessage(data.status_description);
-                        self.showAlert(true);
-                        break;
-                    }
+                    break;
                 }
             }
         };
@@ -531,6 +609,10 @@ $(function() {
                 self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
             }
 
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter() != 'false') {
+                self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
+            }
+
             // Load the avrdude settings
             self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
             self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
@@ -559,6 +641,12 @@ $(function() {
             if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
                 self.configLpc1768ResetBeforeFlash(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset());
             }
+
+            // Load the marlinbft settings
+            self.configMarlinBftWaitAfterConnect(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_waitafterconnect());
+            self.configMarlinBftTimeout(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_timeout());
+            self.configMarlinBftProgressLogging(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_progresslogging());
+            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hasbinproto2package());
 
             // Load the stm32flash settings
             self.configStm32flashPath(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_path());
@@ -619,6 +707,9 @@ $(function() {
                         lpc1768_path: self.configLpc1768Path(),
                         lpc1768_unmount_command: self.configLpc1768UnmountCommand(),
                         lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
+                        marlinbft_waitafterconnect: self.configMarlinBftWaitAfterConnect(),
+                        marlinbft_timeout: self.configMarlinBftTimeout(),
+                        marlinbft_progresslogging: self.configMarlinBftProgressLogging(),
                         enable_preflash_commandline: self.configEnablePreflashCommandline(),
                         preflash_commandline: self.configPreflashCommandline(),
                         enable_postflash_commandline: self.configEnablePostflashCommandline(),
@@ -633,6 +724,7 @@ $(function() {
                         enable_preflash_gcode: self.configEnablePreflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck(),
                         save_url: self.configSaveUrl(),
+                        disable_filefilter: self.configDisableFileFilter(),
                         last_url: lastUrl,
                     }
                 }

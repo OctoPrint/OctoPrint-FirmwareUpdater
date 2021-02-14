@@ -23,7 +23,7 @@
                         <span class="span3">
                             <span class="btn input-group-btn fileinput-button">
                                 <span>{{ _('Browse...') }}</span>
-                                <input id="settings_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: ".hex,.bin" }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
+                                <input id="settings_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: filterFileTypes }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
                             </span>
                         </span>
                         <span class="span9">
@@ -86,12 +86,13 @@
                 <div class="control-group">
                     <label class="control-label">{{ _('Flash method') }}</label>
                     <div class="controls">
-	                    <select data-bind="value: configFlashMethod">
+	                    <select style="width:285px;" data-bind="value: configFlashMethod">
                             <option></option>
                             <option value=avrdude>avrdude (Atmel AVR Family)</option>
                             <option value=bossac>bossac (Atmel SAM Family)</option>
                             <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
                             <option value=lpc1768>lpc176x (LPC176x Boards)</option>
+                            <option value=marlinbft>marlinbft (Marlin Binary File Transfer)</option>
                             <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
                         </select>
                     </div>
@@ -138,6 +139,7 @@
                             </select>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end avrdude options -->
 
@@ -153,6 +155,7 @@
                             <span class="help-block" data-bind="visible: bossacPathBroken() || bossacPathOk, text: bossacPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end bossac options -->
 
@@ -168,8 +171,32 @@
                             <span class="help-block" data-bind="visible: lpc1768PathBroken() || lpc1768PathOk, text: lpc1768PathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end lpc1768 options -->
+
+                <!-- marlinbft options for -->
+                <div data-bind="visible: showMarlinBftConfig">
+                    <div>
+                        <div>
+                            <i class="icon-list"></i><h5 style="display: inline-block; margin-left: 5px;">Prerequisite Status</h5>
+                            <div data-bind="visible: marlinbftHasCapability()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-check" style="margin-right: 5px; color: green;" title="Capability detected"></i>Marlin <code>BINARY_FILE_TRANSFER</code> firmware feature is detected</div>
+                            <div data-bind="visible: !marlinbftHasCapability()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-warning-sign" style="margin-right: 5px; color: red;" title="Capability not detected"></i>Marlin <code>BINARY_FILE_TRANSFER</code> firmware feature is <b>NOT</b> detected</div>
+                            <div data-bind="visible: marlinbftHasBinProto2Package()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-check" style="margin-right: 5px; color: green;" title="Package installed"></i>Python <code>marlin-binary-protocol</code> package is installed</div>
+                            <div data-bind="visible: !marlinbftHasBinProto2Package()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-warning-sign" style="margin-right: 5px; color: red;" title="Package not installed"></i>Python <code>marlin-binary-protocol</code> package is <b>NOT</b> installed</div>
+                            <div style="margin-left: 10px;"><p>Reload browser to refresh status.  See the <a href="">documentation</a> for more information about the prerequisites.</p></div>
+                        </div>
+                        <div>
+                            <i class="icon-warning-sign"></i><h5 style="display: inline-block; margin-left: 5px;">Warning!</h5>
+                            <div style="margin-left: 10px;">
+                                <p>The Marlin Binary File Transfer protocol is still in an <a href="https://github.com/MarlinFirmware/Marlin/pull/14817" target="_new">unfinished / experimental state</a>.  Changes in Marlin may break this method at any time.</p>
+                                <p>That said, it works quite well.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <!-- end marlinbft options -->
 
                 <!-- dfu-programmer options -->
                 <div data-bind="visible: showDfuConfig">
@@ -193,6 +220,7 @@
                             <span class="help-block" data-bind="visible: dfuPathBroken() || dfuPathOk, text: dfuPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end avrdude options -->
 
@@ -208,11 +236,12 @@
                             <span class="help-block" data-bind="visible: stm32flashPathBroken() || stm32flashPathOk, text: stm32flashPathText"></span>
                         </div>
                     </div>
+                    <hr>
                 </div>
                 <!-- end stm32flash options -->
-                <hr>
+
                 <!-- advanced options -->
-                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
+                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig() || showMarlinBftConfig())">
                     <label data-bind="click: toggleAdvancedConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Advanced Flash Method Settings
                     </label>
@@ -328,7 +357,41 @@
                     </div>
                     <!-- Advanced lpc1768 options -->
 
-                     <!-- Advanced dfu-programmer options -->
+                    <!-- Advanced marlinbft options -->
+                    <div data-bind="visible: showMarlinBftConfig">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Wait after connect') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configMarlinBftWaitAfterConnect">
+                                    <span class="add-on">seconds</span>
+                                </div>
+                                <span class="help-block">{{ _('Some boards reset after getting the command to start binary transfer mode. A value of 3 seconds is normal for when this wait is required.  Default is 0s') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Communication timeout') }}</label>
+                            <div class="controls">
+                                <div class="input-append">
+                                    <input type="number" class="input-mini text-right" step=any min="0" max="10000" data-bind="value: configMarlinBftTimeout">
+                                    <span class="add-on">milliseconds</span>
+                                </div>
+                                <span class="help-block">{{ _('Protocol communication timeout.  Default is 1000ms') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Verbose progress logging') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
+                                </div>
+                                <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Advanced marlinbft options -->
+
+                    <!-- Advanced dfu-programmer options -->
                     <div data-bind="visible: showDfuConfig">
                         <div class="control-group">
                             <label class="control-label">{{ _('Erase command line') }}</label>
@@ -417,7 +480,7 @@
                 <!-- End advanced options-->
 
                 <!-- Pre-flash and post-flash settings -->
-                <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig())">
+                <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig() || showMarlinBftConfig())">
                     <label data-bind="click: togglePostflashConfig" >
                         <i class="icon-chevron-right icon-fixed-width"></i>Pre-Flash and Post-Flash Settings
                     </label>
@@ -546,6 +609,15 @@
                                 <input type="checkbox" class="input-block-level" data-bind="checked: configSaveUrl">
                             </div>
                             <span class="help-block">{{ _('Last URL will be remembered when using \'Flash from URL\'.') }}</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Disable file filter') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableFileFilter">
+                            </div>
+                            <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'. (For compatibility with browsers which do not support the \'accept\' attribute.)') }}</span>
                         </div>
                     </div>
                 </div>
