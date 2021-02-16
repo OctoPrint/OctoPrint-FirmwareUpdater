@@ -22,7 +22,7 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 
 1. **Your Raspberry Pi may crash, but it's not my fault**
 
-   While developing this I came across what seems to be a [bug in the Raspberry Pi kerne](https://github.com/raspberrypi/linux/issues/4120)l, where it will sometimes panic (crash) when the printer board resets.  To mitigate this, as of Feb 6th 2021, a 2s delay [has been added](https://github.com/MarlinFirmware/Marlin/commit/004bed8a7fc3ff9feb73a0ea9794635b50073c27) to the LPC `M997` reset routine which appears to stop the crash from happening.  You will need to be running Marlin from the `bugfix-2.0.x` branch, after https://github.com/MarlinFirmware/Marlin/commit/004bed8a7fc3ff9feb73a0ea9794635b50073c27 to have the fix.
+   While developing this I came across what seems to be a [bug in the Raspberry Pi kernel](https://github.com/raspberrypi/linux/issues/4120), where it will sometimes panic (crash) when the printer board resets.  To mitigate this, as of Feb 6th 2021, a 2s delay [has been added](https://github.com/MarlinFirmware/Marlin/commit/004bed8a7fc3ff9feb73a0ea9794635b50073c27) to the LPC `M997` reset routine which appears to stop the crash from happening.  You will need to be running Marlin from the `bugfix-2.0.x` branch, after https://github.com/MarlinFirmware/Marlin/commit/004bed8a7fc3ff9feb73a0ea9794635b50073c27 to have the fix.
 
    On my test system, with the old reset code, I would easily crash my Pi anywhere between 1-25 resets.  After the change I have flashed the board dozens of times and reset it 500+ times without crashing it.
 
