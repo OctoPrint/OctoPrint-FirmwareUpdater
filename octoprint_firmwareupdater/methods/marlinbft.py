@@ -44,6 +44,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
     bft_waitafterconnect = self._settings.get_int(["marlinbft_waitafterconnect"])
     bft_timeout = self._settings.get_int(["marlinbft_timeout"])
     bft_verbose = self._settings.get_boolean(["marlinbft_progresslogging"])
+    no_m997_reset_wait = self._settings.get_boolean(["marlinbft_no_m997_reset_wait"])
 
     # Loggging
     if bft_verbose:
@@ -106,16 +107,17 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
 
     self._send_status("progress", subtype="boardreset")
     self._logger.info(u"Firmware update reset: attempting to reset the board")
-    if not _reset_board(self, printer_port, current_baudrate):
+    if not _reset_board(self, printer_port, current_baudrate, no_m997_reset_wait):
         self._logger.error(u"Reset failed")
         return False
 
     return True
 
-def _reset_board(self, printer_port=None, current_baudrate=None):
+def _reset_board(self, printer_port=None, current_baudrate=None, no_reset_wait=False):
     assert(printer_port is not None)
     assert(current_baudrate is not None)
-
+    
+    no_m997_restart_wait = self._settings.get_boolean(["marlinbft_no_m997_restart_wait"])
     self._logger.info(u"Resetting printer at '{port}'".format(port=printer_port))
 
     # Configure the port
@@ -142,15 +144,22 @@ def _reset_board(self, printer_port=None, current_baudrate=None):
         self._send_status("flasherror", message="Board reset failed")
         return False
 
-    if _wait_for_board(self, printer_port):
+    if no_reset_wait:
+        # Give the board time to reset so that OctoPrint does not try to reconnect before the reset
+        time.sleep(1)
+        self._logger.info(u"Not waiting for reset")
         return True
     else:
-        self._logger.error(u"Board reset failed")
-        self._send_status("flasherror", message="Board reset failed")
-        return False
+        if _wait_for_board(self, printer_port, no_m997_restart_wait):
+            return True
+        else:
+            self._logger.error(u"Board reset failed")
+            self._send_status("flasherror", message="Board reset failed")
+            return False
 
-def _wait_for_board(self, printer_port=None):
+def _wait_for_board(self, printer_port=None, no_restart_wait=False):
     assert(printer_port is not None)
+    
     self._logger.info(u"Waiting for printer at '{port}' to reset".format(port=printer_port))
 
     check_command = 'ls ' + printer_port + ' > /dev/null 2>&1'
@@ -180,30 +189,34 @@ def _wait_for_board(self, printer_port=None):
 
     self._logger.info(u"Printer at '{port}' is resetting".format(port=printer_port))
 
-    time.sleep(3)
+    if no_restart_wait:
+        self._logger.info(u"Not waiting for restart to complete")
+        return True
+    else:
+        time.sleep(3)
 
-    timeout = 20
-    interval = 0.2
-    count = 1
-    connected = False
+        timeout = 20
+        interval = 0.2
+        count = 1
+        connected = False
+        loopstarttime = time.time()
 
-    loopstarttime = time.time()
-    while (time.time() < (loopstarttime + timeout) and not connected):
-        self._logger.debug(u"Waiting for reset to complete [{}/{}]".format(count, int(timeout / interval)))
-        count = count + 1
+        while (time.time() < (loopstarttime + timeout) and not connected):
+            self._logger.debug(u"Waiting for reset to complete [{}/{}]".format(count, int(timeout / interval)))
+            count = count + 1
 
-        if not os.system(check_command):
-            connected = True
-            time.sleep(interval)
+            if not os.system(check_command):
+                connected = True
+                time.sleep(interval)
 
-        else:
-            time.sleep(interval)
-            connected = False
+            else:
+                time.sleep(interval)
+                connected = False
 
-    if not connected:
-        self._logger.error(u"Timeout waiting for board reset to complete")
-        return False
+        if not connected:
+            self._logger.error(u"Timeout waiting for board reset to complete")
+            return False
 
-    end = time.time()
-    self._logger.info(u"Printer at '{port}' reset in {duration} seconds".format(port=printer_port, duration=(round((end - start),2))))
-    return True
+        end = time.time()
+        self._logger.info(u"Printer at '{port}' reset in {duration} seconds".format(port=printer_port, duration=(round((end - start),2))))
+        return True
