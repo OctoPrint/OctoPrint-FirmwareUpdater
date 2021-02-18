@@ -21,6 +21,7 @@ $(function() {
         self.showMarlinBftConfig = ko.observable(false);
         self.showPostflashConfig = ko.observable(false);
         self.showPluginOptions = ko.observable(false);
+        self.configNoAutoReconnect = ko.observable();
         self.configEnablePostflashDelay = ko.observable();
         self.configEnablePreflashDelay = ko.observable();
         self.configPostflashDelay = ko.observable();
@@ -85,6 +86,8 @@ $(function() {
         self.configLpc1768Path = ko.observable();
         self.configLpc1768ResetBeforeFlash = ko.observable();
         self.configLpc1768UnmountCommand = ko.observable();
+        self.configLpc1768NoResetWait = ko.observable();
+        self.configLpc1768NoRestartWait = ko.observable();
         self.lpc1768PathBroken = ko.observable(false);
         self.lpc1768PathOk = ko.observable(false);
         self.lpc1768PathText = ko.observable();
@@ -96,6 +99,8 @@ $(function() {
         self.configMarlinBftWaitAfterConnect = ko.observable();
         self.configMarlinBftTimeout = ko.observable();
         self.configMarlinBftProgressLogging = ko.observable();
+        self.configMarlinBftNoResetWait = ko.observable();
+        self.configMarlinBftNoRestartWait = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
 
@@ -613,6 +618,10 @@ $(function() {
                 self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             }
 
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.no_reconnect_after_flash() != 'false') {
+                self.configNoAutoReconnect(self.settingsViewModel.settings.plugins.firmwareupdater.no_reconnect_after_flash());
+            }
+
             // Load the avrdude settings
             self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
             self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
@@ -641,12 +650,24 @@ $(function() {
             if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
                 self.configLpc1768ResetBeforeFlash(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset());
             }
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_reset_wait() != 'false') {
+                self.configLpc1768NoResetWait(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_reset_wait());
+            }
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_restart_wait() != 'false') {
+                self.configLpc1768NoRestartWait(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_restart_wait());
+            }
 
             // Load the marlinbft settings
             self.configMarlinBftWaitAfterConnect(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_waitafterconnect());
             self.configMarlinBftTimeout(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_timeout());
             self.configMarlinBftProgressLogging(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_progresslogging());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hasbinproto2package());
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_reset_wait() != 'false') {
+                self.configMarlinBftNoResetWait(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_reset_wait());
+            }
+            if (self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_restart_wait() != 'false') {
+                self.configMarlinBftNoRestartWait(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_restart_wait());
+            }
 
             // Load the stm32flash settings
             self.configStm32flashPath(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_path());
@@ -707,9 +728,14 @@ $(function() {
                         lpc1768_path: self.configLpc1768Path(),
                         lpc1768_unmount_command: self.configLpc1768UnmountCommand(),
                         lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
+                        lpc1768_no_m997_reset_wait: self.configLpc1768NoResetWait(),
+                        lpc1768_no_m997_restart_wait: self.configLpc1768NoRestartWait(),
                         marlinbft_waitafterconnect: self.configMarlinBftWaitAfterConnect(),
                         marlinbft_timeout: self.configMarlinBftTimeout(),
                         marlinbft_progresslogging: self.configMarlinBftProgressLogging(),
+                        marlinbft_no_m997_reset_wait: self.configMarlinBftNoResetWait(),
+                        marlinbft_no_m997_restart_wait: self.configMarlinBftNoRestartWait(),
+                        no_reconnect_after_flash: self.configNoAutoReconnect(),
                         enable_preflash_commandline: self.configEnablePreflashCommandline(),
                         preflash_commandline: self.configPreflashCommandline(),
                         enable_postflash_commandline: self.configEnablePostflashCommandline(),

@@ -301,13 +301,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 except:
                     self._logger.exception(u"Could not delete temporary hex file at {}".format(firmware))
 
-            if reconnect is not None:
-                port, baudrate, profile = reconnect
-                self._logger.info("Reconnecting to printer: port={}, baudrate={}, profile={}".format(port, baudrate, profile))
-                self._send_status("progress", subtype="reconnecting")
-                self._printer.connect(port=port, baudrate=baudrate, profile=profile)
-
-            postflash_gcode = self._settings.get(["postflash_gcode"])
+            if self._settings.get_boolean(["no_reconnect_after_flash"]):
+                self._logger.info("Automatic reconnection is disabled")
+            else:
+                if reconnect is not None:
+                    port, baudrate, profile = reconnect
+                    self._logger.info("Reconnecting to printer: port={}, baudrate={}, profile={}".format(port, baudrate, profile))
+                    self._send_status("progress", subtype="reconnecting")
+                    self._printer.connect(port=port, baudrate=baudrate, profile=profile)
 
         finally:
             self._flash_thread = None
@@ -344,11 +345,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "lpc1768_path": None,
             "lpc1768_unmount_command": "sudo umount {mountpoint}",
             "lpc1768_preflashreset": True,
+            "lpc1768_no_m997_reset_wait": False,
+            "lpc1768_no_m997_restart_wait": False,
             "marlinbft_waitafterconnect": 0,
             "marlinbft_timeout": 1000,
             "marlinbft_progresslogging": False,
             "marlinbft_hascapability": False,
             "marlinbft_hasbinproto2package": False,
+            "marlinbft_no_m997_reset_wait": False,
+            "marlinbft_no_m997_restart_wait": False,
             "postflash_delay": "0",
             "preflash_delay": "3",
             "postflash_gcode": None,
@@ -364,6 +369,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "enable_preflash_gcode": None,
             "disable_bootloadercheck": None,
             "disable_filefilter": False,
+            "no_reconnect_after_flash": False,
             "save_url": False,
             "last_url": None,
             "plugin_version": self._plugin_version

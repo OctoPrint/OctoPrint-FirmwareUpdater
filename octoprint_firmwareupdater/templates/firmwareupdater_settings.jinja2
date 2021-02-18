@@ -354,6 +354,24 @@
                                 <span class="help-block">{{ _('Customize the command used to unmount the SD card. Clear to disable.') }}</span>
                             </div>
                         </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configLpc1768NoResetWait">
+                                </div>
+                                <span class="help-block">{{ _('Plugin won\'t wait for board to reset or check that it has restarted after sending reset command.') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configLpc1768NoRestartWait, disable: configLpc1768NoResetWait">
+                                </div>
+                                <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
+                            </div>
+                        </div>
                     </div>
                     <!-- Advanced lpc1768 options -->
 
@@ -386,6 +404,24 @@
                                     <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
                                 </div>
                                 <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configMarlinBftNoResetWait">
+                                </div>
+                                <span class="help-block">{{ _('Plugin won\'t wait for board to reset or check that it has restarted after sending reset command.') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configMarlinBftNoRestartWait, disable: configMarlinBftNoResetWait">
+                                </div>
+                                <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
                             </div>
                         </div>
                     </div>
@@ -489,6 +525,15 @@
                     <label data-bind="click: togglePostflashConfig" >
                             <i class="icon-chevron-down icon-fixed-width"></i>Pre-Flash and Post-Flash Settings
                     </label>
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Don\'t reconnect automatically') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" data-bind="checked: configNoAutoReconnect">
+                            </div>
+                            <span class="help-block">{{ _('Plugin won\'t attempt to reconnect the printer after the firmware update completes') }}</span>
+                        </div>
+                    </div>
                     <!-- Pre-flash commandline -->
                     <div class="control-group">
                         <label class="control-label">{{ _('Pre-flash system command') }}</label>
@@ -552,7 +597,7 @@
 
                     <!-- Post-flash delay -->
                     <div class="control-group">
-                        <label class="control-label">{{ _('Post-flash command delay') }}</label>
+                        <label class="control-label">{{ _('Post-flash delay') }}</label>
                         <div class="controls">
                             <label class="checkbox">
                                 <input type="checkbox" data-bind="checked: configEnablePostflashDelay"> Enabled
