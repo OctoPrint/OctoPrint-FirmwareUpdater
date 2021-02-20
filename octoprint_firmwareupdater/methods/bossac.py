@@ -33,7 +33,7 @@ def _check_bossac(self):
     else:
         return True
 
-def _flash_bossac(self, firmware=None, printer_port=None):
+def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
 
