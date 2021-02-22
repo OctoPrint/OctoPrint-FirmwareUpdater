@@ -317,7 +317,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
     def get_settings_defaults(self):
         return {
-            "flash_method": None,
             "enable_navbar": False,
             "enable_profiles": False,
             "last_profile": None,
@@ -325,8 +324,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "last_url": None,
             "plugin_version": self._plugin_version,
             "arrPrinters": {
-                "id": None,
-                "name": None,
+                "_id": None,
+                "_name": None,
+                "flash_method": None,
                 "avrdude_path": None,
                 "avrdude_conf": None,
                 "avrdude_avrmcu": None,
@@ -336,7 +336,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
                 "bossac_path": None,
                 "bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
-                "bossac_disableverify": None,
+                "bossac_disableverify": False,
                 "dfuprog_path": None,
                 "dfuprog_avrmcu": None,
                 "dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
@@ -362,26 +362,24 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_hasbinproto2package": False,
                 "marlinbft_no_m997_reset_wait": False,
                 "marlinbft_no_m997_restart_wait": False,
-                "postflash_delay": "0",
-                "preflash_delay": "3",
+                "postflash_delay": 0,
+                "preflash_delay": 3,
                 "postflash_gcode": None,
                 "preflash_gcode": None,
                 "run_postflash_gcode": False,
                 "preflash_commandline": None,
                 "postflash_commandline": None,
-                "enable_preflash_commandline": None,
-                "enable_postflash_commandline": None,
-                "enable_postflash_delay": None,
-                "enable_preflash_delay": None,
-                "enable_postflash_gcode": None,
-                "enable_preflash_gcode": None,
-                "disable_bootloadercheck": None,
+                "enable_preflash_commandline": False,
+                "enable_postflash_commandline": False,
+                "enable_postflash_delay": False,
+                "enable_preflash_delay": False,
+                "enable_postflash_gcode": False,
+                "enable_preflash_gcode": False,
+                "disable_bootloadercheck": False,
                 "disable_filefilter": False,
                 "no_reconnect_after_flash": False,
                 "serial_port": None,
             },
-            "id": 0,
-            "name": "Default",
             "avrdude_path": None,
             "avrdude_conf": None,
             "avrdude_avrmcu": None,
@@ -391,7 +389,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
             "bossac_path": None,
             "bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
-            "bossac_disableverify": None,
+            "bossac_disableverify": False,
             "dfuprog_path": None,
             "dfuprog_avrmcu": None,
             "dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
@@ -417,20 +415,20 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "marlinbft_hasbinproto2package": False,
             "marlinbft_no_m997_reset_wait": False,
             "marlinbft_no_m997_restart_wait": False,
-            "postflash_delay": "0",
-            "preflash_delay": "3",
+            "postflash_delay": 0,
+            "preflash_delay": 3,
             "postflash_gcode": None,
             "preflash_gcode": None,
             "run_postflash_gcode": False,
             "preflash_commandline": None,
             "postflash_commandline": None,
-            "enable_preflash_commandline": None,
-            "enable_postflash_commandline": None,
-            "enable_postflash_delay": None,
-            "enable_preflash_delay": None,
-            "enable_postflash_gcode": None,
-            "enable_preflash_gcode": None,
-            "disable_bootloadercheck": None,
+            "enable_preflash_commandline": False,
+            "enable_postflash_commandline": False,
+            "enable_postflash_delay": False,
+            "enable_preflash_delay": False,
+            "enable_postflash_gcode": False,
+            "enable_preflash_gcode": False,
+            "disable_bootloadercheck": False,
             "disable_filefilter": False,
             "no_reconnect_after_flash": False,
             "serial_port": None,
@@ -443,17 +441,74 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         if current is None or current < 2:
             # Migrate single printer settings to a profile
             self._logger.info("Migrating plugin settings to a profile")
+            
+            # Create a new empty array of printer profiles
             arrPrinters_new = []
             
+            # Geta dictionary of the default printer profile settings
             settings_dict = self.get_settings_defaults()["arrPrinters"]
 
-            for key in settings_dict:
-                value = self._settings.get([key])
-                self._logger.info(u"{} -> {}".format(key, value))
-                settings_dict[key] = value
+            # Get the names of all the printer profile settings
+            keys = self.get_settings_defaults()["arrPrinters"].keys()
 
+            # Iterate over each setting in the defaults
+            for key in keys:
+                # Get the current value
+                value = self._settings.get([key])
+
+                # Get the default value
+                default_value = settings_dict[key]
+
+                # If the current value is an empty string, and the default is 'None' set the value to 'None'
+                if (value == "" and settings_dict[key] == None):
+                    value = None
+                
+                # If the current value is a number stored it as a string, convert it to a number
+                if isinstance(value, str) and value.isnumeric():
+                    value = int(value)
+
+                # If the the default value is a number but the current value is not, reset the value to the default
+                if isinstance(default_value, int) and not isinstance(value, int):
+                    self._logger.warn(u"{}: current value '{}' should be an int but isn't, resetting to default value of '{}'".format(key, value, default_value))
+                    value = default_value
+
+                # If the current value isn't the same as the default value, set the value otherwise delete it (so we don't set things to their default unnecessarily)
+                if (value != settings_dict[key]):
+                    self._logger.info(u"{}: {} (default is '{}')".format(key, value, default_value))
+                    settings_dict[key] = value
+                else:
+                    del settings_dict[key]
+
+            # Give the new profile an ID and a default name
+            settings_dict["_id"] = 0
+            settings_dict["_name"] = "Default"
+
+            # Append the new profile and save the settings
             arrPrinters_new.append(settings_dict)
             self._settings.set(['arrPrinters'], arrPrinters_new)
+
+            # Set all the old settings to defaults to remove them from the settings file
+            self._logger.info("Resetting old config values to default values (tidying up config.yaml)")
+            
+            # Get the default settings values
+            settings_dict = self.get_settings_defaults()["arrPrinters"]
+            
+            # Iterate over each setting
+            for key in settings_dict:
+                # Get the current value
+                current_value = self._settings.get([key])
+                
+                # Get the new (default) value
+                new_value = settings_dict[key]
+
+                # If the new value is a string but should be a number, make it a number
+                if isinstance(new_value, str) and new_value.isnumeric():
+                    new_value = int(new_value)
+
+                # If current value isn't the same as the new value (the default), set it
+                if (current_value != new_value):
+                    self._logger.info(u"{}: {} -> {}".format(key, current_value, new_value))
+                    # self._settings.set([key], new_value)
 
     #~~ Asset API
 
