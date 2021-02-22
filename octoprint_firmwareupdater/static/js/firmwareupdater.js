@@ -914,11 +914,11 @@ $(function() {
         };
 
         self.resetDfuCommandLine = function() {
-            self.configDfuCommandLine("sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10 --force");
+            self.configDfuCommandLine("sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10");
         };
 
         self.resetDfuEraseCommandLine = function() {
-            self.configDfuEraseCommandLine("sudo {dfuprogrammer} {mcu} erase --debug-level 10");
+            self.configDfuEraseCommandLine("sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force");
         };
 
         self.testStm32flashPath = function() {
