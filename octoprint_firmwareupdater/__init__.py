@@ -319,6 +319,69 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         return {
             "flash_method": None,
             "enable_navbar": False,
+            "enable_profiles": False,
+            "last_profile": None,
+            "save_url": False,
+            "last_url": None,
+            "plugin_version": self._plugin_version,
+            "arrPrinters": {
+                "id": None,
+                "name": None,
+                "avrdude_path": None,
+                "avrdude_conf": None,
+                "avrdude_avrmcu": None,
+                "avrdude_programmer": None,
+                "avrdude_baudrate": None,
+                "avrdude_disableverify": None,
+                "avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
+                "bossac_path": None,
+                "bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
+                "bossac_disableverify": None,
+                "dfuprog_path": None,
+                "dfuprog_avrmcu": None,
+                "dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
+                "dfuprog_erasecommandline": "sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force",
+                "stm32flash_path": None,
+                "stm32flash_verify": True,
+                "stm32flash_boot0pin": "rts",
+                "stm32flash_boot0low": False,
+                "stm32flash_resetpin": "dtr",
+                "stm32flash_resetlow": True,
+                "stm32flash_execute": True,
+                "stm32flash_executeaddress": "0x8000000",
+                "stm32flash_reset": False,
+                "lpc1768_path": None,
+                "lpc1768_unmount_command": "sudo umount {mountpoint}",
+                "lpc1768_preflashreset": True,
+                "lpc1768_no_m997_reset_wait": False,
+                "lpc1768_no_m997_restart_wait": False,
+                "marlinbft_waitafterconnect": 0,
+                "marlinbft_timeout": 1000,
+                "marlinbft_progresslogging": False,
+                "marlinbft_hascapability": False,
+                "marlinbft_hasbinproto2package": False,
+                "marlinbft_no_m997_reset_wait": False,
+                "marlinbft_no_m997_restart_wait": False,
+                "postflash_delay": "0",
+                "preflash_delay": "3",
+                "postflash_gcode": None,
+                "preflash_gcode": None,
+                "run_postflash_gcode": False,
+                "preflash_commandline": None,
+                "postflash_commandline": None,
+                "enable_preflash_commandline": None,
+                "enable_postflash_commandline": None,
+                "enable_postflash_delay": None,
+                "enable_preflash_delay": None,
+                "enable_postflash_gcode": None,
+                "enable_preflash_gcode": None,
+                "disable_bootloadercheck": None,
+                "disable_filefilter": False,
+                "no_reconnect_after_flash": False,
+                "serial_port": None,
+            },
+            "id": 0,
+            "name": "Default",
             "avrdude_path": None,
             "avrdude_conf": None,
             "avrdude_avrmcu": None,
@@ -370,10 +433,27 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "disable_bootloadercheck": None,
             "disable_filefilter": False,
             "no_reconnect_after_flash": False,
-            "save_url": False,
-            "last_url": None,
-            "plugin_version": self._plugin_version
+            "serial_port": None,
         }
+
+    def get_settings_version(self):
+        return 2
+
+    def on_settings_migrate(self, target, current=None):
+        if current is None or current < 2:
+            # Migrate single printer settings to a profile
+            self._logger.info("Migrating plugin settings to a profile")
+            arrPrinters_new = []
+            
+            settings_dict = self.get_settings_defaults()["arrPrinters"]
+
+            for key in settings_dict:
+                value = self._settings.get([key])
+                self._logger.info(u"{} -> {}".format(key, value))
+                settings_dict[key] = value
+
+            arrPrinters_new.append(settings_dict)
+            self._settings.set(['arrPrinters'], arrPrinters_new)
 
     #~~ Asset API
 
