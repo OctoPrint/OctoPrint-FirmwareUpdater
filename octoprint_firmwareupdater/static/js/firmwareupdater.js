@@ -170,8 +170,8 @@ $(function() {
             console.log(`Number of profiles: ${self.profiles().length}`)
             console.log(ko.toJS(self.profiles()))
 
-            self.selectedProfileId(self.settingsViewModel.settings.plugins.firmwareupdater._last_profile());
-            console.log(`Last profile ID: ${self.selectedProfileId()}`)
+            self.selectedProfileId(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
+            console.log(`Selected profile ID: ${self.selectedProfileId()}`)
 
             // TO DO: Get all the valid profile IDs and check that the last profile ID is among them
             
@@ -193,7 +193,7 @@ $(function() {
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
-            self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater.plugin_version());
+            self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater._plugin_version());
         }
 
         self.showFirmwareUpdater = function(){

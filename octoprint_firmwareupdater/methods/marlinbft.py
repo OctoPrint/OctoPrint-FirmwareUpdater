@@ -41,10 +41,10 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
     assert(current_baudrate is not None)
 
     # Get the settings
-    bft_waitafterconnect = self._settings.get_int(["marlinbft_waitafterconnect"])
-    bft_timeout = self._settings.get_int(["marlinbft_timeout"])
-    bft_verbose = self._settings.get_boolean(["marlinbft_progresslogging"])
-    no_m997_reset_wait = self._settings.get_boolean(["marlinbft_no_m997_reset_wait"])
+    bft_waitafterconnect = self.get_profile_setting_int("marlinbft_waitafterconnect")
+    bft_timeout = self.get_profile_setting_int("marlinbft_timeout")
+    bft_verbose = self.get_profile_setting_boolean("marlinbft_progresslogging")
+    no_m997_reset_wait = self.get_profile_setting_boolean("marlinbft_no_m997_reset_wait")
 
     # Loggging
     if bft_verbose:
@@ -117,7 +117,7 @@ def _reset_board(self, printer_port=None, current_baudrate=None, no_reset_wait=F
     assert(printer_port is not None)
     assert(current_baudrate is not None)
     
-    no_m997_restart_wait = self._settings.get_boolean(["marlinbft_no_m997_restart_wait"])
+    no_m997_restart_wait = self.get_profile_setting_boolean("marlinbft_no_m997_restart_wait")
     self._logger.info(u"Resetting printer at '{port}'".format(port=printer_port))
 
     # Configure the port

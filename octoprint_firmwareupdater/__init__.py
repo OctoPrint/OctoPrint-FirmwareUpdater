@@ -74,43 +74,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
         self._logger.info("Python binproto2 package installed: {}".format(marlinbft._check_binproto2(self)))
 
-        ## Testing new settings handlers - delete before release
-        # self.selected_profile_index = self._settings.get_int(["_last_profile"])
-        self.selected_profile_index = 2
-
-        self.selected_profile = self.get_selected_profile(self.selected_profile_index)
-        
-        self._logger.info("Selected profile name: {}".format(self.get_profile_setting("_name", self.selected_profile)))
-        self._logger.info("Post-flash gcode: {}".format(self.get_profile_setting("postflash_gcode", self.selected_profile)))
-        self._logger.info("Post-flash gcode enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_gcode", self.selected_profile)))
-        self._logger.info("Post-flash command enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_commandline", self.selected_profile)))
-        self._logger.info("No such bool: {}".format(self.get_profile_setting_boolean("no_such_bool", self.selected_profile)))
-        self._logger.info("Avrdude command line: {}".format(self.get_profile_setting("avrdude_commandline", self.selected_profile)))
-
-        ## End delete
-
-    # Event handler
-    def on_event(self, event, payload):
-        #self._logger.info("Got event: {}".format(event))
-        if event == Events.CONNECTED:
-            self._logger.info("Got CONNECTED event")
-            if self._settings.get_boolean(["run_postflash_gcode"]):
-                self._logger.info("Run postflash flag is set")
-                postflash_gcode = self._settings.get(["postflash_gcode"])
-
-                if postflash_gcode is not None:
-                    # Run post-flash commands
-                    self._logger.info("Sending post-flash commands:{}".format(postflash_gcode))
-                    self._printer.commands(postflash_gcode.split(";"))
-
-                self._logger.info("Clearing postflash flag")
-                self._settings.set_boolean(["run_postflash_gcode"], False)
-                self._settings.save()
-
-            else:
-                self._logger.info("Run postflash flag is not set")
-
-
     #~~ BluePrint API
 
     @octoprint.plugin.BlueprintPlugin.route("/status", methods=["GET"])
@@ -129,12 +92,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
         value_source = flask.request.json if flask.request.json else flask.request.values
 
+        ## TODO: Get printer profile from value_source
+
         if not "port" in value_source:
             error_message = "Cannot flash firmware, printer port is not specified"
             self._send_status("flasherror", subtype="port", message=error_message)
             return flask.make_response(error_message, 400)
 
-        method = self._settings.get(["flash_method"])
+        method = self.get_profile_setting("flash_method")
+        self._logger.info("Flash method: {}".format(method))
 
         if method in self._flash_prechecks:
             if not self._flash_prechecks[method](self):
@@ -223,9 +189,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         return True
 
     def _flash_worker(self, method, firmware, printer_port):
-        # Run pre-flash commandline here
-        preflash_command = self._settings.get(["preflash_commandline"])
-        if preflash_command is not None and self._settings.get_boolean(["enable_preflash_commandline"]):
+        # Run pre-flash system command
+        preflash_command = self.get_profile_setting("preflash_commandline")
+        if preflash_command is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
             self._logger.info("Executing pre-flash commandline '{}'".format(preflash_command))
             try:
                 r = os.system(preflash_command)
@@ -234,6 +200,21 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 self._logger.error("Error executing pre-flash commandline '{}'".format(preflash_command))
 
             self._logger.info("Pre-flash command '{}' returned: {}".format(preflash_command, r))
+
+        # Run pre-flash gcode command
+        preflash_gcode = self.get_profile_setting("preflash_gcode")
+        if preflash_gcode is not None and self.get_profile_setting_boolean("enable_preflash_gcode"):
+            if self._printer.is_operational():
+                self._logger.info("Sending pre-flash gcode commands: {}".format(preflash_gcode))
+                self._printer.commands(preflash_gcode.split(";"))
+
+                preflash_delay = self.get_profile_setting_int("preflash_delay") or 3
+                if float(preflash_delay) > 0 and self.get_profile_setting_boolean("enable_preflash_delay"):
+                    self._logger.info("Pre-flash delay: {}s".format(preflash_delay))
+                    time.sleep(float(preflash_delay))
+
+            else:
+                self._logger.info("Printer not connected, not sending pre-flash gcode commands")
 
         try:
             self._logger.info("Firmware update started")
@@ -251,24 +232,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 self._send_status("flasherror", message=error_message)
                 return
 
-            preflash_gcode = self._settings.get(["preflash_gcode"])
-            if preflash_gcode is not None and self._settings.get_boolean(["enable_preflash_gcode"]):
-                if self._printer.is_operational():
-                    self._logger.info("Sending pre-flash gcode commands: {}".format(preflash_gcode))
-                    self._printer.commands(preflash_gcode.split(";"))
-
-                    preflash_delay = self._settings.get(["preflash_delay"]) or 3
-                    if float(preflash_delay) > 0 and self._settings.get(["enable_preflash_delay"]):
-                        self._logger.info("Pre-flash delay: {}s".format(preflash_delay))
-                        time.sleep(float(preflash_delay))
-
-                else:
-                    self._logger.info("Printer not connected, not sending pre-flash gcode commands")
-
             reconnect = None
             if self._printer.is_operational():
                 _, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
-
                 reconnect = (current_port, current_baudrate, current_profile)
                 self._logger.info("Disconnecting from printer")
                 self._send_status("progress", subtype="disconnecting")
@@ -278,9 +244,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
             try:
                 if flash_callable(self, firmware=firmware, printer_port=printer_port):
-
-                    postflash_delay = self._settings.get(["postflash_delay"]) or 0
-                    if float(postflash_delay) > 0 and self._settings.get(["enable_postflash_delay"]):
+                    postflash_delay = self.get_profile_setting_int("postflash_delay") or 0
+                    if float(postflash_delay) > 0 and self.get_profile_setting_boolean("enable_postflash_delay"):
                         self._logger.info("Post-flash delay: {}s".format(postflash_delay))
                         self._send_status("progress", subtype="postflashdelay")
                         time.sleep(float(postflash_delay))
@@ -291,8 +256,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     self._send_status("success")
 
                     # Run post-flash commandline here
-                    postflash_command = self._settings.get(["postflash_commandline"])
-                    if postflash_command is not None and self._settings.get_boolean(["enable_postflash_commandline"]):
+                    postflash_command = self.get_profile_setting("postflash_commandline")
+                    if postflash_command is not None and self.get_profile_setting_boolean("enable_postflash_commandline"):
                         self._logger.info("Executing post-flash commandline '{}'".format(postflash_command))
                         try:
                             r = os.system(postflash_command)
@@ -302,13 +267,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                         self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
 
-                    postflash_gcode = self._settings.get(["postflash_gcode"])
-                    if postflash_gcode is not None and self._settings.get_boolean(["enable_postflash_gcode"]):
+                    postflash_gcode = self.get_profile_setting("postflash_gcode")
+                    if postflash_gcode is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
                         self._logger.info(u"Setting run_postflash_gcode flag to true")
-                        self._settings.set_boolean (["run_postflash_gcode"], True)
+                        self.set_profile_setting_boolean("run_postflash_gcode", True)
+
                     else:
                         self._logger.info(u"No postflash gcode or postflash is disabled, setting run_postflash_gcode to false")
-                        self._settings.set_boolean(["run_postflash_gcode"], False)
+                        self.set_profile_setting_boolean("run_postflash_gcode", False)
 
                     self._settings.save()
 
@@ -321,7 +287,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 except:
                     self._logger.exception(u"Could not delete temporary hex file at {}".format(firmware))
 
-            if self._settings.get_boolean(["no_reconnect_after_flash"]):
+            if self.get_profile_setting_boolean("no_reconnect_after_flash"):
                 self._logger.info("Automatic reconnection is disabled")
             else:
                 if reconnect is not None:
@@ -333,37 +299,100 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         finally:
             self._flash_thread = None
 
-    def get_selected_profile(self, index):
+    # Checks for a valid profile in the plugin's settings
+    #   Returns True if the settings contain one or more profiles, otherwise false
+    def check_for_profile(self):
+        # Get all the profiles from the settings
         profiles = self._settings.get(["profiles"])
+
+        # If the profiles aren't an array, make them one
+        # Catches case when there are no profiles and the defaults are returned
+        if not isinstance(profiles, list):
+            profiles = [profiles]
+        
+        # If there is only one profile and the ID is None there were no real profiles and we have the defaults
+        if len(profiles) == 1 and profiles[0]["_id"] == None:
+            return False
+        else:
+            return True
+
+    # Gets the settings for the currently-selected profile
+    #  Returns the configured profile settings if one is found at the index, otherwise None
+    def get_selected_profile(self, **kwargs):
+        # Get the currently-selected profile index
+        index = kwargs.pop("index", self._settings.get_int(["_selected_profile"]))
+
+        # Check that the index is valid
+        if not isinstance(index, int) or index < 0:
+            self._logger.warn("Invalid profile index '{}' specified".format(index))
+            return None
+
+        # Check that there is a valid profile in the settings
+        if not self.check_for_profile():
+            self._logger.warn("No profiles configured")
+            return None
+
+        # Get all the profiles from the settings
+        profiles = self._settings.get(["profiles"])
+
+        # If the profiles aren't an array, make them one
+        if not isinstance(profiles, list):
+            profiles = [profiles]
+
+        # Check if the index is within the set of profiles; return the profile if it is, otherwise return None
         if len(profiles) >= index:
             return profiles[index]
         else:
-            self._logger.warn("Invalid profile index {} selected".format(index))
+            self._logger.warn("Profile with index {} not found. {} profiles are configured.".format(index, len(profiles)))
             return None
 
-    def get_profile_settings(self, dict):
-        if dict != None:
+    # Gets all the settings for a profile - specified values and default values
+    #  Merges the profile settings with the default settings and returns the complete set
+    def get_profile_settings(self):
+        # Get the selected profile's configured settings
+        profile_settings = self.get_selected_profile()
+
+        # Check if the profile is valid
+        if profile_settings != None:
+            # Get the profile defaults
             profile_defaults = self.get_settings_defaults()["profiles"]
-            profile = dict_merge(profile_defaults, dict)
+            
+            # Merge the profile settings with the defaults
+            profile = dict_merge(profile_defaults, profile_settings)
+            
+            # Return the superset of settings
             return profile
         else:
             return None
 
-    def get_profile_setting(self, key, dict):
-        if dict != None:
-            profile = self.get_profile_settings(dict)
+    # Gets the value of a specified setting from the profile
+    #  Returns the value or None if the given key was not found in the profile
+    def get_profile_setting(self, key):
+        # Check if the key is valid
+        if key != None:
+            # Get the superset of profile settings
+            profile = self.get_profile_settings()
+
+            # Check if the profile is valid
+            if profile == None:
+                return None
+
+            # Check if the key is present in the profile
             if key in profile.keys():
+                # Return the value
                 return profile[key]
             else:
                 return None
         else:
             return None
 
-    def get_profile_setting_int(self, key, dict, **kwargs):
+    # Gets the integer value of a specified setting from the profile
+    #  Returns the value or None if the given key was not found in the profile or is not an integer
+    def get_profile_setting_int(self, key, **kwargs):
         minimum = kwargs.pop("min", None)
         maximum = kwargs.pop("max", None)
 
-        value = self.get_profile_setting(key, dict)
+        value = self.get_profile_setting(key)
         if value is None:
             return None
 
@@ -383,8 +412,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             )
             return None
 
-    def get_profile_setting_boolean(self, key, dict):
-        value = self.get_profile_setting(key, dict)
+    # Gets the boolean value of a specified setting from the profile
+    #  Returns the value or None if the given key was not found in the profile or is cannot be parsed as a boolean
+    def get_profile_setting_boolean(self, key):
+        value = self.get_profile_setting(key)
         if value is None:
             return None
         if isinstance(value, bool):
@@ -395,11 +426,76 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             return value.lower() in valid_boolean_trues
         return value is not None
 
+
+    # Sets the specified value in the profile
+    def set_profile_setting(self, key, value):
+        # Get the current value
+        current_value = self.get_profile_setting(key)
+        
+        # Check if the new value matches the current value
+        if current_value == value:
+            # Don't need to modify a setting which isn't changing
+            return
+        
+        # Get the default value
+        default_value = self.get_settings_defaults()["profiles"][key]
+
+        # Get all the profile settings
+        profiles = self._settings.get(["profiles"])
+
+        # Check if the new value matches the default
+        if default_value == value:
+            # Don't need to store default values so remove the setting from the profile
+            del profiles[self._settings.get_int(["_selected_profile"])][key]
+        else:
+            # Update this setting in the profile
+            profiles[self._settings.get_int(["_selected_profile"])][key] = value
+        
+        # Save the settings
+        profiles = self._settings.set(["profiles"], profiles)
+
+    # Sets the specified int value in the profile
+    def set_profile_setting_int(self, key, value, **kwargs):
+        if value is None:
+            self.set_profile_setting(key, None)
+            return
+
+        minimum = kwargs.pop("min", None)
+        maximum = kwargs.pop("max", None)
+
+        try:
+            intValue = int(value)
+
+            if minimum is not None and intValue < minimum:
+                intValue = minimum
+            if maximum is not None and intValue > maximum:
+                intValue = maximum
+        except ValueError:
+            self._logger.warning(
+                "Could not convert %r to a valid integer when setting option %r"
+                % (value, key)
+            )
+            return
+
+        self.set_profile_setting(key, intValue)
+
+    # Sets the specified boolean value in the profile
+    def set_profile_setting_boolean(self, key, value):
+        if value is None or isinstance(value, bool):
+            self.set_profile_setting(key, value)
+        elif isinstance(value, basestring) and value.lower() in valid_boolean_trues:
+            self.set_profile_setting(key, True)
+        else:
+            self.set_profile_setting(key, False)
+
+
+
     #~~ SettingsPlugin API
 
     def get_settings_defaults(self):
         return {
-            "_last_profile": None,
+            "_selected_profile": None,
+            "_plugin_version": self._plugin_version,
             "enable_navbar": False,
             "enable_profiles": False,
             "save_url": False,
@@ -407,10 +503,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
-            "plugin_version": self._plugin_version,
-            "parent": {
-                "subkey": "Foobar"
-            },
             "profiles": {
                 "_id": None,
                 "_name": None,
@@ -465,7 +557,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "no_reconnect_after_flash": False,
                 "serial_port": None,
             },
-            ## Delete all of this once the UI uses the profile ##
+            ## Delete all of this once the UI uses the migrated profile ##
             "flash_method": None,
             "avrdude_path": None,
             "avrdude_conf": None,
@@ -577,7 +669,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._settings.set(['profiles'], profiles_new)
             
             # Set the profile to the new one
-            self._settings.set_int(['_last_profile'], 0)
+            self._settings.set_int(['_selected_profile'], 0)
 
             # Set all the old settings to defaults to remove them from the settings file
             self._logger.info("Resetting old config values to default values (tidying up config.yaml)")
@@ -602,6 +694,30 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     self._logger.info(u"{}: {} -> {}".format(key, current_value, new_value))
                     # self._settings.set([key], new_value)
 
+    def on_settings_initialized(self):
+        ## Testing new settings handlers - delete before release
+        self.selected_profile = self.get_selected_profile(index = None)
+        self.selected_profile = self.get_selected_profile(index = -1)
+        self.selected_profile = self.get_selected_profile(index = 6)
+        self.selected_profile = self.get_selected_profile(index = '')
+        self.selected_profile = self.get_selected_profile(index = 'foo')
+
+        self.set_profile_setting("avrdude_programmer", "wiring")
+        self.set_profile_setting("avrdude_programmer", "wiring")
+        self.set_profile_setting("avrdude_programmer", None)
+
+        self.set_profile_setting_boolean("enable_postflash_gcode", True)
+
+        self._logger.info("Selected profile index: {}".format(self._settings.get_int(["_selected_profile"])))
+        self._logger.info("Selected profile name: {}".format(self.get_profile_setting("_name")))
+        self._logger.info("Post-flash gcode: {}".format(self.get_profile_setting("postflash_gcode")))
+        self._logger.info("Post-flash gcode enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_gcode")))
+        self._logger.info("Post-flash command enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_commandline")))
+        self._logger.info("No such bool: {}".format(self.get_profile_setting_boolean("no_such_bool")))
+        self._logger.info("Avrdude command line: {}".format(self.get_profile_setting("avrdude_commandline")))
+        ## End delete
+
+
     #~~ Asset API
 
     def get_assets(self):
@@ -621,6 +737,32 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                                                                         message=message))
 
     #~~ Hooks
+
+    ##~~ Event handler
+    def on_event(self, event, payload):
+        # Only handle the CONNECTED event
+        if event == Events.CONNECTED:
+            self._logger.info("Got CONNECTED event")
+
+            # Check if the current profile has the postflash gcode flag set
+            if self.get_profile_setting_boolean("run_postflash_gcode"):
+                self._logger.info("Run postflash gcode flag is set")
+
+                # Get the postflash gcode from the profile
+                postflash_gcode = self.get_profile_setting("postflash_gcode")
+
+                # If there is something to send, send it
+                if postflash_gcode is not None:
+                    self._logger.info("Sending post-flash commands:{}".format(postflash_gcode))
+                    self._printer.commands(postflash_gcode.split(";"))
+
+                # Clear the postflash gcode flag
+                self._logger.info("Clearing postflash gcode flag")
+                self.set_profile_setting_boolean("run_postflash_gcode", False)
+                self._settings.save()
+
+            else:
+                self._logger.info("Run postflash flag is not set")
 
     ##~~ capabilites hook
     def firmware_capability_hook(self, comm_instance, capability, enabled, already_defined):
