@@ -8,6 +8,10 @@ $(function() {
         self.printerState = parameters[3];
         self.access = parameters[4];
 
+        self.profiles = ko.observableArray();
+        self.selectedProfileId = ko.observable();
+        //self.selectedProfile = ko.observableArray();
+        
         // General settings
         self.configFlashMethod = ko.observable();
         self.configShowNavbarIcon = ko.observable();
@@ -153,6 +157,27 @@ $(function() {
 
         self.inSettingsDialog = false;
 
+        
+        self.selectedProfile = ko.computed(function() {
+            var currentProfile = self.selectedProfileId();
+            return ko.utils.arrayFilter(self.profiles(), function(profile) {
+                return profile._id() == currentProfile;
+            })[0];
+        });
+        
+        self.onBeforeBinding = function() {
+            self.profiles(self.settingsViewModel.settings.plugins.firmwareupdater.profiles());
+            console.log(`Number of profiles: ${self.profiles().length}`)
+            console.log(ko.toJS(self.profiles()))
+
+            self.selectedProfileId(self.settingsViewModel.settings.plugins.firmwareupdater._last_profile());
+            console.log(`Last profile ID: ${self.selectedProfileId()}`)
+
+            // TO DO: Get all the valid profile IDs and check that the last profile ID is among them
+            
+            console.log(ko.toJS(self.selectedProfile()));
+        }
+
         self.onAllBound = function(allViewModels) {
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             if (self.loginState.isAdmin() && self.configShowNavbarIcon()) {
@@ -165,8 +190,8 @@ $(function() {
                 self.firmwareFileURL("");
             }
 
-            self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hascapability());
-            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hasbinproto2package());
+            self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
+            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater.plugin_version());
         }
@@ -661,7 +686,7 @@ $(function() {
             self.configMarlinBftWaitAfterConnect(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_waitafterconnect());
             self.configMarlinBftTimeout(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_timeout());
             self.configMarlinBftProgressLogging(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_progresslogging());
-            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_hasbinproto2package());
+            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             if (self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_reset_wait() != 'false') {
                 self.configMarlinBftNoResetWait(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_reset_wait());
             }
@@ -716,14 +741,14 @@ $(function() {
                         dfuprog_avrmcu: self.configDfuMcu(),
                         dfuprog_commandline: self.configDfuCommandLine(),
                         dfuprog_erasecommandline: self.configDfuEraseCommandLine(),
-                        stm32flash_path : self.configStm32flashPath(),
+                        stm32flash_path: self.configStm32flashPath(),
                         stm32flash_verify: self.configStm32flashVerify(),
-                        stm32flash_boot0pin : self.configStm32flashBoot0Pin(),
-                        stm32flash_boot0low : self.configStm32flashBoot0Low(),
-                        stm32flash_resetpin : self.configStm32flashResetPin(),
-                        stm32flash_resetlow : self.configStm32flashResetLow(),
-                        stm32flash_execute : self.configStm32flashExecute(),
-                        stm32flash_executeaddress : self.configStm32flashExecuteAddress(),
+                        stm32flash_boot0pin: self.configStm32flashBoot0Pin(),
+                        stm32flash_boot0low: self.configStm32flashBoot0Low(),
+                        stm32flash_resetpin: self.configStm32flashResetPin(),
+                        stm32flash_resetlow: self.configStm32flashResetLow(),
+                        stm32flash_execute: self.configStm32flashExecute(),
+                        stm32flash_executeaddress: self.configStm32flashExecuteAddress(),
                         stm32flash_reset: self.configStm32flashReset(),
                         lpc1768_path: self.configLpc1768Path(),
                         lpc1768_unmount_command: self.configLpc1768UnmountCommand(),
@@ -755,6 +780,7 @@ $(function() {
                     }
                 }
             };
+
             self.settingsViewModel.saveData(data).done(function () {
                 self.configurationDialog.modal("hide");
                 self.alertMessage(undefined);

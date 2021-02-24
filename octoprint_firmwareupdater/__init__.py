@@ -15,6 +15,9 @@ import octoprint.plugin
 import octoprint.server.util.flask
 from octoprint.server import admin_permission, NO_CONTENT
 from octoprint.events import Events
+from octoprint.util import CaseInsensitiveSet, dict_merge
+
+from past.builtins import basestring
 
 # import the flash methods
 from octoprint_firmwareupdater.methods import avrdude
@@ -23,6 +26,8 @@ from octoprint_firmwareupdater.methods import dfuprog
 from octoprint_firmwareupdater.methods import lpc1768
 from octoprint_firmwareupdater.methods import stm32flash
 from octoprint_firmwareupdater.methods import marlinbft
+
+valid_boolean_trues = CaseInsensitiveSet(True, "true", "yes", "y", "1", 1)
 
 class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                             octoprint.plugin.TemplatePlugin,
@@ -68,6 +73,21 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         self._console_logger.propagate = False
 
         self._logger.info("Python binproto2 package installed: {}".format(marlinbft._check_binproto2(self)))
+
+        ## Testing new settings handlers - delete before release
+        # self.selected_profile_index = self._settings.get_int(["_last_profile"])
+        self.selected_profile_index = 2
+
+        self.selected_profile = self.get_selected_profile(self.selected_profile_index)
+        
+        self._logger.info("Selected profile name: {}".format(self.get_profile_setting("_name", self.selected_profile)))
+        self._logger.info("Post-flash gcode: {}".format(self.get_profile_setting("postflash_gcode", self.selected_profile)))
+        self._logger.info("Post-flash gcode enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_gcode", self.selected_profile)))
+        self._logger.info("Post-flash command enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_commandline", self.selected_profile)))
+        self._logger.info("No such bool: {}".format(self.get_profile_setting_boolean("no_such_bool", self.selected_profile)))
+        self._logger.info("Avrdude command line: {}".format(self.get_profile_setting("avrdude_commandline", self.selected_profile)))
+
+        ## End delete
 
     # Event handler
     def on_event(self, event, payload):
@@ -313,19 +333,85 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         finally:
             self._flash_thread = None
 
+    def get_selected_profile(self, index):
+        profiles = self._settings.get(["profiles"])
+        if len(profiles) >= index:
+            return profiles[index]
+        else:
+            self._logger.warn("Invalid profile index {} selected".format(index))
+            return None
+
+    def get_profile_settings(self, dict):
+        if dict != None:
+            profile_defaults = self.get_settings_defaults()["profiles"]
+            profile = dict_merge(profile_defaults, dict)
+            return profile
+        else:
+            return None
+
+    def get_profile_setting(self, key, dict):
+        if dict != None:
+            profile = self.get_profile_settings(dict)
+            if key in profile.keys():
+                return profile[key]
+            else:
+                return None
+        else:
+            return None
+
+    def get_profile_setting_int(self, key, dict, **kwargs):
+        minimum = kwargs.pop("min", None)
+        maximum = kwargs.pop("max", None)
+
+        value = self.get_profile_setting(key, dict)
+        if value is None:
+            return None
+
+        try:
+            intValue = int(value)
+
+            if minimum is not None and intValue < minimum:
+                return minimum
+            elif maximum is not None and intValue > maximum:
+                return maximum
+            else:
+                return intValue
+        except ValueError:
+            self._logger.warning(
+                "Could not convert %r to a valid integer when getting option %r"
+                % (value, key)
+            )
+            return None
+
+    def get_profile_setting_boolean(self, key, dict):
+        value = self.get_profile_setting(key, dict)
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return value != 0
+        if isinstance(value, basestring):
+            return value.lower() in valid_boolean_trues
+        return value is not None
+
     #~~ SettingsPlugin API
 
     def get_settings_defaults(self):
         return {
+            "_last_profile": None,
             "enable_navbar": False,
             "enable_profiles": False,
-            "last_profile": None,
             "save_url": False,
             "last_url": None,
-            "marlinbft_hascapability": False,
-            "marlinbft_hasbinproto2package": False,
+            "has_bftcapability": False,
+            "has_binproto2package": False,
+            "disable_filefilter": False,
             "plugin_version": self._plugin_version,
-            "arrPrinters": {
+            "parent": {
+                "subkey": "Foobar"
+            },
+            "profiles": {
                 "_id": None,
                 "_name": None,
                 "flash_method": None,
@@ -376,10 +462,61 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "enable_postflash_gcode": False,
                 "enable_preflash_gcode": False,
                 "disable_bootloadercheck": False,
-                "disable_filefilter": False,
                 "no_reconnect_after_flash": False,
                 "serial_port": None,
-            }
+            },
+            ## Delete all of this once the UI uses the profile ##
+            "flash_method": None,
+            "avrdude_path": None,
+            "avrdude_conf": None,
+            "avrdude_avrmcu": None,
+            "avrdude_programmer": None,
+            "avrdude_baudrate": None,
+            "avrdude_disableverify": None,
+            "avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
+            "bossac_path": None,
+            "bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
+            "bossac_disableverify": False,
+            "dfuprog_path": None,
+            "dfuprog_avrmcu": None,
+            "dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
+            "dfuprog_erasecommandline": "sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force",
+            "stm32flash_path": None,
+            "stm32flash_verify": True,
+            "stm32flash_boot0pin": "rts",
+            "stm32flash_boot0low": False,
+            "stm32flash_resetpin": "dtr",
+            "stm32flash_resetlow": True,
+            "stm32flash_execute": True,
+            "stm32flash_executeaddress": "0x8000000",
+            "stm32flash_reset": False,
+            "lpc1768_path": None,
+            "lpc1768_unmount_command": "sudo umount {mountpoint}",
+            "lpc1768_preflashreset": True,
+            "lpc1768_no_m997_reset_wait": False,
+            "lpc1768_no_m997_restart_wait": False,
+            "marlinbft_waitafterconnect": 0,
+            "marlinbft_timeout": 1000,
+            "marlinbft_progresslogging": False,
+            "marlinbft_no_m997_reset_wait": False,
+            "marlinbft_no_m997_restart_wait": False,
+            "postflash_delay": 0,
+            "preflash_delay": 3,
+            "postflash_gcode": None,
+            "preflash_gcode": None,
+            "run_postflash_gcode": False,
+            "preflash_commandline": None,
+            "postflash_commandline": None,
+            "enable_preflash_commandline": False,
+            "enable_postflash_commandline": False,
+            "enable_postflash_delay": False,
+            "enable_preflash_delay": False,
+            "enable_postflash_gcode": False,
+            "enable_preflash_gcode": False,
+            "disable_bootloadercheck": False,
+            "no_reconnect_after_flash": False,
+            "serial_port": None,
+            ## End delete ##
         }
 
     def get_settings_version(self):
@@ -391,13 +528,13 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._logger.info("Migrating plugin settings to a profile")
             
             # Create a new empty array of printer profiles
-            arrPrinters_new = []
+            profiles_new = []
             
             # Geta dictionary of the default printer profile settings
-            settings_dict = self.get_settings_defaults()["arrPrinters"]
+            settings_dict = self.get_settings_defaults()["profiles"]
 
             # Get the names of all the printer profile settings
-            keys = self.get_settings_defaults()["arrPrinters"].keys()
+            keys = self.get_settings_defaults()["profiles"].keys()
 
             # Iterate over each setting in the defaults
             for key in keys:
@@ -411,13 +548,17 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 if (value == "" and settings_dict[key] == None):
                     value = None
                 
+                # If the current value is None, and the default is a string set the value to the default
+                if (value == None and settings_dict[key] != None):
+                    value = settings_dict[key]
+
                 # If the current value is a number stored it as a string, convert it to a number
                 if isinstance(value, str) and value.isnumeric():
                     value = int(value)
 
                 # If the the default value is a number but the current value is not, reset the value to the default
                 if isinstance(default_value, int) and not isinstance(value, int):
-                    self._logger.warn(u"{}: current value '{}' should be an int but isn't, resetting to default value of '{}'".format(key, value, default_value))
+                    self._logger.warn(u"{}: current value '{}' should be a number but isn't, resetting to default value of '{}'".format(key, value, default_value))
                     value = default_value
 
                 # If the current value isn't the same as the default value, set the value otherwise delete it (so we don't set things to their default unnecessarily)
@@ -432,14 +573,17 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             settings_dict["_name"] = "Default"
 
             # Append the new profile and save the settings
-            arrPrinters_new.append(settings_dict)
-            self._settings.set(['arrPrinters'], arrPrinters_new)
+            profiles_new.append(settings_dict)
+            self._settings.set(['profiles'], profiles_new)
+            
+            # Set the profile to the new one
+            self._settings.set_int(['_last_profile'], 0)
 
             # Set all the old settings to defaults to remove them from the settings file
             self._logger.info("Resetting old config values to default values (tidying up config.yaml)")
             
             # Get the default settings values
-            settings_dict = self.get_settings_defaults()["arrPrinters"]
+            settings_dict = self.get_settings_defaults()["profiles"]
             
             # Iterate over each setting
             for key in settings_dict:
@@ -483,7 +627,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         del comm_instance, already_defined
         if capability.lower() == "BINARY_FILE_TRANSFER".lower():
             self._logger.info("Setting BINARY_FILE_TRANSFER capability to %s" % (enabled))
-            self._settings.set_boolean(["marlinbft_hascapability"], enabled)
+            self._settings.set_boolean(["has_bftcapability"], enabled)
             self._settings.save()
             self._send_capability("BINARY_FILE_TRANSFER", enabled)
 

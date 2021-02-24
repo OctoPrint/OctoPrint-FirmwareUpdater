@@ -11,18 +11,18 @@ current_baudrate = None
 
 def _check_binproto2(self):
     global binproto2_installed
-    self._settings.set_boolean(["marlinbft_hasbinproto2package"], binproto2_installed)
+    self._settings.set_boolean(["has_binproto2package"], binproto2_installed)
     self._settings.save()
     return binproto2_installed
 
 def _check_marlinbft(self):
     self._logger.info("Python package 'marlin-binary-protocol' is installed: %s" % (_check_binproto2(self)))
-    self._logger.info("Marlin BINARY_FILE_TRANSFER capability is enabled: %s" % (self._settings.get_boolean(["marlinbft_hascapability"])))
+    self._logger.info("Marlin BINARY_FILE_TRANSFER capability is enabled: %s" % (self._settings.get_boolean(["has_bftcapability"])))
 
     if not _check_binproto2(self):
         self._logger.error("Python package 'marlin-binary-protocol' is not installed")
         self._send_status("flasherror", subtype="nobinproto2")
-    elif not self._settings.get_boolean(["marlinbft_hascapability"]):
+    elif not self._settings.get_boolean(["has_bftcapability"]):
         self._logger.error("Marlin BINARY_FILE_TRANSFER capability is not supported")
         self._send_status("flasherror", subtype="nobftcap")
         return False
