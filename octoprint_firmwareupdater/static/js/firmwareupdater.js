@@ -792,6 +792,19 @@ $(function() {
             });
         };
 
+        self._saveSelectedProfile = function() {
+            var selectedId = ko.toJS(self.selectedProfile())._id
+            var data = {
+                plugins: {
+                    firmwareupdater: {
+                        _selected_profile: selectedId,
+                    }
+                }
+            };
+            self.settingsViewModel.saveData(data);
+            // TODO: Disable UI until this finishes
+        }
+
         self._saveLastUrl = function() {
             var data = {
                 plugins: {

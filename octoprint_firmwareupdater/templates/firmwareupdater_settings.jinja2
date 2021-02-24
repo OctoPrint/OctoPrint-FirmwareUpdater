@@ -1,12 +1,22 @@
 <div id="settings_plugin_firmwareupdater">
 
     <div class="pull-right">
-        <button class="btn btn-small" data-bind="click: showPluginConfig" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
+        <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
     </div>
 
     <h3>{{ _('Firmware Updater') }}</h3>
 
     <form class="form-horizontal">
+
+        <div class="control-group" title="{{ _('Select the printer profile') }}">
+            <label class="control-label">{{ _('Firmware Update Profile') }}</label>
+            <div class="controls controls-row">
+                <select data-bind="options: profiles, optionsText: '_name', optionsValue: '_id', value: selectedProfileId, event: {change: _saveSelectedProfile}"></select>
+                <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Configure Profile') }}"><i class="icon-cog"></i></button>
+                <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Add New Profile') }}"><i class="icon-plus"></i></button>
+                <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Delete Profile') }}"><i class="icon-trash"></i></button>
+            </div>
+        </div>
 
         <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
             <label class="control-label">{{ _('Serial Port') }}</label>

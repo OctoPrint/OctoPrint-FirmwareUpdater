@@ -121,8 +121,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             # flash from uploaded file
             uploaded_hex_path = flask.request.values[input_upload_path]
 
-            # create a temporary
-
             try:
                 file_to_flash = tempfile.NamedTemporaryFile(mode='r+b', delete=False)
                 file_to_flash.close()
@@ -201,7 +199,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
             self._logger.info("Pre-flash command '{}' returned: {}".format(preflash_command, r))
 
-        # Run pre-flash gcode command
+        # Run pre-flash gcode
         preflash_gcode = self.get_profile_setting("preflash_gcode")
         if preflash_gcode is not None and self.get_profile_setting_boolean("enable_preflash_gcode"):
             if self._printer.is_operational():
@@ -255,7 +253,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     self._console_logger.info(message)
                     self._send_status("success")
 
-                    # Run post-flash commandline here
+                    # Run post-flash commandline
                     postflash_command = self.get_profile_setting("postflash_commandline")
                     if postflash_command is not None and self.get_profile_setting_boolean("enable_postflash_commandline"):
                         self._logger.info("Executing post-flash commandline '{}'".format(postflash_command))
@@ -267,6 +265,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                         self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
 
+                    # Run post-flash gcode
                     postflash_gcode = self.get_profile_setting("postflash_gcode")
                     if postflash_gcode is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
                         self._logger.info(u"Setting run_postflash_gcode flag to true")
@@ -489,9 +488,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self.set_profile_setting(key, False)
 
 
+    # Send capability information to the UI
+    def _send_capability(self, capability, enabled):
+        self._plugin_manager.send_plugin_message(self._identifier, dict(type="capability", capability=capability, enabled=enabled))
+
+    # Send status messages to the UI
+    def _send_status(self, status, subtype=None, message=None):
+        self._plugin_manager.send_plugin_message(self._identifier, dict(type="status", status=status, subtype=subtype, message=message))
 
     #~~ SettingsPlugin API
-
     def get_settings_defaults(self):
         return {
             "_selected_profile": None,
@@ -717,28 +722,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         self._logger.info("Avrdude command line: {}".format(self.get_profile_setting("avrdude_commandline")))
         ## End delete
 
-
-    #~~ Asset API
-
-    def get_assets(self):
-        return dict(js=["js/firmwareupdater.js"])
-
-    #~~ Extra methods
-
-    def _send_capability(self, capability, enabled):
-        self._plugin_manager.send_plugin_message(self._identifier, dict(type="capability",
-                                                                        capability=capability,
-                                                                        enabled=enabled))	
-
-    def _send_status(self, status, subtype=None, message=None):
-        self._plugin_manager.send_plugin_message(self._identifier, dict(type="status",
-                                                                        status=status,
-                                                                        subtype=subtype,
-                                                                        message=message))
-
-    #~~ Hooks
-
-    ##~~ Event handler
+    #~~ EventHandlerPlugin API
     def on_event(self, event, payload):
         # Only handle the CONNECTED event
         if event == Events.CONNECTED:
@@ -764,7 +748,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             else:
                 self._logger.info("Run postflash flag is not set")
 
-    ##~~ capabilites hook
+    #~~ AssetPlugin API
+    def get_assets(self):
+        return dict(
+            js=["js/firmwareupdater.js"],
+            css=["css/firmwareupdater.css"]
+        )
+
+    #~~ Hook handlers
+    ##~~ Capabilites hook
     def firmware_capability_hook(self, comm_instance, capability, enabled, already_defined):
         del comm_instance, already_defined
         if capability.lower() == "BINARY_FILE_TRANSFER".lower():
@@ -773,9 +765,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._settings.save()
             self._send_capability("BINARY_FILE_TRANSFER", enabled)
 
+    ##~~ Bodysize hook
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         return [("POST", r"/flash", 1000 * 1024)]
 
+    ##~~ Update hook
     def update_hook(self):
         return dict(
             firmwareupdater=dict(
