@@ -1,14 +1,14 @@
 <div id="settings_plugin_firmwareupdater">
 
     <div class="pull-right">
-        <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
+        <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
     </div>
 
     <h3>{{ _('Firmware Updater') }}</h3>
 
     <form class="form-horizontal">
 
-        <div class="control-group" title="{{ _('Select the printer profile') }}">
+        <div class="control-group" title="{{ _('Select the firmware update profile') }}">
             <label class="control-label">{{ _('Update Profile') }}</label>
             <div class="controls controls-row">
                 <select data-bind="options: profiles, optionsText: '_name', optionsValue: function(item) { return profileIndexFromItem(item) }, value: selectedProfileIndex, event: {change: _saveSelectedProfile}"></select>
