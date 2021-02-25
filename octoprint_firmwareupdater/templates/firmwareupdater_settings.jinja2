@@ -9,12 +9,13 @@
     <form class="form-horizontal">
 
         <div class="control-group" title="{{ _('Select the printer profile') }}">
-            <label class="control-label">{{ _('Firmware Update Profile') }}</label>
+            <label class="control-label">{{ _('Update Profile') }}</label>
             <div class="controls controls-row">
-                <select data-bind="options: profiles, optionsText: '_name', optionsValue: '_id', value: selectedProfileId, event: {change: _saveSelectedProfile}"></select>
-                <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Configure Profile') }}"><i class="icon-cog"></i></button>
-                <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Add New Profile') }}"><i class="icon-plus"></i></button>
-                <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Delete Profile') }}"><i class="icon-trash"></i></button>
+                <select data-bind="options: profiles, optionsText: '_name', optionsValue: function(item) { return profileIndexFromItem(item) }, value: selectedProfileIndex, event: {change: _saveSelectedProfile}"></select>
+                <button class="btn big-icon" data-bind="click: editSelectedProfile" title="{{ _('Configure selected firmware update profile') }}"><i class="icon-cog"></i></button>
+                <button class="btn big-icon" data-bind="click: showDeleteModal, enable: canDeleteProfile, css: {disabled: !canDeleteProfile()}" title="{{ _('Delete selected firmware update profile') }}"><i class="icon-trash"></i></button>
+                <button class="btn big-icon" data-bind="click: showCopyModal" title="{{ _('Copy selected firmware update profile') }}"><i class="icon-copy"></i></button>
+                <button class="btn big-icon" data-bind="click: showAddModal" title="{{ _('Add a new firmware update profile') }}"><i class="icon-plus"></i></button>
             </div>
         </div>
 
@@ -689,7 +690,7 @@
     <div id="BootLoaderWarning" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-            <h3>Firmware Updater</h3>
+            <h3>Bootloader Warning</h3>
         </div>
         <div class="modal-body">
             <i class="icon-warning-sign"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Warning</h5>
@@ -699,6 +700,53 @@
         </div>
         <div class="modal-footer">
             <a href="#" class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse">{{ _('OK') }}</a>
+        </div>
+    </div>
+    <div id="NewProfileName" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>Create New Profile</h3>
+        </div>
+        <div class="modal-body">
+            <label class="control-label">{{ _('New profile name') }}</label>
+            <div class="controls controls-row">
+                <input class="input-block-level" type="text" data-bind='value: newProfileName, valueUpdate: "afterkeydown"'>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-primary" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _('Create') }}</button>
+        </div>
+    </div>
+    <div id="CopyProfileName" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>Copy Profile</h3>
+        </div>
+        <div class="modal-body">
+            <label class="control-label">{{ _('New profile name') }}</label>
+            <div class="controls controls-row">
+                <input class="input-block-level" type="text" data-bind='value: newProfileName, valueUpdate: "afterkeydown"'>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-primary" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _('Copy') }}</button>
+        </div>
+    </div>
+    <div id="ProfileDeleteConfirm" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>Confirm Profile Deletion</h3>
+        </div>
+        <div class="modal-body">
+            <p>
+                Delete the Firmware Updater profile '<span data-bind="text: selectedProfileName"></span>'?
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !deleting(), css: {disabled: deleting()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-danger" aria-hidden="true" data-bind="click: deleteSelectedProfile, enable: !deleting(), css: {disabled: deleting()}"><i class="fas fa-spinner fa-spin" data-bind="visible: deleting" style="display: none;"></i>{{ _('Delete') }}</button>
         </div>
     </div>
 </div>

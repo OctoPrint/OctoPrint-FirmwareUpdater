@@ -9,7 +9,7 @@ $(function() {
         self.access = parameters[4];
 
         self.profiles = ko.observableArray();
-        self.selectedProfileId = ko.observable();
+        self.selectedProfileIndex = ko.observable();
         //self.selectedProfile = ko.observableArray();
         
         // General settings
@@ -150,30 +150,57 @@ $(function() {
         self.isBusy = ko.observable(false);
         self.fileFlashButtonText = ko.observable("");
         self.urlFlashButtonText = ko.observable("");
+        
         self.saving = ko.observable(false);
+        self.deleting = ko.observable(false);
+        self.adding = ko.observable(false);
+
+        self.newProfileName = ko.observable("");
+
+        self.canDeleteProfile = ko.computed(function() {
+            return self.selectedProfileIndex() != 0;
+        });
 
         self.selectFilePath = undefined;
         self.configurationDialog = undefined;
 
         self.inSettingsDialog = false;
-
         
         self.selectedProfile = ko.computed(function() {
-            var currentProfile = self.selectedProfileId();
-            return ko.utils.arrayFilter(self.profiles(), function(profile) {
-                return profile._id() == currentProfile;
-            })[0];
+            var index = self.selectedProfileIndex();
+            if (index < self.profiles().length) {
+                return self.profiles()[index];
+            } else {
+                return null;
+            }
+        });
+
+        self.selectedProfileName = ko.computed(function() {
+            if (self.selectedProfile() != null) {
+                return ko.toJS(self.selectedProfile())._name;
+            } else {
+                return null;
+            }
+            
         });
         
+        self.profileIndexFromItem = function(item) {
+            profiles = ko.toJS(self.profiles())
+            var index = profiles.findIndex(function(profile) {
+                return profile._name == ko.toJS(item)._name
+            });
+            return index
+        }
+
         self.onBeforeBinding = function() {
             self.profiles(self.settingsViewModel.settings.plugins.firmwareupdater.profiles());
             console.log(`Number of profiles: ${self.profiles().length}`)
             console.log(ko.toJS(self.profiles()))
 
-            self.selectedProfileId(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
-            console.log(`Selected profile ID: ${self.selectedProfileId()}`)
+            self.selectedProfileIndex(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
+            console.log(`Selected profile index: ${self.selectedProfileIndex()}`)
 
-            // TO DO: Get all the valid profile IDs and check that the last profile ID is among them
+            // TO DO: Get all the valid profiles and check that the selected profile is among them
             
             console.log(ko.toJS(self.selectedProfile()));
         }
@@ -215,6 +242,172 @@ $(function() {
 
         self.togglePluginOptions = function(){
             self.showPluginOptions(!self.showPluginOptions());
+        }
+
+        /*
+        * Shows the profile settings editor modal
+        */
+        self.editSelectedProfile = function(){
+
+        }
+
+        /*
+        * Shows the new profile modal
+        */
+        self.showAddModal = function() {
+            self.profileAddDialog.modal()
+        }
+
+        /*
+        * Creates a new profile and selects it
+        */
+        self.addNewProfile = function() {
+            // TODO: Check if name is already in use
+
+            // Show the spinner and disable the modal buttons
+            self.adding(true)
+
+            // Get the current profiles
+            var profiles = ko.toJS(self.profiles())
+
+            // Create a new profile
+            var newProfile = {_name: self.newProfileName()}
+
+            // Add the new profile to the array of profiles
+            profiles.push(newProfile);
+
+            // Construct updated settings object with the new profile array and an updated selected profile index
+            var data = {
+                plugins: {
+                    firmwareupdater: {
+                        _selected_profile: profiles.length - 1,
+                        profiles: profiles,
+                    }
+                }
+            };
+
+            // Save the settings
+            self.settingsViewModel.saveData(data).done(function () {
+                // Hide the modal
+                self.profileAddDialog.modal("hide");
+
+                // Disable the spinner and show the buttons
+                self.adding(false);
+
+                // Update the profiles
+                self.profiles(profiles)
+
+                // Select the profile before this one
+                self.selectedProfileIndex(profiles.length - 1)
+
+                // Clear the new profile name input
+                self.newProfileName(null)
+            });
+        }
+
+        /*
+        * Shows the new profile modal
+        */
+        self.showCopyModal = function() {
+            self.newProfileName(self.selectedProfileName() + ' - Copy')
+            self.profileCopyDialog.modal()
+        }
+
+        self.copyProfile = function() {
+            // TODO: Check if name is already in use
+
+            // Show the spinner and disable the modal buttons
+            self.adding(true)
+
+            // Get the current profiles
+            var profiles = ko.toJS(self.profiles())
+
+            // Copy the current profile
+            var newProfile = ko.toJS(self.selectedProfile())
+
+            // Change the name
+            newProfile._name = self.newProfileName()
+
+            // Add the new profile to the array of profiles
+            profiles.push(newProfile);
+
+            // Construct updated settings object with the new profile array and an updated selected profile index
+            var data = {
+                plugins: {
+                    firmwareupdater: {
+                        _selected_profile: profiles.length - 1,
+                        profiles: profiles,
+                    }
+                }
+            };
+
+            // Save the settings
+            self.settingsViewModel.saveData(data).done(function () {
+                // Hide the modal
+                self.profileCopyDialog.modal("hide");
+
+                // Disable the spinner and show the buttons
+                self.adding(false);
+
+                // Update the profiles
+                self.profiles(profiles)
+
+                // Select the profile before this one
+                self.selectedProfileIndex(profiles.length - 1)
+
+                // Clear the new profile name input
+                self.newProfileName(null)
+            });
+        }
+
+        /*
+        * Shows the profile deletion confirmation modal
+        */
+        self.showDeleteModal = function() {
+            self.profileDeleteDialog.modal()
+        }
+
+        /*
+        * Deletes the selected profile from the settings and saves the settings
+        * Selects the n-1 profile after deleting the selected profile
+        */
+        self.deleteSelectedProfile = function(){
+            // Show the spinner and disable the modal buttons
+            self.deleting(true)
+
+            // Get the currently selected profile index
+            var index = self.selectedProfileIndex()
+
+            // Get the current profiles
+            var profiles = ko.toJS(self.profiles())
+            
+            // Remove the selected profile from the array of profiles
+            profiles.splice(index, 1);
+
+            // Construct updated settings object with the new profile array and an updated selected profile index
+            var data = {
+                plugins: {
+                    firmwareupdater: {
+                        _selected_profile: index - 1,
+                        profiles: profiles,
+                    }
+                }
+            };
+
+            // Save the settings
+            self.settingsViewModel.saveData(data).done(function () {
+                // Hide the modal
+                self.profileDeleteDialog.modal("hide");
+
+                // Disable the spinner and show the buttons
+                self.deleting(false);
+
+                // Update the profiles
+                self.profiles(profiles)
+
+                // Select the profile before this one
+                self.selectedProfileIndex(index - 1)
+            });
         }
 
         self.configFlashMethod.subscribe(function(value) {
@@ -282,6 +475,9 @@ $(function() {
             self.selectFilePath = $("#settings_firmwareupdater_selectFilePath");
             self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
             self.bootloaderWarningDialog = $("#BootLoaderWarning");
+            self.profileAddDialog = $("#NewProfileName");
+            self.profileCopyDialog = $("#CopyProfileName");
+            self.profileDeleteDialog = $("#ProfileDeleteConfirm");
 
             self.selectFilePath.fileupload({
                 dataType: "hex",
@@ -793,11 +989,10 @@ $(function() {
         };
 
         self._saveSelectedProfile = function() {
-            var selectedId = ko.toJS(self.selectedProfile())._id
             var data = {
                 plugins: {
                     firmwareupdater: {
-                        _selected_profile: selectedId,
+                        _selected_profile: self.selectedProfileIndex(),
                     }
                 }
             };

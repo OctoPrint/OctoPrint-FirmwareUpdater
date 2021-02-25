@@ -309,8 +309,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         if not isinstance(profiles, list):
             profiles = [profiles]
         
-        # If there is only one profile and the ID is None there were no real profiles and we have the defaults
-        if len(profiles) == 1 and profiles[0]["_id"] == None:
+        # If there is only one profile and the name is None there were no real profiles and we have the defaults
+        if len(profiles) == 1 and profiles[0]["_name"] == None:
             return False
         else:
             return True
@@ -509,7 +509,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_binproto2package": False,
             "disable_filefilter": False,
             "profiles": {
-                "_id": None,
                 "_name": None,
                 "flash_method": None,
                 "avrdude_path": None,
@@ -666,7 +665,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     del settings_dict[key]
 
             # Give the new profile an ID and a default name
-            settings_dict["_id"] = 0
             settings_dict["_name"] = "Default"
 
             # Append the new profile and save the settings
