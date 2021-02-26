@@ -1,7 +1,7 @@
 <div id="settings_plugin_firmwareupdater">
 
     <div class="pull-right">
-        <button class="btn big-icon" data-bind="click: showPluginConfig" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
+        <button class="btn btn-small" data-bind="click: showPluginConfig" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
     </div>
 
     <h3>{{ _('Firmware Updater') }}</h3>
@@ -715,7 +715,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _('Create') }}</button>
+            <button class="btn btn-primary" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Create') }}</button>
         </div>
     </div>
     <div id="CopyProfileName" class="modal hide fade">
@@ -731,7 +731,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _('Copy') }}</button>
+            <button class="btn btn-primary" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Copy') }}</button>
         </div>
     </div>
     <div id="ProfileDeleteConfirm" class="modal hide fade">
@@ -746,7 +746,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !deleting(), css: {disabled: deleting()}">{{ _('Cancel') }}</button>
-            <button class="btn btn-danger" aria-hidden="true" data-bind="click: deleteSelectedProfile, enable: !deleting(), css: {disabled: deleting()}"><i class="fas fa-spinner fa-spin" data-bind="visible: deleting" style="display: none;"></i>{{ _('Delete') }}</button>
+            <button class="btn btn-danger" aria-hidden="true" data-bind="click: deleteSelectedProfile, enable: !deleting(), css: {disabled: deleting()}"><i class="fas fa-spinner fa-spin" data-bind="visible: deleting" style="display: none;"></i>{{ _(' Delete') }}</button>
         </div>
     </div>
 </div>

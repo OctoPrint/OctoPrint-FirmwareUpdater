@@ -203,6 +203,10 @@ $(function() {
             // TO DO: Get all the valid profiles and check that the selected profile is among them
             
             console.log(ko.toJS(self.selectedProfile()));
+
+            // Get all the default settings
+            self.profile_defaults = ko.toJS(self.settingsViewModel.settings.plugins.firmwareupdater._profiles)
+
         }
 
         self.onAllBound = function(allViewModels) {
@@ -244,18 +248,29 @@ $(function() {
             self.showPluginOptions(!self.showPluginOptions());
         }
 
+        self.getProfileSetting = function(key) {
+            // Merge the selected profile with the default settings
+            var profile_settings = Object.assign({}, self.profile_defaults, ko.toJS(self.selectedProfile()));
+
+            // Return the setting value
+            return profile_settings[key]
+        }
+
         /*
         * Shows the profile settings editor modal
         */
         self.editSelectedProfile = function(){
-
+            self.getProfileSetting("avrdude_commandline");
+            self.getProfileSetting("postflash_gcode");
+            self.getProfileSetting("enable_preflash_commandline");
+            self.getProfileSetting("enable_preflash_gcode");
         }
 
         /*
         * Shows the new profile modal
         */
         self.showAddModal = function() {
-            self.profileAddDialog.modal()
+            self.profileAddDialog.modal();
         }
 
         /*
@@ -795,118 +810,95 @@ $(function() {
         };
 
         self.showPluginConfig = function() {
-            // Load the general settings
-            self.configFlashMethod(self.settingsViewModel.settings.plugins.firmwareupdater.flash_method());
+            // Load the general plugin settings
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
-            self.configPreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_commandline());
-            self.configPostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_commandline());
-            self.configPostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_delay());
-            self.configPreflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_delay());
-            self.configPostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.postflash_gcode());
-            self.configPreflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.preflash_gcode());
             self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
             self.configLastUrl(self.settingsViewModel.settings.plugins.firmwareupdater.last_url());
+            self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
+            self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
+            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
 
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline() != 'false') {
-                self.configEnablePreflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_commandline());
-            }
+            // Load the profile settings
+            self.configFlashMethod(self.getProfileSetting("flash_method"))
 
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_commandline() != 'false') {
-                self.configEnablePostflashCommandline(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_commandline());
-            }
-
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay() != 'false') {
-                self.configEnablePostflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_delay());
-            }
-
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_delay() != 'false') {
-                self.configEnablePreflashDelay(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_delay());
-            }
-
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode() != 'false') {
-                self.configEnablePostflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_postflash_gcode());
-            }
-
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_gcode() != 'false') {
-                self.configEnablePreflashGcode(self.settingsViewModel.settings.plugins.firmwareupdater.enable_preflash_gcode());
-            }
-
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck() != 'false') {
-                self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
-            }
-
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter() != 'false') {
-                self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
-            }
-
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.no_reconnect_after_flash() != 'false') {
-                self.configNoAutoReconnect(self.settingsViewModel.settings.plugins.firmwareupdater.no_reconnect_after_flash());
-            }
+            // Pre and post flash settings
+            self.configNoAutoReconnect(self.getProfileSetting("no_reconnect_after_flash"))
+            self.configEnablePreflashDelay(self.getProfileSetting("enable_preflash_delay"))
+            self.configPreflashDelay(self.getProfileSetting("preflash_delay"))
+            self.configEnablePostflashDelay(self.getProfileSetting("enable_postflash_delay"))
+            self.configPostflashDelay(self.getProfileSetting("postflash_delay"))
+            self.configEnablePreflashCommandline(self.getProfileSetting("enable_preflash_commandline"))
+            self.configPreflashCommandline(self.getProfileSetting("preflash_commandline"))
+            self.configEnablePostflashCommandline(self.getProfileSetting("enable_postflash_commandline"))
+            self.configPostflashCommandline(self.getProfileSetting("postflash_commandline"))
+            self.configEnablePreflashGcode(self.getProfileSetting("enable_preflash_gcode"))
+            self.configPreflashGcode(self.getProfileSetting("preflash_gcode"))
+            self.configEnablePostflashGcode(self.getProfileSetting("enable_postflash_gcode"))
+            self.configPostflashGcode(self.getProfileSetting("postflash_gcode"))
 
             // Load the avrdude settings
-            self.configAvrdudePath(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path());
-            self.configAvrdudeConfigFile(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_conf());
-            self.configAvrdudeMcu(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu());
-            self.configAvrdudeProgrammer(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer());
-            self.configAvrdudeBaudRate(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_baudrate());
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify() != 'false') {
-                self.configAvrdudeDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_disableverify());
-            }
-            self.configAvrdudeCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_commandline());
-
+            self.configAvrdudePath(self.getProfileSetting("avrdude_path"))
+            self.configAvrdudeCommandLine(self.getProfileSetting("avrdude_commandline"))
+            self.configAvrdudeConfigFile(self.getProfileSetting("avrdude_conf"))
+            self.configAvrdudeMcu(self.getProfileSetting("avrdude_avrmcu"))
+            self.configAvrdudeMcu(self.getProfileSetting("avrdude_avrmcu"))
+            self.configAvrdudeProgrammer(self.getProfileSetting("avrdude_programmer"))
+            self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"))
+            self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"))
+            
             // Load the bossac settings
-            self.configBossacPath(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path());
-            self.configBossacDisableVerification(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_disableverify());
-            self.configBossacCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.bossac_commandline());
+            self.configBossacPath(self.getProfileSetting("bossac_path"))
+            self.configBossacDisableVerification(self.getProfileSetting("bossac_disableverify"))
+            self.configBossacCommandLine(self.getProfileSetting("bossac_commandline"))
 
             // Load the dfu-programmer settings
-            self.configDfuPath(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_path());
-            self.configDfuMcu(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_avrmcu());
-            self.configDfuCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_commandline());
-            self.configDfuEraseCommandLine(self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_erasecommandline());
+            self.configDfuPath(self.getProfileSetting("dfuprog_path"))
+            self.configDfuMcu(self.getProfileSetting("dfuprog_avrmcu"))
+            self.configDfuCommandLine(self.getProfileSetting("dfuprog_commandline"))
+            self.configDfuEraseCommandLine(self.getProfileSetting("dfuprog_erasecommandline"))
 
             // Load the lpc1768 settings
-            self.configLpc1768Path(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path());
-            self.configLpc1768UnmountCommand(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_unmount_command());
-            if(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset() != 'false') {
-                self.configLpc1768ResetBeforeFlash(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_preflashreset());
-            }
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_reset_wait() != 'false') {
-                self.configLpc1768NoResetWait(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_reset_wait());
-            }
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_restart_wait() != 'false') {
-                self.configLpc1768NoRestartWait(self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_no_m997_restart_wait());
-            }
+            self.configLpc1768Path(self.getProfileSetting("lpc1768_path"))
+            self.configLpc1768UnmountCommand(self.getProfileSetting("lpc1768_unmount_command"))
+            self.configLpc1768ResetBeforeFlash(self.getProfileSetting("lpc1768_preflashreset"))
+            self.configLpc1768NoResetWait(self.getProfileSetting("lpc1768_no_m997_reset_wait"))
+            self.configLpc1768NoRestartWait(self.getProfileSetting("lpc1768_no_m997_restart_wait"))
 
             // Load the marlinbft settings
-            self.configMarlinBftWaitAfterConnect(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_waitafterconnect());
-            self.configMarlinBftTimeout(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_timeout());
-            self.configMarlinBftProgressLogging(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_progresslogging());
-            self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_reset_wait() != 'false') {
-                self.configMarlinBftNoResetWait(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_reset_wait());
-            }
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_restart_wait() != 'false') {
-                self.configMarlinBftNoRestartWait(self.settingsViewModel.settings.plugins.firmwareupdater.marlinbft_no_m997_restart_wait());
-            }
+            self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"))
+            self.configMarlinBftTimeout(self.getProfileSetting("marlinbft_timeout"))
+            self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"))
+            self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"))
+            self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"))
 
             // Load the stm32flash settings
-            self.configStm32flashPath(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_path());
-            self.configStm32flashVerify(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_verify());
-            self.configStm32flashBoot0Pin(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_boot0pin());
-            self.configStm32flashBoot0Low(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_boot0low());
-            self.configStm32flashResetPin(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_resetpin());
-            self.configStm32flashResetLow(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_resetlow());
-            self.configStm32flashExecute(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_execute());
-            self.configStm32flashExecuteAddress(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_executeaddress());
-            self.configStm32flashReset(self.settingsViewModel.settings.plugins.firmwareupdater.stm32flash_reset());
+            self.configStm32flashPath(self.getProfileSetting("stm32flash_path"))
+            self.configStm32flashVerify(self.getProfileSetting("stm32flash_verify"))
+            self.configStm32flashBoot0Pin(self.getProfileSetting("stm32flash_boot0pin"))
+            self.configStm32flashBoot0Low(self.getProfileSetting("stm32flash_boot0low"))
+            self.configStm32flashResetPin(self.getProfileSetting("stm32flash_resetpin"))
+            self.configStm32flashResetLow(self.getProfileSetting("stm32flash_resetlow"))
+            self.configStm32flashExecute(self.getProfileSetting("stm32flash_execute"))
+            self.configStm32flashExecuteAddress(self.getProfileSetting("stm32flash_executeaddress"))
+            self.configStm32flashReset(self.getProfileSetting("stm32flash_reset"))
 
+            // Show the modal
             self.configurationDialog.modal();
         };
 
         self.onConfigClose = function() {
             self._saveConfig();
         };
+
+        self.removeProfileDefaultBeforeSave = function(profile) {
+            for (const key in profile) {
+                var keyValue = (profile[key] == '' ? null : profile[key]);
+                if (keyValue == self.profile_defaults[key]) {
+                    delete profile[key]
+                }
+            }
+            return profile;
+        }
 
         self._saveConfig = function() {
             self.saving(true);
@@ -918,18 +910,34 @@ $(function() {
                 lastUrl = self.configLastUrl();
             }
 
-            var data = {
+            var index = self.selectedProfileIndex();
+            // Get the profiles
+            var profiles = ko.toJS(self.profiles())
+
+            // Update the settings in the current profile
+            profiles[index]["flash_method"] = self.configFlashMethod();
+
+            // Pre and post flash settings
+
+            // Avrdude settings
+            profiles[index]["avrdude_path"] = self.configAvrdudePath();
+            profiles[index]["avrdude_conf"] = self.configAvrdudeConfigFile();
+            profiles[index]["avrdude_avrmcu"] = self.configAvrdudeMcu();
+            profiles[index]["avrdude_programmer"] = self.configAvrdudeProgrammer();
+            profiles[index]["avrdude_baudrate"] = self.configAvrdudeBaudRate();
+            profiles[index]["avrdude_disableverify"] = self.configAvrdudeDisableVerification();
+            profiles[index]["avrdude_commandline"] = self.configAvrdudeCommandLine();
+
+            // Bossac settings
+
+            
+            self.removeProfileDefaultBeforeSave(profiles[index]);
+            profiles[index] = self.removeProfileDefaultBeforeSave(profiles[index]);
+
+            /*
+            var profileData = {
                 plugins: {
                     firmwareupdater: {
-                        flash_method: self.configFlashMethod(),
-                        enable_navbar: self.configShowNavbarIcon(),
-                        avrdude_path: self.configAvrdudePath(),
-                        avrdude_conf: self.configAvrdudeConfigFile(),
-                        avrdude_avrmcu: self.configAvrdudeMcu(),
-                        avrdude_programmer: self.configAvrdudeProgrammer(),
-                        avrdude_baudrate: self.configAvrdudeBaudRate(),
-                        avrdude_disableverify: self.configAvrdudeDisableVerification(),
-                        avrdude_commandline: self.configAvrdudeCommandLine(),
                         bossac_path: self.configBossacPath(),
                         bossac_disableverify: self.configBossacDisableVerification(),
                         bossac_commandline: self.configBossacCommandLine(),
@@ -970,14 +978,27 @@ $(function() {
                         enable_postflash_gcode: self.configEnablePostflashGcode(),
                         enable_preflash_gcode: self.configEnablePreflashGcode(),
                         disable_bootloadercheck: self.configDisableBootloaderCheck(),
-                        save_url: self.configSaveUrl(),
-                        disable_filefilter: self.configDisableFileFilter(),
-                        last_url: lastUrl,
+
                     }
                 }
             };
+            */
+
+            
+           var data = {
+                plugins: {
+                    firmwareupdater: {
+                        enable_navbar: self.configShowNavbarIcon(),
+                        save_url: self.configSaveUrl(),
+                        disable_filefilter: self.configDisableFileFilter(),
+                        last_url: lastUrl,
+                        profiles: profiles,
+                    }
+                }
+            }
 
             self.settingsViewModel.saveData(data).done(function () {
+                self.profiles(profiles)
                 self.configurationDialog.modal("hide");
                 self.alertMessage(undefined);
                 self.showAlert(false);

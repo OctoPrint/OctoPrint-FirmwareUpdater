@@ -354,7 +354,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         # Check if the profile is valid
         if profile_settings != None:
             # Get the profile defaults
-            profile_defaults = self.get_settings_defaults()["profiles"]
+            profile_defaults = self.get_settings_defaults()["_profiles"]
             
             # Merge the profile settings with the defaults
             profile = dict_merge(profile_defaults, profile_settings)
@@ -437,7 +437,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             return
         
         # Get the default value
-        default_value = self.get_settings_defaults()["profiles"][key]
+        default_value = self.get_settings_defaults()["_profiles"][key]
 
         # Get all the profile settings
         profiles = self._settings.get(["profiles"])
@@ -508,7 +508,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
-            "profiles": {
+            "_profiles": {
                 "_name": None,
                 "flash_method": None,
                 "avrdude_path": None,
@@ -627,10 +627,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             profiles_new = []
             
             # Geta dictionary of the default printer profile settings
-            settings_dict = self.get_settings_defaults()["profiles"]
+            settings_dict = self.get_settings_defaults()["_profiles"]
 
             # Get the names of all the printer profile settings
-            keys = self.get_settings_defaults()["profiles"].keys()
+            keys = settings_dict.keys()
 
             # Iterate over each setting in the defaults
             for key in keys:
@@ -678,7 +678,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._logger.info("Resetting old config values to default values (tidying up config.yaml)")
             
             # Get the default settings values
-            settings_dict = self.get_settings_defaults()["profiles"]
+            settings_dict = self.get_settings_defaults()["_profiles"]
             
             # Iterate over each setting
             for key in settings_dict:
