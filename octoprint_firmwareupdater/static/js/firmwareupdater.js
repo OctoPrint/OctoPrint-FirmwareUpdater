@@ -892,11 +892,22 @@ $(function() {
 
         self.removeProfileDefaultBeforeSave = function(profile) {
             for (const key in profile) {
+                // Get the default value for this setting
+                var defaultValue = self.profile_defaults[key];
+
+                // Replace empty strings with null
                 var keyValue = (profile[key] == '' ? null : profile[key]);
-                if (keyValue == self.profile_defaults[key]) {
+
+                // Replace null with false if default is a boolean
+                keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue
+
+                // Remove settings which match their default value
+                if (keyValue == defaultValue) {
                     delete profile[key]
                 }
             }
+
+            // Return the updated profile
             return profile;
         }
 
@@ -910,14 +921,31 @@ $(function() {
                 lastUrl = self.configLastUrl();
             }
 
+            // Get the selected profile index
             var index = self.selectedProfileIndex();
+
             // Get the profiles
             var profiles = ko.toJS(self.profiles())
 
             // Update the settings in the current profile
             profiles[index]["flash_method"] = self.configFlashMethod();
 
+            profiles[index]["disable_bootloadercheck"] = self.configDisableBootloaderCheck();
+
             // Pre and post flash settings
+            profiles[index]["no_reconnect_after_flash"] = self.configNoAutoReconnect();
+            profiles[index]["enable_preflash_delay"] = self.configEnablePreflashDelay();
+            profiles[index]["preflash_delay"] = self.configPreflashDelay();
+            profiles[index]["enable_postflash_delay"] = self.configEnablePostflashDelay();
+            profiles[index]["postflash_delay"] = self.configPostflashDelay();
+            profiles[index]["enable_preflash_commandline"] = self.configEnablePreflashCommandline();
+            profiles[index]["preflash_commandline"] = self.configPreflashCommandline();
+            profiles[index]["enable_postflash_commandline"] = self.configEnablePostflashCommandline();
+            profiles[index]["preflash_commandline"] = self.configPreflashCommandline();
+            profiles[index]["enable_preflash_gcode"] = self.configEnablePreflashGcode();
+            profiles[index]["preflash_gcode"] = self.configPreflashGcode();
+            profiles[index]["enable_postflash_gcode"] = self.configEnablePostflashGcode();
+            profiles[index]["postflash_gcode"] = self.configPostflashGcode();
 
             // Avrdude settings
             profiles[index]["avrdude_path"] = self.configAvrdudePath();
@@ -929,63 +957,46 @@ $(function() {
             profiles[index]["avrdude_commandline"] = self.configAvrdudeCommandLine();
 
             // Bossac settings
+            profiles[index]["bossac_path"] = self.configBossacPath();
+            profiles[index]["bossac_disableverify"] = self.configBossacDisableVerification();
+            profiles[index]["bossac_commandline"] = self.configBossacCommandLine();
 
-            
-            self.removeProfileDefaultBeforeSave(profiles[index]);
+            // DFU-Programmer settings
+            profiles[index]["dfuprog_path"] = self.configDfuPath();
+            profiles[index]["dfuprog_avrmcu"] = self.configDfuMcu();
+            profiles[index]["dfuprog_commandline"] = self.configDfuCommandLine();
+            profiles[index]["dfuprog_erasecommandline"] = self.configDfuEraseCommandLine();
+
+            // LPC176x settings
+            profiles[index]["lpc1768_path"] = self.configLpc1768Path();
+            profiles[index]["lpc1768_unmount_command"] = self.configLpc1768UnmountCommand();
+            profiles[index]["lpc1768_preflashreset"] = self.configLpc1768ResetBeforeFlash();
+            profiles[index]["lpc1768_no_m997_reset_wait"] = self.configLpc1768NoResetWait();
+            profiles[index]["lpc1768_no_m997_restart_wait"] = self.configLpc1768NoRestartWait();
+
+            // MarlinBFT Settings
+            profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
+            profiles[index]["marlinbft_timeout"] = self.configMarlinBftTimeout();
+            profiles[index]["marlinbft_progresslogging"] = self.configMarlinBftProgressLogging();
+            profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
+            profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
+
+            // STM32Flash Settings
+            profiles[index]["stm32flash_path"] = self.configStm32flashPath();
+            profiles[index]["stm32flash_verify"] = self.configStm32flashVerify();
+            profiles[index]["stm32flash_boot0pin"] = self.configStm32flashBoot0Pin();
+            profiles[index]["stm32flash_boot0low"] = self.configStm32flashBoot0Low();
+            profiles[index]["stm32flash_resetpin"] = self.configStm32flashResetPin();
+            profiles[index]["stm32flash_resetlow"] = self.configStm32flashResetLow();
+            profiles[index]["stm32flash_execute"] = self.configStm32flashExecute();
+            profiles[index]["stm32flash_executeaddress"] = self.configStm32flashExecuteAddress();
+            profiles[index]["stm32flash_reset"] = self.configStm32flashReset();
+
+            // Remove all the settings which are the same as the defaults so we only store what's needed
             profiles[index] = self.removeProfileDefaultBeforeSave(profiles[index]);
-
-            /*
-            var profileData = {
-                plugins: {
-                    firmwareupdater: {
-                        bossac_path: self.configBossacPath(),
-                        bossac_disableverify: self.configBossacDisableVerification(),
-                        bossac_commandline: self.configBossacCommandLine(),
-                        dfuprog_path: self.configDfuPath(),
-                        dfuprog_avrmcu: self.configDfuMcu(),
-                        dfuprog_commandline: self.configDfuCommandLine(),
-                        dfuprog_erasecommandline: self.configDfuEraseCommandLine(),
-                        stm32flash_path: self.configStm32flashPath(),
-                        stm32flash_verify: self.configStm32flashVerify(),
-                        stm32flash_boot0pin: self.configStm32flashBoot0Pin(),
-                        stm32flash_boot0low: self.configStm32flashBoot0Low(),
-                        stm32flash_resetpin: self.configStm32flashResetPin(),
-                        stm32flash_resetlow: self.configStm32flashResetLow(),
-                        stm32flash_execute: self.configStm32flashExecute(),
-                        stm32flash_executeaddress: self.configStm32flashExecuteAddress(),
-                        stm32flash_reset: self.configStm32flashReset(),
-                        lpc1768_path: self.configLpc1768Path(),
-                        lpc1768_unmount_command: self.configLpc1768UnmountCommand(),
-                        lpc1768_preflashreset: self.configLpc1768ResetBeforeFlash(),
-                        lpc1768_no_m997_reset_wait: self.configLpc1768NoResetWait(),
-                        lpc1768_no_m997_restart_wait: self.configLpc1768NoRestartWait(),
-                        marlinbft_waitafterconnect: self.configMarlinBftWaitAfterConnect(),
-                        marlinbft_timeout: self.configMarlinBftTimeout(),
-                        marlinbft_progresslogging: self.configMarlinBftProgressLogging(),
-                        marlinbft_no_m997_reset_wait: self.configMarlinBftNoResetWait(),
-                        marlinbft_no_m997_restart_wait: self.configMarlinBftNoRestartWait(),
-                        no_reconnect_after_flash: self.configNoAutoReconnect(),
-                        enable_preflash_commandline: self.configEnablePreflashCommandline(),
-                        preflash_commandline: self.configPreflashCommandline(),
-                        enable_postflash_commandline: self.configEnablePostflashCommandline(),
-                        postflash_commandline: self.configPostflashCommandline(),
-                        postflash_delay: self.configPostflashDelay(),
-                        preflash_delay: self.configPreflashDelay(),
-                        postflash_gcode: self.configPostflashGcode(),
-                        preflash_gcode: self.configPreflashGcode(),
-                        enable_postflash_delay: self.configEnablePostflashDelay(),
-                        enable_preflash_delay: self.configEnablePreflashDelay(),
-                        enable_postflash_gcode: self.configEnablePostflashGcode(),
-                        enable_preflash_gcode: self.configEnablePreflashGcode(),
-                        disable_bootloadercheck: self.configDisableBootloaderCheck(),
-
-                    }
-                }
-            };
-            */
-
-            
-           var data = {
+          
+            // Construct the settings object
+            var data = {
                 plugins: {
                     firmwareupdater: {
                         enable_navbar: self.configShowNavbarIcon(),
@@ -997,6 +1008,7 @@ $(function() {
                 }
             }
 
+            // Save the settings
             self.settingsViewModel.saveData(data).done(function () {
                 self.profiles(profiles)
                 self.configurationDialog.modal("hide");
