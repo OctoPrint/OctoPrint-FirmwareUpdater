@@ -504,13 +504,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "enable_navbar": False,
             "enable_profiles": False,
             "save_url": False,
-            "last_url": None,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
+            "profiles": {},
             "_profiles": {
                 "_name": None,
                 "flash_method": None,
+                "disable_bootloadercheck": False,
+                "last_url": None,
                 "avrdude_path": None,
                 "avrdude_conf": None,
                 "avrdude_avrmcu": None,
@@ -561,58 +563,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "no_reconnect_after_flash": False,
                 "serial_port": None,
             },
-            ## Delete all of this once the UI uses the migrated profile ##
-            "flash_method": None,
-            "avrdude_path": None,
-            "avrdude_conf": None,
-            "avrdude_avrmcu": None,
-            "avrdude_programmer": None,
-            "avrdude_baudrate": None,
-            "avrdude_disableverify": None,
-            "avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
-            "bossac_path": None,
-            "bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
-            "bossac_disableverify": False,
-            "dfuprog_path": None,
-            "dfuprog_avrmcu": None,
-            "dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
-            "dfuprog_erasecommandline": "sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force",
-            "stm32flash_path": None,
-            "stm32flash_verify": True,
-            "stm32flash_boot0pin": "rts",
-            "stm32flash_boot0low": False,
-            "stm32flash_resetpin": "dtr",
-            "stm32flash_resetlow": True,
-            "stm32flash_execute": True,
-            "stm32flash_executeaddress": "0x8000000",
-            "stm32flash_reset": False,
-            "lpc1768_path": None,
-            "lpc1768_unmount_command": "sudo umount {mountpoint}",
-            "lpc1768_preflashreset": True,
-            "lpc1768_no_m997_reset_wait": False,
-            "lpc1768_no_m997_restart_wait": False,
-            "marlinbft_waitafterconnect": 0,
-            "marlinbft_timeout": 1000,
-            "marlinbft_progresslogging": False,
-            "marlinbft_no_m997_reset_wait": False,
-            "marlinbft_no_m997_restart_wait": False,
-            "postflash_delay": 0,
-            "preflash_delay": 3,
-            "postflash_gcode": None,
-            "preflash_gcode": None,
-            "run_postflash_gcode": False,
-            "preflash_commandline": None,
-            "postflash_commandline": None,
-            "enable_preflash_commandline": False,
-            "enable_postflash_commandline": False,
-            "enable_postflash_delay": False,
-            "enable_preflash_delay": False,
-            "enable_postflash_gcode": False,
-            "enable_preflash_gcode": False,
-            "disable_bootloadercheck": False,
-            "no_reconnect_after_flash": False,
-            "serial_port": None,
-            ## End delete ##
         }
 
     def get_settings_version(self):
@@ -626,11 +576,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             # Create a new empty array of printer profiles
             profiles_new = []
             
-            # Geta dictionary of the default printer profile settings
+            # Get a dictionary of the default printer profile settings
             settings_dict = self.get_settings_defaults()["_profiles"]
 
             # Get the names of all the printer profile settings
-            keys = settings_dict.keys()
+            keys = self.get_settings_defaults()["_profiles"].keys()
 
             # Iterate over each setting in the defaults
             for key in keys:
@@ -663,62 +613,19 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     settings_dict[key] = value
                 else:
                     del settings_dict[key]
+                
+                self._settings.set([key], None)
 
-            # Give the new profile an ID and a default name
+            # Give the new profile a default name
             settings_dict["_name"] = "Default"
 
             # Append the new profile and save the settings
             profiles_new.append(settings_dict)
             self._settings.set(['profiles'], profiles_new)
-            
+
             # Set the profile to the new one
             self._settings.set_int(['_selected_profile'], 0)
 
-            # Set all the old settings to defaults to remove them from the settings file
-            self._logger.info("Resetting old config values to default values (tidying up config.yaml)")
-            
-            # Get the default settings values
-            settings_dict = self.get_settings_defaults()["_profiles"]
-            
-            # Iterate over each setting
-            for key in settings_dict:
-                # Get the current value
-                current_value = self._settings.get([key])
-                
-                # Get the new (default) value
-                new_value = settings_dict[key]
-
-                # If the new value is a string but should be a number, make it a number
-                if isinstance(new_value, str) and new_value.isnumeric():
-                    new_value = int(new_value)
-
-                # If current value isn't the same as the new value (the default), set it
-                if (current_value != new_value):
-                    self._logger.info(u"{}: {} -> {}".format(key, current_value, new_value))
-                    # self._settings.set([key], new_value)
-
-    def on_settings_initialized(self):
-        ## Testing new settings handlers - delete before release
-        self.selected_profile = self.get_selected_profile(index = None)
-        self.selected_profile = self.get_selected_profile(index = -1)
-        self.selected_profile = self.get_selected_profile(index = 6)
-        self.selected_profile = self.get_selected_profile(index = '')
-        self.selected_profile = self.get_selected_profile(index = 'foo')
-
-        self.set_profile_setting("avrdude_programmer", "wiring")
-        self.set_profile_setting("avrdude_programmer", "wiring")
-        self.set_profile_setting("avrdude_programmer", None)
-
-        self.set_profile_setting_boolean("enable_postflash_gcode", True)
-
-        self._logger.info("Selected profile index: {}".format(self._settings.get_int(["_selected_profile"])))
-        self._logger.info("Selected profile name: {}".format(self.get_profile_setting("_name")))
-        self._logger.info("Post-flash gcode: {}".format(self.get_profile_setting("postflash_gcode")))
-        self._logger.info("Post-flash gcode enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_gcode")))
-        self._logger.info("Post-flash command enabled: {}".format(self.get_profile_setting_boolean("enable_postflash_commandline")))
-        self._logger.info("No such bool: {}".format(self.get_profile_setting_boolean("no_such_bool")))
-        self._logger.info("Avrdude command line: {}".format(self.get_profile_setting("avrdude_commandline")))
-        ## End delete
 
     #~~ EventHandlerPlugin API
     def on_event(self, event, payload):

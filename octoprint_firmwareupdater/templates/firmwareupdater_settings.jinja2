@@ -95,6 +95,12 @@
         <div class="modal-body">
             <form class="form-horizontal">
                 <div class="control-group">
+                    <label class="control-label">{{ _('Profile name') }}</label>
+                    <div class="controls">
+                        <input type="text" data-bind='value: configProfileName'>
+                    </div>
+                </div>
+                <div class="control-group">
                     <label class="control-label">{{ _('Flash method') }}</label>
                     <div class="controls">
 	                    <select style="width:285px;" data-bind="value: configFlashMethod">

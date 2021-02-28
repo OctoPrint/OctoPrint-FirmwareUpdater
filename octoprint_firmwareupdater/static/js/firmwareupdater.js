@@ -183,7 +183,8 @@ $(function() {
             }
             
         });
-        
+        self.configProfileName = ko.observable();
+
         self.profileIndexFromItem = function(item) {
             profiles = ko.toJS(self.profiles())
             var index = profiles.findIndex(function(profile) {
@@ -194,19 +195,16 @@ $(function() {
 
         self.onBeforeBinding = function() {
             self.profiles(self.settingsViewModel.settings.plugins.firmwareupdater.profiles());
-            console.log(`Number of profiles: ${self.profiles().length}`)
-            console.log(ko.toJS(self.profiles()))
-
             self.selectedProfileIndex(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
-            console.log(`Selected profile index: ${self.selectedProfileIndex()}`)
-
-            // TO DO: Get all the valid profiles and check that the selected profile is among them
             
-            console.log(ko.toJS(self.selectedProfile()));
+            // Make sure the selected profile is valid, reset it to 0 if not
+            if (self.selectedProfileIndex() >= self.profiles.length) {
+                self.selectedProfileIndex(0);
+                self._saveSelectedProfile();
+            }
 
             // Get all the default settings
             self.profile_defaults = ko.toJS(self.settingsViewModel.settings.plugins.firmwareupdater._profiles)
-
         }
 
         self.onAllBound = function(allViewModels) {
@@ -813,13 +811,15 @@ $(function() {
             // Load the general plugin settings
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
-            self.configLastUrl(self.settingsViewModel.settings.plugins.firmwareupdater.last_url());
+            
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
-            self.configDisableBootloaderCheck(self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
 
             // Load the profile settings
+            self.configProfileName(self.getProfileSetting("_name"))
             self.configFlashMethod(self.getProfileSetting("flash_method"))
+            self.configDisableBootloaderCheck(self.getProfileSetting("disable_bootloadercheck"));
+            self.configLastUrl(self.getProfileSetting("last_url"));
 
             // Pre and post flash settings
             self.configNoAutoReconnect(self.getProfileSetting("no_reconnect_after_flash"))
@@ -892,11 +892,13 @@ $(function() {
 
         self.removeProfileDefaultBeforeSave = function(profile) {
             for (const key in profile) {
+                var keyValue
+
                 // Get the default value for this setting
                 var defaultValue = self.profile_defaults[key];
 
                 // Replace empty strings with null
-                var keyValue = (profile[key] == '' ? null : profile[key]);
+                keyValue = (profile[key] === '' ? null : profile[key]);
 
                 // Replace null with false if default is a boolean
                 keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue
@@ -928,8 +930,8 @@ $(function() {
             var profiles = ko.toJS(self.profiles())
 
             // Update the settings in the current profile
+            profiles[index]["_name"] = self.configProfileName();
             profiles[index]["flash_method"] = self.configFlashMethod();
-
             profiles[index]["disable_bootloadercheck"] = self.configDisableBootloaderCheck();
 
             // Pre and post flash settings
@@ -1041,7 +1043,8 @@ $(function() {
                     }
                 }
             };
-            self.settingsViewModel.saveData(data);
+            // TODO: Fix this!
+            //self.settingsViewModel.saveData(data);
         }
 
         self.onConfigHidden = function() {
