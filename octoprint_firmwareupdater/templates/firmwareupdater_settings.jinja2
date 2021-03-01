@@ -8,14 +8,16 @@
 
     <form class="form-horizontal">
 
-        <div class="control-group" title="{{ _('Select the firmware update profile') }}">
-            <label class="control-label">{{ _('Update Profile') }}</label>
-            <div class="controls controls-row">
-                <select data-bind="options: profiles, optionsText: '_name', optionsValue: function(item) { return profileIndexFromItem(item) }, value: selectedProfileIndex, event: {change: _saveSelectedProfile}"></select>
-                <button class="btn big-icon" data-bind="click: editSelectedProfile" title="{{ _('Configure selected firmware update profile') }}"><i class="icon-cog"></i></button>
-                <button class="btn big-icon" data-bind="click: showDeleteModal, enable: canDeleteProfile, css: {disabled: !canDeleteProfile()}" title="{{ _('Delete selected firmware update profile') }}"><i class="icon-trash"></i></button>
-                <button class="btn big-icon" data-bind="click: showCopyModal" title="{{ _('Copy selected firmware update profile') }}"><i class="icon-copy"></i></button>
-                <button class="btn big-icon" data-bind="click: showAddModal" title="{{ _('Add a new firmware update profile') }}"><i class="icon-plus"></i></button>
+        <div  data-bind="visible: configProfilesVisible">
+            <div class="control-group" title="{{ _('Select the firmware update profile') }}">
+                <label class="control-label">{{ _('Update Profile') }}</label>
+                <div class="controls controls-row">
+                    <select data-bind="options: profiles, optionsText: '_name', optionsValue: function(item) { return profileIndexFromItem(item) }, value: selectedProfileIndex, event: {change: _saveSelectedProfile}"></select>
+                    <button class="btn big-icon" data-bind="click: editSelectedProfile" title="{{ _('Configure selected firmware update profile') }}"><i class="icon-cog"></i></button>
+                    <button class="btn big-icon" data-bind="click: showDeleteModal, enable: canDeleteProfile, css: {disabled: !canDeleteProfile()}" title="{{ _('Delete selected firmware update profile') }}"><i class="icon-trash"></i></button>
+                    <button class="btn big-icon" data-bind="click: showCopyModal" title="{{ _('Copy selected firmware update profile') }}"><i class="icon-copy"></i></button>
+                    <button class="btn big-icon" data-bind="click: showAddModal" title="{{ _('Add a new firmware update profile') }}"><i class="icon-plus"></i></button>
+                </div>
             </div>
         </div>
 
@@ -655,6 +657,15 @@
                     <label data-bind="click: togglePluginOptions" >
                             <i class="icon-chevron-down icon-fixed-width"></i>Plugin Options
                     </label>
+                    <div class="control-group">
+                        <label class="control-label">{{ _('Enable profiles') }}</label>
+                        <div class="controls">
+                            <div class="input">
+                                <input type="checkbox" class="input-block-level" data-bind="checked: configProfilesEnabled">
+                            </div>
+                            <span class="help-block">{{ _('Enables multiple configurable firmware update profiles. Useful when multiple printers are connected to the same OctoPrint instance.') }}</span>
+                        </div>
+                    </div>
                     <div class="control-group">
                         <label class="control-label">{{ _('Enable navbar icon') }}</label>
                         <div class="controls">

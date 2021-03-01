@@ -7,10 +7,11 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
         self.access = parameters[4];
-
+        
         self.profiles = ko.observableArray();
         self.selectedProfileIndex = ko.observable();
-        //self.selectedProfile = ko.observableArray();
+        self.configProfilesEnabled = ko.observable();
+        self.configProfilesVisible = ko.observable();
         
         // General settings
         self.configFlashMethod = ko.observable();
@@ -202,6 +203,17 @@ $(function() {
                 self.selectedProfileIndex(0);
                 self._saveSelectedProfile();
             }
+
+            // Select profile 0 if profiles are disabled
+            self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles())
+            console.log("Profiles are enabled:", self.configProfilesEnabled())
+
+            if (self.configProfilesEnabled() != true) {
+                
+                self.selectedProfileIndex(0);
+                self._saveSelectedProfile();
+            }
+            self.configProfilesVisible(self.configProfilesEnabled())
 
             // Get all the default settings
             self.profile_defaults = ko.toJS(self.settingsViewModel.settings.plugins.firmwareupdater._profiles)
@@ -605,6 +617,8 @@ $(function() {
                 return;
             }
 
+            self._savePrinterPort();
+            
             self.progressBarText("Flashing firmware...");
             self.isBusy(true);
             self.showAlert(false);
@@ -809,6 +823,7 @@ $(function() {
 
         self.showPluginConfig = function() {
             // Load the general plugin settings
+            self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles());
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
             
@@ -1002,9 +1017,9 @@ $(function() {
                 plugins: {
                     firmwareupdater: {
                         enable_navbar: self.configShowNavbarIcon(),
+                        enable_profiles: self.configProfilesEnabled(),
                         save_url: self.configSaveUrl(),
                         disable_filefilter: self.configDisableFileFilter(),
-                        last_url: lastUrl,
                         profiles: profiles,
                     }
                 }
@@ -1020,6 +1035,7 @@ $(function() {
                 self.showAdvancedConfig(false);
                 self.showPostflashConfig(false);
                 self.showPluginOptions(false);
+                self.configProfilesVisible(self.configProfilesEnabled())
             });
         };
 
@@ -1043,7 +1059,18 @@ $(function() {
                     }
                 }
             };
+            self.settingsViewModel.saveData(data);
+        }
+
+        self._savePrinterPort = function() {
             // TODO: Fix this!
+            var data = {
+                plugins: {
+                    firmwareupdater: {
+                        last_url: self.firmwareFileURL(),
+                    }
+                }
+            };
             //self.settingsViewModel.saveData(data);
         }
 
