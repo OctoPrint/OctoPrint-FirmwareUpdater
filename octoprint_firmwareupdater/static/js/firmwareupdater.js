@@ -489,7 +489,7 @@ $(function() {
          });
 
          self.firmwareFileName.subscribe(function(value) {
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.disable_bootloadercheck()) {
+            if (!self.getProfileSetting("disable_bootloadercheck")) {
                 if (self._checkForBootloader(value)) {
                     self.bootloaderWarningDialog.modal();
                 }
@@ -529,51 +529,51 @@ $(function() {
                 alert = gettext("Printer is printing. Please wait for the print to be finished.");
             }
 
-            if (!self.settingsViewModel.settings.plugins.firmwareupdater.flash_method()){
+            if (!self.getProfileSetting("flash_method")){
                 alert = gettext("The flash method is not selected.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_avrmcu()) {
+            if (self.getProfileSetting("flash_method") == "avrdude" && !self.getProfileSetting("avrdude_avrmcu")) {
                 alert = gettext("The AVR MCU type is not selected.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_path()) {
+            if (self.getProfileSetting("flash_method") == "avrdude" && !self.getProfileSetting("avrdude_path")) {
                 alert = gettext("The avrdude path is not configured.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "avrdude" && !self.settingsViewModel.settings.plugins.firmwareupdater.avrdude_programmer()) {
+            if (self.getProfileSetting("flash_method") == "avrdude" && !self.getProfileSetting("avrdude_programmer")) {
                 alert = gettext("The AVR programmer is not selected.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "bossac" && !self.settingsViewModel.settings.plugins.firmwareupdater.bossac_path()) {
+            if (self.getProfileSetting("flash_method") == "bossac" && !self.getProfileSetting("bossac_path")) {
                 alert = gettext("The bossac path is not configured.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "lpc1768" && !self.settingsViewModel.settings.plugins.firmwareupdater.lpc1768_path()) {
+            if (self.getProfileSetting("flash_method") == "lpc1768" && !self.getProfileSetting("lpc1768_path")) {
                 alert = gettext("The lpc1768 firmware folder path is not configured.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer" && !self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_path()) {
+            if (self.getProfileSetting("flash_method") == "dfuprogrammer" && !self.getProfileSetting("dfuprog_path")) {
                 alert = gettext("The dfu-programmer path is not configured.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer" && !self.settingsViewModel.settings.plugins.firmwareupdater.dfuprog_avrmcu()) {
+            if (self.getProfileSetting("flash_method") == "dfuprogrammer" && !self.getProfileSetting("dfuprog_avrmcu")) {
                 alert = gettext("The AVR MCU type is not selected.");
             }
             
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && !self.printerState.isReady()) {
+            if (self.getProfileSetting("flash_method") == "marlinbft" && !self.printerState.isReady()) {
                 alert = gettext("The printer is not connected.");
             }
             
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasBinProto2Package()) {
+            if (self.getProfileSetting("flash_method") == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasBinProto2Package()) {
                 alert = gettext("The marlin-binary-protocol Python package is not installed.");
             }
 
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasCapability()) {
+            if (self.getProfileSetting("flash_method") == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasCapability()) {
                 alert = gettext("The printer does not support Binary File Transfer.");
             }
 
-            if (!self.flashPort() &! self.settingsViewModel.settings.plugins.firmwareupdater.flash_method() == "dfuprogrammer") {
+            if (!self.flashPort() &! self.getProfileSetting("flash_method") == "dfuprogrammer") {
                 alert = gettext("The printer port is not selected.");
             }
 
@@ -616,9 +616,7 @@ $(function() {
             if (!self._checkIfReadyToFlash("file")) {
                 return;
             }
-
-            self._savePrinterPort();
-            
+           
             self.progressBarText("Flashing firmware...");
             self.isBusy(true);
             self.showAlert(false);
@@ -1060,18 +1058,6 @@ $(function() {
                 }
             };
             self.settingsViewModel.saveData(data);
-        }
-
-        self._savePrinterPort = function() {
-            // TODO: Fix this!
-            var data = {
-                plugins: {
-                    firmwareupdater: {
-                        last_url: self.firmwareFileURL(),
-                    }
-                }
-            };
-            //self.settingsViewModel.saveData(data);
         }
 
         self.onConfigHidden = function() {

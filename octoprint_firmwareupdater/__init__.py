@@ -92,13 +92,17 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
         value_source = flask.request.json if flask.request.json else flask.request.values
 
-        ## TODO: Get printer profile from value_source
-
         if not "port" in value_source:
             error_message = "Cannot flash firmware, printer port is not specified"
             self._send_status("flasherror", subtype="port", message=error_message)
             return flask.make_response(error_message, 400)
 
+        printer_port = value_source["port"]
+
+        # Save the printer port
+        self._logger.info("Printer port: {}".format(printer_port))
+        self.set_profile_setting("serial_port", printer_port)
+        
         method = self.get_profile_setting("flash_method")
         self._logger.info("Flash method: {}".format(method))
 
@@ -112,7 +116,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 return flask.make_response(error_message, 400)
 
         file_to_flash = None
-        printer_port = value_source["port"]
 
         input_name = "file"
         input_upload_path = input_name + "." + self._settings.global_get(["server", "uploads", "pathSuffix"])
