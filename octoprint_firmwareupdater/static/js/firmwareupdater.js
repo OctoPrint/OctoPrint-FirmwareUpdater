@@ -2,58 +2,46 @@ $(function() {
     function FirmwareUpdaterViewModel(parameters) {
         var self = this;
 
+        // Parameters
         self.settingsViewModel = parameters[0];
         self.loginState = parameters[1];
         self.connection = parameters[2];
         self.printerState = parameters[3];
         self.access = parameters[4];
         
-        self.profiles = ko.observableArray();
-        self.selectedProfileIndex = ko.observable();
-        self.configProfilesEnabled = ko.observable();
-        self.configProfilesVisible = ko.observable();
+        // Observables for plugin options
+        self.configShowNavbarIcon = ko.observable();                    // enable_navbar
+        self.configProfilesEnabled = ko.observable();                   // enable_profiles
+        self.configDisableFileFilter = ko.observable();
         
-        // General settings
-        self.configFlashMethod = ko.observable();
-        self.configShowNavbarIcon = ko.observable();
-        self.showFirmwareUpdaterNavbarIcon = ko.observable(false);
-        self.showAdvancedConfig = ko.observable(false);
-        self.showAvrdudeConfig = ko.observable(false);
-        self.showBossacConfig = ko.observable(false);
-        self.showLpc1768Config = ko.observable(false);
-        self.showDfuConfig = ko.observable(false);
-        self.showStm32flashConfig = ko.observable(false);
-        self.showMarlinBftConfig = ko.observable(false);
-        self.showPostflashConfig = ko.observable(false);
-        self.showPluginOptions = ko.observable(false);
+        // Observables for profiles
+        self.selectedProfileIndex = ko.observable();                    // _selected_profile 
+        self.profiles = ko.observableArray();                           // profiles
+        self.configProfilesVisible = ko.observable();                   // Indicates if profiles should be displayed in the UI. Updated on load and settings save.
+        self.configProfileName = ko.observable();
+
+        // Observables for general profile settings
+        self.configFlashMethod = ko.observable();                       // flash_method 
+        self.configSaveUrl = ko.observable();                           // save_url
+        self.configLastUrl = ko.observable();                           // last_url
+        self.configDisableBootloaderCheck = ko.observable();            // disable_bootloadercheck
+
+        // Observables for pre and post flash profile settings
         self.configNoAutoReconnect = ko.observable();
-        self.configEnablePostflashDelay = ko.observable();
         self.configEnablePreflashDelay = ko.observable();
-        self.configPostflashDelay = ko.observable();
         self.configPreflashDelay = ko.observable();
+        self.configEnablePostflashDelay = ko.observable();
+        self.configPostflashDelay = ko.observable();
         self.configEnablePostflashGcode = ko.observable();
         self.configPostflashGcode = ko.observable();
-        self.configDisableBootloaderCheck = ko.observable();
         self.configEnablePreflashCommandline = ko.observable();
         self.configPreflashCommandline = ko.observable();
         self.configEnablePostflashCommandline = ko.observable();
         self.configPostflashCommandline = ko.observable();
         self.configEnablePreflashGcode = ko.observable();
         self.configPreflashGcode = ko.observable();
-        self.configSaveUrl = ko.observable();
-        self.configLastUrl = ko.observable();
-        self.configDisableFileFilter = ko.observable();
-        self.pluginVersion = ko.observable();
 
-        self.filterFileTypes = ko.computed(function() {
-            if (self.configDisableFileFilter()) {
-                return null;
-            } else {
-                return '.hex,.bin';
-            }
-        });
-
-        // Config settings for avrdude
+        // Observables for avrdude config settings
         self.configAvrdudeMcu = ko.observable();
         self.configAvrdudePath = ko.observable();
         self.configAvrdudeConfigFile = ko.observable();
@@ -61,13 +49,14 @@ $(function() {
         self.configAvrdudeBaudRate = ko.observable();
         self.configAvrdudeDisableVerification = ko.observable();
         self.configAvrdudeCommandLine = ko.observable();
+
+        // Observables for avrdude UI messages
         self.avrdudePathBroken = ko.observable(false);
         self.avrdudePathOk = ko.observable(false);
         self.avrdudePathText = ko.observable();
         self.avrdudePathHelpVisible = ko.computed(function() {
             return self.avrdudePathBroken() || self.avrdudePathOk();
         });
-
         self.avrdudeConfPathBroken = ko.observable(false);
         self.avrdudeConfPathOk = ko.observable(false);
         self.avrdudeConfPathText = ko.observable();
@@ -75,11 +64,12 @@ $(function() {
             return self.avrdudeConfPathBroken() || self.avrdudeConfPathOk();
         });
 
-        // Config settings for bossac
+        // Observables for bossac config settings
         self.configBossacPath = ko.observable();
         self.configBossacDisableVerification = ko.observable()
         self.configBossacCommandLine = ko.observable();
 
+        // Observables for bossac UI messages
         self.bossacPathBroken = ko.observable(false);
         self.bossacPathOk = ko.observable(false);
         self.bossacPathText = ko.observable();
@@ -87,12 +77,14 @@ $(function() {
             return self.bossacPathBroken() || self.bossacPathOk();
         });
 
-        // Config settings for lpc1768
+        // Observables for lpc1768 config settings
         self.configLpc1768Path = ko.observable();
         self.configLpc1768ResetBeforeFlash = ko.observable();
         self.configLpc1768UnmountCommand = ko.observable();
         self.configLpc1768NoResetWait = ko.observable();
         self.configLpc1768NoRestartWait = ko.observable();
+
+        // Observables for lpc1768 UI messages
         self.lpc1768PathBroken = ko.observable(false);
         self.lpc1768PathOk = ko.observable(false);
         self.lpc1768PathText = ko.observable();
@@ -100,7 +92,7 @@ $(function() {
             return self.lpc1768PathBroken() || self.lpc1768PathOk();
         });
 
-        // Config settings for marlinbft
+        // Observables for marlinbft config settings
         self.configMarlinBftWaitAfterConnect = ko.observable();
         self.configMarlinBftTimeout = ko.observable();
         self.configMarlinBftProgressLogging = ko.observable();
@@ -109,11 +101,13 @@ $(function() {
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
 
-        // Config settings for dfu-programmer
+        // Observables for dfu-programmer config settings
         self.configDfuMcu = ko.observable();
         self.configDfuPath = ko.observable();
         self.configDfuCommandLine = ko.observable();
         self.configDfuEraseCommandLine = ko.observable();
+
+        // Observables for dfu-programmer UI messages
         self.dfuPathBroken = ko.observable(false);
         self.dfuPathOk = ko.observable(false);
         self.dfuPathText = ko.observable();
@@ -121,31 +115,42 @@ $(function() {
             return self.dfuPathBroken() || self.dfuPathOk();
         });
 
-        // Config settings for stm32flash
+        // Observables for stm32flash config settings
         self.configStm32flashPath = ko.observable();
-        self.configStm32flashVerify = ko.observable(true);
+        self.configStm32flashVerify = ko.observable();
         self.configStm32flashBoot0Pin = ko.observable();
-        self.configStm32flashBoot0Low = ko.observable(true);
+        self.configStm32flashBoot0Low = ko.observable();
         self.configStm32flashResetPin = ko.observable();
-        self.configStm32flashResetLow = ko.observable(true);
+        self.configStm32flashResetLow = ko.observable();
         self.configStm32flashExecute = ko.observable();
         self.configStm32flashExecuteAddress = ko.observable();
-        self.configStm32flashReset = ko.observable(false);
-        self.stm32flashPathBroken = ko.observable();
+        self.configStm32flashReset = ko.observable();
+
+        // Observables for stm32flash UI messages
+        self.stm32flashPathBroken = ko.observable(false);
         self.stm32flashPathOk = ko.observable(false);
         self.stm32flashPathText = ko.observable();
         self.stm32flashPathHelpVisible = ko.computed(function() {
             return self.stm32flashPathBroken() || self.stm32flashPathOk();
         });
 
-        self.flashPort = ko.observable(undefined);
+        // Observables to control which settings to show
+        self.showAvrdudeConfig = ko.observable(false);
+        self.showBossacConfig = ko.observable(false);
+        self.showLpc1768Config = ko.observable(false);
+        self.showDfuConfig = ko.observable(false);
+        self.showStm32flashConfig = ko.observable(false);
+        self.showMarlinBftConfig = ko.observable(false);
 
+        // Observables for UI elements
+        self.flashPort = ko.observable(undefined);
+        self.pluginVersion = ko.observable(undefined);
         self.firmwareFileName = ko.observable(undefined);
         self.firmwareFileURL = ko.observable(undefined);
-
+        self.showAlert = ko.observable(false);
         self.alertMessage = ko.observable("");
         self.alertType = ko.observable("alert-warning");
-        self.showAlert = ko.observable(false);
+
         self.missingParamToFlash = ko.observable(false);
         self.progressBarText = ko.observable();
         self.isBusy = ko.observable(false);
@@ -158,15 +163,30 @@ $(function() {
 
         self.newProfileName = ko.observable("");
 
+        self.showPluginSettingsInOptions = ko.observable();
+        self.showProfileSettingsInOptions = ko.observable();
+        self.optionsDialogTitle = ko.observable("Firmware Updater Configuration");
+
+        // Returns a list of file types to accept for upload based on whether or not file type filter is enabled or disabled
+        self.filterFileTypes = ko.computed(function() {
+            if (self.configDisableFileFilter()) {
+                return null;
+            } else {
+                return '.hex,.bin';
+            }
+        });
+
+        // Prevents enabling the delete button for profile 0
         self.canDeleteProfile = ko.computed(function() {
             return self.selectedProfileIndex() != 0;
         });
-
-        self.selectFilePath = undefined;
-        self.configurationDialog = undefined;
-
-        self.inSettingsDialog = false;
         
+        // Disables the navbar icon if the logged-in user is not an admin
+        self.showFirmwareUpdaterNavbarIcon = ko.computed(function() {
+            return self.loginState.isAdmin() && self.configShowNavbarIcon();
+        });
+
+        // Gets the selected profile from the profile collection, based on the selected profile index
         self.selectedProfile = ko.computed(function() {
             var index = self.selectedProfileIndex();
             if (index < self.profiles().length) {
@@ -176,54 +196,80 @@ $(function() {
             }
         });
 
+        // Gets the name of the selected profile
         self.selectedProfileName = ko.computed(function() {
             if (self.selectedProfile() != null) {
                 return ko.toJS(self.selectedProfile())._name;
             } else {
                 return null;
             }
-            
         });
-        self.configProfileName = ko.observable();
 
-        self.profileIndexFromItem = function(item) {
-            profiles = ko.toJS(self.profiles())
-            var index = profiles.findIndex(function(profile) {
-                return profile._name == ko.toJS(item)._name
+        self.selectFilePath = undefined;
+        self.configurationDialog = undefined;
+        self.bootloaderWarningDialog = undefined;
+        self.profileAddDialog = undefined;
+        self.profileCopyDialog = undefined;
+        self.profileDeleteDialog = undefined;
+
+        self.profileDefaults = undefined;
+        self.inSettingsDialog = false;
+
+        self.onStartup = function() {
+            self.selectFilePath = $("#settings_plugin_firmwareupdater_selectFilePath");
+
+            // Plugin modals
+            self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationDialog");
+            self.bootloaderWarningDialog = $("#settings_plugin_firmwareupdater_bootLoaderWarningModal");
+
+            // Profile Modals
+            self.profileAddDialog = $("#settings_plugin_firmwareupdater_newProfileModal");
+            self.profileCopyDialog = $("#settings_plugin_firmwareupdater_copyProfileModal");
+            self.profileDeleteDialog = $("#settings_plugin_firmwareupdater_profileDeleteModal");
+
+            self.selectFilePath.fileupload({
+                dataType: "hex",
+                maxNumberOfFiles: 1,
+                autoUpload: false,
+                add: function(e, data) {
+                    if (data.files.length === 0) {
+                        return false;
+                    }
+                    self.hexData = data;
+                    self.firmwareFileName(data.files[0].name);
+                }
             });
-            return index
-        }
+        };
 
         self.onBeforeBinding = function() {
+            // Get all the profiles from the settings
             self.profiles(self.settingsViewModel.settings.plugins.firmwareupdater.profiles());
+
+            // Get the index of the selected profile
             self.selectedProfileIndex(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
             
             // Make sure the selected profile is valid, reset it to 0 if not
-            if (self.selectedProfileIndex() >= self.profiles.length) {
+            if (self.selectedProfileIndex() >= self.profiles().length) {
                 self.selectedProfileIndex(0);
                 self._saveSelectedProfile();
             }
 
             // Select profile 0 if profiles are disabled
             self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles())
-            console.log("Profiles are enabled:", self.configProfilesEnabled())
-
             if (self.configProfilesEnabled() != true) {
-                
                 self.selectedProfileIndex(0);
                 self._saveSelectedProfile();
             }
+
+            // Make the profiles UI elements visible/hidden per the setting
             self.configProfilesVisible(self.configProfilesEnabled())
 
-            // Get all the default settings
-            self.profile_defaults = ko.toJS(self.settingsViewModel.settings.plugins.firmwareupdater._profiles)
+            // Get all the default profile settings
+            self.profileDefaults = ko.toJS(self.settingsViewModel.settings.plugins.firmwareupdater._profiles)
         }
 
         self.onAllBound = function(allViewModels) {
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
-            if (self.loginState.isAdmin() && self.configShowNavbarIcon()) {
-                self.showFirmwareUpdaterNavbarIcon(true);
-            }
 
             if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
                 self.firmwareFileURL(self.settingsViewModel.settings.plugins.firmwareupdater.last_url());
@@ -237,49 +283,62 @@ $(function() {
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater._plugin_version());
         }
 
-        self.showFirmwareUpdater = function(){
-            self.settingsViewModel.show("#settings_plugin_firmwareupdater");
-        }
+        self.onSettingsShown = function() {
+            self.inSettingsDialog = true;
+        };
 
+        self.onSettingsHidden = function() {
+            self.inSettingsDialog = false;
+            self.showAlert(false);
+        };
+
+        /*
+        * Sets the serial port when the connected printer port changes
+        */
         self.connection.selectedPort.subscribe(function(value) {
             if (value === undefined) return;
             self.flashPort(value);
         });
 
-        self.toggleAdvancedConfig = function(){
-            self.showAdvancedConfig(!self.showAdvancedConfig());
+        /*
+        * Opens the plugin UI from the Navbar
+        */
+        self.showFirmwareUpdater = function(){
+            self.settingsViewModel.show("#settings_plugin_firmwareupdater");
         }
 
-        self.togglePostflashConfig = function(){
-            self.showPostflashConfig(!self.showPostflashConfig());
-        }
-
-        self.togglePluginOptions = function(){
-            self.showPluginOptions(!self.showPluginOptions());
-        }
-
-        self.getProfileSetting = function(key) {
-            // Merge the selected profile with the default settings
-            var profile_settings = Object.assign({}, self.profile_defaults, ko.toJS(self.selectedProfile()));
-
-            // Return the setting value
-            return profile_settings[key]
+        /*
+        * Opens the plugin options modal with he appropriate heading, visible pages, and selected page
+        */
+        self.showPluginOptions = function () {
+            self.showPluginSettingsInOptions(true);
+            self.showProfileSettingsInOptions(!self.configProfilesEnabled());
+            if (self.configProfilesEnabled()) {
+                self.optionsDialogTitle("Firmware Updater Options")
+                $('.nav-tabs a[href="#plugin"]').tab('show');
+            } else {
+                self.optionsDialogTitle("Firmware Updater Configuration")
+                $('.nav-tabs a[href="#flash-method"]').tab('show');
+            }
+            self.showPluginConfig();
         }
 
         /*
         * Shows the profile settings editor modal
         */
         self.editSelectedProfile = function(){
-            self.getProfileSetting("avrdude_commandline");
-            self.getProfileSetting("postflash_gcode");
-            self.getProfileSetting("enable_preflash_commandline");
-            self.getProfileSetting("enable_preflash_gcode");
+            self.showPluginSettingsInOptions(false);
+            self.showProfileSettingsInOptions(true);
+            self.optionsDialogTitle("Update Profile Configuration")
+            $('.nav-tabs a[href="#flash-method"]').tab('show');
+            self.showPluginConfig();
         }
 
         /*
         * Shows the new profile modal
         */
         self.showAddModal = function() {
+            self.newProfileName("");
             self.profileAddDialog.modal();
         }
 
@@ -287,21 +346,10 @@ $(function() {
         * Creates a new profile and selects it
         */
         self.addNewProfile = function() {
-            // TODO: Check if name is already in use
-
-            // Show the spinner and disable the modal buttons
             self.adding(true)
-
-            // Get the current profiles
             var profiles = ko.toJS(self.profiles())
-
-            // Create a new profile
             var newProfile = {_name: self.newProfileName()}
-
-            // Add the new profile to the array of profiles
             profiles.push(newProfile);
-
-            // Construct updated settings object with the new profile array and an updated selected profile index
             var data = {
                 plugins: {
                     firmwareupdater: {
@@ -311,21 +359,11 @@ $(function() {
                 }
             };
 
-            // Save the settings
             self.settingsViewModel.saveData(data).done(function () {
-                // Hide the modal
                 self.profileAddDialog.modal("hide");
-
-                // Disable the spinner and show the buttons
                 self.adding(false);
-
-                // Update the profiles
                 self.profiles(profiles)
-
-                // Select the profile before this one
                 self.selectedProfileIndex(profiles.length - 1)
-
-                // Clear the new profile name input
                 self.newProfileName(null)
             });
         }
@@ -339,24 +377,11 @@ $(function() {
         }
 
         self.copyProfile = function() {
-            // TODO: Check if name is already in use
-
-            // Show the spinner and disable the modal buttons
             self.adding(true)
-
-            // Get the current profiles
             var profiles = ko.toJS(self.profiles())
-
-            // Copy the current profile
             var newProfile = ko.toJS(self.selectedProfile())
-
-            // Change the name
             newProfile._name = self.newProfileName()
-
-            // Add the new profile to the array of profiles
             profiles.push(newProfile);
-
-            // Construct updated settings object with the new profile array and an updated selected profile index
             var data = {
                 plugins: {
                     firmwareupdater: {
@@ -366,21 +391,11 @@ $(function() {
                 }
             };
 
-            // Save the settings
             self.settingsViewModel.saveData(data).done(function () {
-                // Hide the modal
                 self.profileCopyDialog.modal("hide");
-
-                // Disable the spinner and show the buttons
                 self.adding(false);
-
-                // Update the profiles
-                self.profiles(profiles)
-
-                // Select the profile before this one
-                self.selectedProfileIndex(profiles.length - 1)
-
-                // Clear the new profile name input
+                self.profiles(profiles);
+                self.selectedProfileIndex(profiles.length - 1);
                 self.newProfileName(null)
             });
         }
@@ -397,19 +412,10 @@ $(function() {
         * Selects the n-1 profile after deleting the selected profile
         */
         self.deleteSelectedProfile = function(){
-            // Show the spinner and disable the modal buttons
             self.deleting(true)
-
-            // Get the currently selected profile index
             var index = self.selectedProfileIndex()
-
-            // Get the current profiles
             var profiles = ko.toJS(self.profiles())
-            
-            // Remove the selected profile from the array of profiles
             profiles.splice(index, 1);
-
-            // Construct updated settings object with the new profile array and an updated selected profile index
             var data = {
                 plugins: {
                     firmwareupdater: {
@@ -419,104 +425,57 @@ $(function() {
                 }
             };
 
-            // Save the settings
             self.settingsViewModel.saveData(data).done(function () {
-                // Hide the modal
                 self.profileDeleteDialog.modal("hide");
-
-                // Disable the spinner and show the buttons
                 self.deleting(false);
-
-                // Update the profiles
                 self.profiles(profiles)
-
-                // Select the profile before this one
                 self.selectedProfileIndex(index - 1)
             });
         }
 
+        self.getProfileSetting = function(key) {
+            var profile_settings = Object.assign({}, self.profileDefaults, ko.toJS(self.selectedProfile()));
+            return profile_settings[key]
+        }
+
+        /*
+        * Shows and hides the relevant flash-method settings
+        */
         self.configFlashMethod.subscribe(function(value) {
+            // Hide all the flash method settings
+            self.showAvrdudeConfig(false);
+            self.showBossacConfig(false);
+            self.showLpc1768Config(false);
+            self.showDfuConfig(false);
+            self.showStm32flashConfig(false);
+            self.showMarlinBftConfig(false);
+            
+            // Show only the selected method's settings
             if(value == 'avrdude') {
                 self.showAvrdudeConfig(true);
-                self.showBossacConfig(false);
-                self.showLpc1768Config(false);
-                self.showDfuConfig(false);
-                self.showStm32flashConfig(false);
-                self.showMarlinBftConfig(false);
             } else if(value == 'bossac') {
-                self.showAvrdudeConfig(false);
                 self.showBossacConfig(true);
-                self.showLpc1768Config(false);
-                self.showDfuConfig(false);
-                self.showStm32flashConfig(false);
-                self.showMarlinBftConfig(false);
             } else if(value == 'lpc1768'){
-                self.showAvrdudeConfig(false);
-                self.showBossacConfig(false);
                 self.showLpc1768Config(true);
-                self.showStm32flashConfig(false);
-                self.showDfuConfig(false);
-                self.showMarlinBftConfig(false);
             } else if(value == 'dfuprogrammer'){
-                self.showAvrdudeConfig(false);
-                self.showBossacConfig(false);
-                self.showLpc1768Config(false);
                 self.showDfuConfig(true);
-                self.showStm32flashConfig(false);
-                self.showMarlinBftConfig(false);
             } else if(value == 'stm32flash'){
-                self.showAvrdudeConfig(false);
-                self.showBossacConfig(false);
-                self.showLpc1768Config(false);
-                self.showDfuConfig(false);
                 self.showStm32flashConfig(true);
-                self.showMarlinBftConfig(false);
             } else if(value == 'marlinbft'){
-                self.showAvrdudeConfig(false);
-                self.showBossacConfig(false);
-                self.showLpc1768Config(false);
-                self.showDfuConfig(false);
-                self.showStm32flashConfig(false);
                 self.showMarlinBftConfig(true);
-            } else {
-                self.showAvrdudeConfig(false);
-                self.showBossacConfig(false);
-                self.showLpc1768Config(false);
-                self.showDfuConfig(false);
-                self.showStm32flashConfig(false);
-                self.showMarlinBftConfig(false);
             }
-         });
+        });
 
-         self.firmwareFileName.subscribe(function(value) {
+        /*
+        * Shows a warning if the selected filename contains the word 'bootloader'
+        */
+        self.firmwareFileName.subscribe(function(value) {
             if (!self.getProfileSetting("disable_bootloadercheck")) {
-                if (self._checkForBootloader(value)) {
+                if (value.search(/bootloader/i) > -1) {
                     self.bootloaderWarningDialog.modal();
                 }
             }
          });
-
-        self.onStartup = function() {
-            self.selectFilePath = $("#settings_firmwareupdater_selectFilePath");
-            self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationdialog");
-            self.bootloaderWarningDialog = $("#BootLoaderWarning");
-            self.profileAddDialog = $("#NewProfileName");
-            self.profileCopyDialog = $("#CopyProfileName");
-            self.profileDeleteDialog = $("#ProfileDeleteConfirm");
-
-            self.selectFilePath.fileupload({
-                dataType: "hex",
-                maxNumberOfFiles: 1,
-                autoUpload: false,
-                add: function(e, data) {
-                    if (data.files.length === 0) {
-                        return false;
-                    }
-                    self.hexData = data;
-                    self.firmwareFileName(data.files[0].name);
-                }
-            });
-        };
 
         self._checkIfReadyToFlash = function(source) {
             var alert = undefined;
@@ -595,22 +554,6 @@ $(function() {
 
             return true;
         };
-
-        self._checkForBootloader = function(filename) {
-            if (filename.search(/bootloader/i) > -1) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        self.returnTrue = function() {
-            return true;
-        }
-
-        self.returnFalse = function() {
-            return false;
-        }
 
         self.startFlashFromFile = function() {
             if (!self._checkIfReadyToFlash("file")) {
@@ -819,6 +762,9 @@ $(function() {
             }
         };
 
+        /*
+        * Loads all the settings and shows the configuration modal
+        */
         self.showPluginConfig = function() {
             // Load the general plugin settings
             self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles());
@@ -899,47 +845,43 @@ $(function() {
             self.configurationDialog.modal();
         };
 
-        self.onConfigClose = function() {
-            self._saveConfig();
-        };
-
+        /*
+        * Compares the profile settings with the defaults and removes any settings which match the default
+        * Also forces empty strings to null, null booleans to false, null integers to their default value, and integers as strings to integers
+        */
         self.removeProfileDefaultBeforeSave = function(profile) {
             for (const key in profile) {
                 var keyValue
+                var defaultValue = self.profileDefaults[key];
 
-                // Get the default value for this setting
-                var defaultValue = self.profile_defaults[key];
-
-                // Replace empty strings with null
                 keyValue = (profile[key] === '' ? null : profile[key]);
-
-                // Replace null with false if default is a boolean
                 keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue
+                keyValue = (Number.isInteger(defaultValue) && keyValue == null) ? defaultValue : keyValue
+                
+                if (Number.isInteger(parseInt(keyValue))) {
+                    profile[key] = parseInt(keyValue);
+                }
 
-                // Remove settings which match their default value
                 if (keyValue == defaultValue) {
                     delete profile[key]
                 }
             }
-
-            // Return the updated profile
             return profile;
         }
+        
+        /*
+        * Saves the configuration when the settings are closed
+        */
+        self.onConfigClose = function() {
+            self._saveConfig();
+        };
 
+        /*
+        * Saves all the plugin settings
+        */
         self._saveConfig = function() {
             self.saving(true);
-            var lastUrl;
-            if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url() &! self.configSaveUrl()) {
-                self.firmwareFileURL("");
-                lastUrl = null;
-            } else {
-                lastUrl = self.configLastUrl();
-            }
-
-            // Get the selected profile index
             var index = self.selectedProfileIndex();
-
-            // Get the profiles
             var profiles = ko.toJS(self.profiles())
 
             // Update the settings in the current profile
@@ -1026,17 +968,23 @@ $(function() {
             // Save the settings
             self.settingsViewModel.saveData(data).done(function () {
                 self.profiles(profiles)
+                self.selectedProfileIndex(index)
                 self.configurationDialog.modal("hide");
                 self.alertMessage(undefined);
                 self.showAlert(false);
+                self.onConfigHidden();
                 self.saving(false);
-                self.showAdvancedConfig(false);
-                self.showPostflashConfig(false);
-                self.showPluginOptions(false);
-                self.configProfilesVisible(self.configProfilesEnabled())
+                self.configProfilesVisible(self.configProfilesEnabled());
             });
         };
 
+        self.selectedProfileOnChange = function(data, event) {
+            self._saveSelectedProfile();
+        }
+
+        /*
+        * Saves the selected profile index
+        */
         self._saveSelectedProfile = function() {
             var data = {
                 plugins: {
@@ -1049,6 +997,9 @@ $(function() {
             // TODO: Disable UI until this finishes
         }
 
+        /*
+        * Saves the last URL
+        */
         self._saveLastUrl = function() {
             var data = {
                 plugins: {
@@ -1060,17 +1011,54 @@ $(function() {
             self.settingsViewModel.saveData(data);
         }
 
+        /*
+        * Clears any path test status messages when the settings are closed
+        */
         self.onConfigHidden = function() {
             self.avrdudePathBroken(false);
             self.avrdudePathOk(false);
             self.avrdudePathText("");
+            self.avrdudeConfPathBroken(false);
+            self.avrdudeConfPathOk(false);
+            self.avrdudeConfPathText("");
+
             self.bossacPathBroken(false);
             self.bossacPathOk(false);
             self.bossacPathText("");
-            self.showAdvancedConfig(false);
-            self.showPostflashConfig(false);
-            self.showPluginOptions(false);
+
+            self.dfuPathBroken(false);
+            self.dfuPathOk(false);
+            self.dfuPathText("");
+
+            self.lpc1768PathBroken(false);
+            self.lpc1768PathOk(false);
+            self.lpc1768PathText("");
+
+            self.stm32flashPathBroken(false);
+            self.stm32flashPathOk(false);
+            self.stm32flashPathText("");
         };
+
+        self.resetAvrdudeCommandLine = function() {
+            self.configAvrdudeCommandLine(self.profileDefaults["avrdude_commandline"]);
+        };
+
+        self.resetBossacCommandLine = function() {
+            self.configBossacCommandLine(self.profileDefaults["bossac_commandline"]);
+
+        };
+
+        self.resetDfuCommandLine = function() {
+            self.configDfuCommandLine(self.profileDefaults["dfuprog_commandline"]);
+        };
+
+        self.resetDfuEraseCommandLine = function() {
+            self.configDfuEraseCommandLine(self.profileDefaults["dfuprog_erasecommandline"]);
+        };
+
+        self.resetLpc1768UnmountCommand = function() {
+            self.configLpc1768UnmountCommand(self.profileDefaults["lpc1768_unmount_command"]);
+        }
 
         self.testAvrdudePath = function() {
             var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");
@@ -1109,10 +1097,6 @@ $(function() {
                     }
                 })
             }
-        };
-
-        self.resetAvrdudeCommandLine = function() {
-            self.configAvrdudeCommandLine("{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i");
         };
 
         self.testBossacPath = function() {
@@ -1154,10 +1138,6 @@ $(function() {
             }
         };
 
-        self.resetBossacCommandLine = function() {
-            self.configBossacCommandLine("{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R");
-        };
-
         self.testDfuPath = function() {
             var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
 
@@ -1194,14 +1174,6 @@ $(function() {
                     }
                 })
             }
-        };
-
-        self.resetDfuCommandLine = function() {
-            self.configDfuCommandLine("sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10");
-        };
-
-        self.resetDfuEraseCommandLine = function() {
-            self.configDfuEraseCommandLine("sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force");
         };
 
         self.testStm32flashPath = function() {
@@ -1302,21 +1274,7 @@ $(function() {
             })
         };
 
-        self.resetLpc1768UnmountCommand = function() {
-            self.configLpc1768UnmountCommand("sudo umount {mountpoint}");
-        }
-
-        self.onSettingsShown = function() {
-            self.inSettingsDialog = true;
-        };
-
-        self.onSettingsHidden = function() {
-            self.inSettingsDialog = false;
-            self.showAlert(false);
-        };
-
         // Popup Messages
-
         self.showPopup = function(message_type, title, text){
             if (self.popup !== undefined){
                 self.closePopup();

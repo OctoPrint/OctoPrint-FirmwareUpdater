@@ -4,3 +4,12 @@
     padding-top: 4px;
     padding-bottom: 2px;
 }
+
+.plugin-version {
+    font-size:12px; 
+    opacity:0.6;
+}
+
+.btn-primary-fix {
+    border-color: #04c #04c #002a80;
+}

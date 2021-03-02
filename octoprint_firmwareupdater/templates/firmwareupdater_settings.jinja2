@@ -1,7 +1,7 @@
 <div id="settings_plugin_firmwareupdater">
 
     <div class="pull-right">
-        <button class="btn btn-small" data-bind="click: showPluginConfig" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
+        <button class="btn btn-small" data-bind="click: showPluginOptions" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
     </div>
 
     <h3>{{ _('Firmware Updater') }}</h3>
@@ -12,7 +12,9 @@
             <div class="control-group" title="{{ _('Select the firmware update profile') }}">
                 <label class="control-label">{{ _('Update Profile') }}</label>
                 <div class="controls controls-row">
-                    <select data-bind="options: profiles, optionsText: '_name', optionsValue: function(item) { return profileIndexFromItem(item) }, value: selectedProfileIndex, event: {change: _saveSelectedProfile}"></select>
+                    <select data-bind="foreach: profiles, value: selectedProfileIndex, event: { change: selectedProfileOnChange }">
+                        <option data-bind="value: $index, text: _name"></option>
+                    </select>
                     <button class="btn big-icon" data-bind="click: editSelectedProfile" title="{{ _('Configure selected firmware update profile') }}"><i class="icon-cog"></i></button>
                     <button class="btn big-icon" data-bind="click: showDeleteModal, enable: canDeleteProfile, css: {disabled: !canDeleteProfile()}" title="{{ _('Delete selected firmware update profile') }}"><i class="icon-trash"></i></button>
                     <button class="btn big-icon" data-bind="click: showCopyModal" title="{{ _('Copy selected firmware update profile') }}"><i class="icon-copy"></i></button>
@@ -36,7 +38,7 @@
                         <span class="span3">
                             <span class="btn input-group-btn fileinput-button">
                                 <span>{{ _('Browse...') }}</span>
-                                <input id="settings_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: filterFileTypes }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
+                                <input id="settings_plugin_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: filterFileTypes }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
                             </span>
                         </span>
                         <span class="span9">
@@ -86,30 +88,28 @@
             <i class="icon-book"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Documentation</h5>
             <p>Documentation is available on <a target=_new href="https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/blob/master/README.md">Github</a></p>
          </div>
-         <div class="pull-right" style="font-size:12px; opacity:0.6">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
+         <div class="pull-right plugin-version">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
     </form>
 
-
-
-    <div id="settings_plugin_firmwareupdater_configurationdialog" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_configurationDialog" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-            <h3>{{ _('Firmware Updater Configuration') }}</h3>
+            <h3><span class="help-block" data-bind="text: optionsDialogTitle"></span></h3>
         </div>
         <div class="modal-body">
             <div>
               <!-- Nav tabs -->
-              <ul class="nav nav-tabs" role="tablist">
-                <li role="presentation" class="active"><a href="#flash-method" aria-controls="required" role="tab" data-toggle="tab">{{ _('Flash Method') }}</a></li>
-                <li role="presentation"><a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab">{{ _('Advanced') }}</a></li>
-                <li role="presentation"><a href="#preflash" aria-controls="preflash" role="tab" data-toggle="tab">{{ _('Pre-Flash') }}</a></li>
-                <li role="presentation"><a href="#postflash" aria-controls="postflash" role="tab" data-toggle="tab">{{ _('Post-Flash') }}</a>
-                <li role="presentation"><a href="#plugin" aria-controls="plugin" role="tab" data-toggle="tab">{{ _('Plugin') }}</a></li>
+              <ul class="nav nav-tabs" role="tablist" data-bind ="visible: showProfileSettingsInOptions">
+                <li role="presentation" class="active"><a href="#flash-method" aria-controls="required" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Flash Method') }}</a></li>
+                <li role="presentation"><a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Advanced') }}</a></li>
+                <li role="presentation"><a href="#preflash" aria-controls="preflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Pre-Flash') }}</a></li>
+                <li role="presentation"><a href="#postflash" aria-controls="postflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Post-Flash') }}</a>
+                <li role="presentation"><a href="#plugin" aria-controls="plugin" role="tab" data-toggle="tab" data-bind ="visible: showPluginSettingsInOptions">{{ _('Plugin') }}</a></li>
               </ul>
 
               <!-- Tab panes -->
               <div class="tab-content">
-                <div role="tabpanel" class="tab-pane active" id="flash-method">
+                <div role="tabpanel" class="tab-pane active" id="flash-method" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
                         <div class="control-group" data-bind="visible: configProfilesVisible">
                             <label class="control-label">{{ _('Profile name') }}</label>
@@ -272,7 +272,7 @@
                 </div>
 
                 <!-- Advanced Tab -->
-                <div role="tabpanel" class="tab-pane" id="advanced">
+                <div role="tabpanel" class="tab-pane" id="advanced" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
                         <!-- Advanced avrdude options-->
                         <div data-bind="visible: showAvrdudeConfig">
@@ -540,14 +540,13 @@
                 <!-- End Advanced Tab -->
 
                 <!-- Pre-Flash Tab -->
-                <div role="tabpanel" class="tab-pane" id="preflash">
+                <div role="tabpanel" class="tab-pane" id="preflash" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
-
                         <!-- Pre-flash commandline -->
                         <div class="control-group">
                             <label class="control-label">{{ _('Pre-flash system command') }}</label>
                             <div class="controls">
-                                <label class="checkbox">
+                                 <label class="checkbox">
                                     <input type="checkbox" data-bind="checked: configEnablePreflashCommandline">
                                 </label>
                                 <div class="input">
@@ -593,7 +592,7 @@
                 <!-- End Pre-Flash Tab -->
 
                 <!-- Post-Flash Tab -->
-                <div role="tabpanel" class="tab-pane" id="postflash">
+                <div role="tabpanel" class="tab-pane" id="postflash" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
                         <div class="control-group">
                             <label class="control-label">{{ _('Don\'t reconnect automatically') }}</label>
@@ -654,7 +653,7 @@
                 <!-- End Post-Flash Tab -->
 
                 <!-- Plugin Options Tab -->
-                <div role="tabpanel" class="tab-pane" id="plugin">
+                <div role="tabpanel" class="tab-pane" id="plugin" data-bind ="visible: showPluginSettingsInOptions">
                     <form class="form-horizontal">
                         <div class="control-group">
                             <label class="control-label">{{ _('Enable profiles') }}</label>
@@ -701,12 +700,12 @@
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" data-bind="click: onConfigHidden" aria-hidden="true">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" style="border-color: #04c #04c #002a80;" data-bind="click: onConfigClose, enable: !saving(), css: {disabled: saving()}" aria-hidden="true">
+            <button class="btn btn-primary btn-primary-fix" data-bind="click: onConfigClose, enable: !saving(), css: {disabled: saving()}" aria-hidden="true">
                 <i class="fas fa-spinner fa-spin" data-bind="visible: saving" style="display: none;"></i>{{ _(' Save') }}
             </button>
         </div>
     </div>
-    <div id="BootLoaderWarning" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_bootLoaderWarningModal" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Bootloader Warning</h3>
@@ -718,10 +717,10 @@
             </p>
         </div>
         <div class="modal-footer">
-            <a href="#" class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse">{{ _('OK') }}</a>
+            <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
-    <div id="NewProfileName" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_newProfileModal" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Create New Profile</h3>
@@ -733,11 +732,11 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Create') }}</button>
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Create') }}</button>
         </div>
     </div>
-    <div id="CopyProfileName" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_copyProfileModal" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Copy Profile</h3>
@@ -749,11 +748,11 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Copy') }}</button>
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Copy') }}</button>
         </div>
     </div>
-    <div id="ProfileDeleteConfirm" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_profileDeleteModal" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Confirm Profile Deletion</h3>
@@ -764,7 +763,7 @@
             </p>
         </div>
         <div class="modal-footer">
-            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse, enable: !deleting(), css: {disabled: deleting()}">{{ _('Cancel') }}</button>
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="enable: !deleting(), css: {disabled: deleting()}">{{ _('Cancel') }}</button>
             <button class="btn btn-danger" aria-hidden="true" data-bind="click: deleteSelectedProfile, enable: !deleting(), css: {disabled: deleting()}"><i class="fas fa-spinner fa-spin" data-bind="visible: deleting" style="display: none;"></i>{{ _(' Delete') }}</button>
         </div>
     </div>
