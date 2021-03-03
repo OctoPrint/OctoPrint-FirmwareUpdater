@@ -565,7 +565,8 @@ $(function() {
             self.showAlert(false);
 
             self.hexData.formData = {
-                port: self.flashPort()
+                port: self.flashPort(),
+                profile: self.selectedProfileIndex(),
             };
             self.hexData.submit();
         };
@@ -590,7 +591,8 @@ $(function() {
                 dataType: "json",
                 data: JSON.stringify({
                     port: self.flashPort(),
-                    url: self.firmwareFileURL()
+                    url: self.firmwareFileURL(),
+                    profile: self.selectedProfileIndex(),
                 }),
                 contentType: "application/json; charset=UTF-8"
             })
@@ -847,7 +849,7 @@ $(function() {
 
         /*
         * Compares the profile settings with the defaults and removes any settings which match the default
-        * Also forces empty strings to null, null booleans to false, null integers to their default value, and integers as strings to integers
+        * Also forces empty strings to null, null booleans to false, null integers to 0, and integers as strings to integers
         */
         self.removeProfileDefaultBeforeSave = function(profile) {
             for (const key in profile) {
@@ -856,7 +858,7 @@ $(function() {
 
                 keyValue = (profile[key] === '' ? null : profile[key]);
                 keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue
-                keyValue = (Number.isInteger(defaultValue) && keyValue == null) ? defaultValue : keyValue
+                keyValue = (Number.isInteger(defaultValue) && keyValue == null) ? 0 : keyValue
                 
                 if (Number.isInteger(parseInt(keyValue))) {
                     profile[key] = parseInt(keyValue);

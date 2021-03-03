@@ -656,21 +656,21 @@
                 <div role="tabpanel" class="tab-pane" id="plugin" data-bind ="visible: showPluginSettingsInOptions">
                     <form class="form-horizontal">
                         <div class="control-group">
-                            <label class="control-label">{{ _('Enable profiles') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" data-bind="checked: configProfilesEnabled">
-                                </div>
-                                <span class="help-block">{{ _('Enables multiple configurable firmware update profiles. Useful when multiple printers are connected to the same OctoPrint instance.') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
                             <label class="control-label">{{ _('Enable navbar icon') }}</label>
                             <div class="controls">
                                 <div class="input">
                                     <input type="checkbox" data-bind="checked: configShowNavbarIcon">
                                 </div>
                                 <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar.  (Reload after enabling/disabling.)') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Enable profiles') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configProfilesEnabled">
+                                </div>
+                                <span class="help-block">{{ _('Enables multiple configurable firmware update profiles. Useful when multiple printers are connected to the same OctoPrint instance.') }}</span>
                             </div>
                         </div>
                         <div class="control-group">
