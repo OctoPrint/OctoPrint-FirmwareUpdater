@@ -986,12 +986,7 @@ $(function() {
         };
 
         self.selectedProfileOnChange = function(data, event) {
-            // console.log(self.flashPort())
-            console.log(ko.toJS(self.selectedProfile()).serial_port)
             self.flashPort(ko.toJS(self.selectedProfile()).serial_port);
-
-            //self.selectSerialPort.val(ko.toJS(self.selectedProfile()).serial_port);
-            //self._saveSelectedProfile();
         }
 
         /*
@@ -1006,7 +1001,6 @@ $(function() {
                 }
             };
             self.settingsViewModel.saveData(data);
-            // TODO: Disable UI until this finishes
         }
 
         /*
