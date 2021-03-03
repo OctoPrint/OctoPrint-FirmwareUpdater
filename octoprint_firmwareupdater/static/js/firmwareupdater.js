@@ -144,6 +144,7 @@ $(function() {
 
         // Observables for UI elements
         self.flashPort = ko.observable(undefined);
+        self.serialPorts = ko.observable(undefined);
         self.pluginVersion = ko.observable(undefined);
         self.firmwareFileName = ko.observable(undefined);
         self.firmwareFileURL = ko.observable(undefined);
@@ -206,6 +207,7 @@ $(function() {
         });
 
         self.selectFilePath = undefined;
+        self.selectSerialPort = undefined;
         self.configurationDialog = undefined;
         self.bootloaderWarningDialog = undefined;
         self.profileAddDialog = undefined;
@@ -217,6 +219,7 @@ $(function() {
 
         self.onStartup = function() {
             self.selectFilePath = $("#settings_plugin_firmwareupdater_selectFilePath");
+            self.selectSerialPort = $("#settings_plugin_firmwareupdater_selectSerialPort");
 
             // Plugin modals
             self.configurationDialog = $("#settings_plugin_firmwareupdater_configurationDialog");
@@ -284,6 +287,7 @@ $(function() {
         }
 
         self.onSettingsShown = function() {
+            self.flashPort(ko.toJS(self.selectedProfile()).serial_port);
             self.inSettingsDialog = true;
         };
 
@@ -292,12 +296,13 @@ $(function() {
             self.showAlert(false);
         };
 
-        /*
-        * Sets the serial port when the connected printer port changes
-        */
-        self.connection.selectedPort.subscribe(function(value) {
+        self.refreshPorts = function() {
+            self.connection.requestData();
+        }
+
+        self.connection.portOptions.subscribe(function(value) {
             if (value === undefined) return;
-            self.flashPort(value);
+            self.selectSerialPort.val(ko.toJS(self.selectedProfile()).serial_port);
         });
 
         /*
@@ -981,7 +986,12 @@ $(function() {
         };
 
         self.selectedProfileOnChange = function(data, event) {
-            self._saveSelectedProfile();
+            // console.log(self.flashPort())
+            console.log(ko.toJS(self.selectedProfile()).serial_port)
+            self.flashPort(ko.toJS(self.selectedProfile()).serial_port);
+
+            //self.selectSerialPort.val(ko.toJS(self.selectedProfile()).serial_port);
+            //self._saveSelectedProfile();
         }
 
         /*

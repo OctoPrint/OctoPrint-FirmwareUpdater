@@ -118,6 +118,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         method = self.get_profile_setting("flash_method")
         self._logger.info("Flash method: {}".format(method))
 
+        self._settings.save()
+        
         if method in self._flash_prechecks:
             if not self._flash_prechecks[method](self):
                 if method == "marlinbft":

@@ -25,8 +25,9 @@
 
         <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
             <label class="control-label">{{ _('Serial Port') }}</label>
-            <div class="controls">
-                <select data-bind="options: connection.portOptions, value: flashPort"></select>
+            <div class="controls controls-row">
+                <select id="settings_plugin_firmwareupdater_selectSerialPort" data-bind="options: connection.portOptions, value: flashPort"></select>
+                <a href="#" data-bind="click: refreshPorts" title="Refresh serial ports"><i class="fas fa-sync color-black"></i></a>
             </div>
         </div>
 
