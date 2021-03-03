@@ -12,7 +12,7 @@ BOSSAC_NODEVICE = "No device found on"
 BOSSAC_ERROR_VERIFICATION = "verification error"
 
 def _check_bossac(self):
-    bossac_path = self._settings.get(["bossac_path"])
+    bossac_path = self.get_profile_setting("bossac_path")
     pattern = re.compile("^(\/[^\0/]+)+$")
 
     if not pattern.match(bossac_path):
@@ -37,12 +37,12 @@ def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
 
-    bossac_path = self._settings.get(["bossac_path"])
-    bossac_disableverify = self._settings.get(["bossac_disableverify"])
+    bossac_path = self.get_profile_setting("bossac_path")
+    bossac_disableverify = self.get_profile_setting_boolean("bossac_disableverify")
 
     working_dir = os.path.dirname(bossac_path)
 
-    bossac_command = self._settings.get(["bossac_commandline"])
+    bossac_command = self.get_profile_setting("bossac_commandline")
     bossac_command = bossac_command.replace("{bossac}", bossac_path)
     bossac_command = bossac_command.replace("{port}", printer_port)
     bossac_command = bossac_command.replace("{firmware}", firmware)

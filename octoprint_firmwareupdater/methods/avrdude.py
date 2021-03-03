@@ -10,7 +10,6 @@ try:
 except ImportError:
     exit("This requires serial module\nInstall with: sudo pip install pyserial")
 
-
 AVRDUDE_WRITING = "writing flash"
 AVRDUDE_VERIFYING = "reading on-chip flash data"
 AVRDUDE_TIMEOUT = "timeout communicating with programmer"
@@ -29,7 +28,6 @@ USB_VID_PID_MMU_APP  = "2c99:0004"
 USB_VID_PID_CW1_BOOT = "2c99:0007"
 USB_VID_PID_CW1_APP  = "2c99:0008"
 
-
 TARGET_NO_PRUSA = 0
 TARGET_MMU = 1
 TARGET_CW1 = 2
@@ -37,9 +35,9 @@ TARGET_CW1 = 2
 ser = serial
 
 def _check_avrdude(self):
-    avrdude_path = self._settings.get(["avrdude_path"])
-    avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
-    avrdude_programmer = self._settings.get(["avrdude_programmer"])
+    avrdude_path = self.get_profile_setting("avrdude_path")
+    avrdude_avrmcu = self.get_profile_setting("avrdude_avrmcu")
+    avrdude_programmer = self.get_profile_setting("avrdude_programmer")
 
     if os.name == 'nt':
        pattern = re.compile(WINDOWS_PATTERN)
@@ -71,16 +69,16 @@ def _flash_avrdude(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
 
-    avrdude_path = self._settings.get(["avrdude_path"])
-    avrdude_conf = self._settings.get(["avrdude_conf"])
-    avrdude_avrmcu = self._settings.get(["avrdude_avrmcu"])
-    avrdude_programmer = self._settings.get(["avrdude_programmer"])
-    avrdude_baudrate = self._settings.get(["avrdude_baudrate"])
-    avrdude_disableverify = self._settings.get(["avrdude_disableverify"])
+    avrdude_path = self.get_profile_setting("avrdude_path")
+    avrdude_conf = self.get_profile_setting("avrdude_conf")
+    avrdude_avrmcu = self.get_profile_setting("avrdude_avrmcu")
+    avrdude_programmer = self.get_profile_setting("avrdude_programmer")
+    avrdude_baudrate = self.get_profile_setting("avrdude_baudrate")
+    avrdude_disableverify = self.get_profile_setting_boolean("avrdude_disableverify")
 
     working_dir = os.path.dirname(avrdude_path)
 
-    avrdude_command = self._settings.get(["avrdude_commandline"])
+    avrdude_command = self.get_profile_setting("avrdude_commandline")
     avrdude_command = avrdude_command.replace("{avrdude}", avrdude_path)
     avrdude_command = avrdude_command.replace("{mcu}", avrdude_avrmcu)
     avrdude_command = avrdude_command.replace("{programmer}", avrdude_programmer)
