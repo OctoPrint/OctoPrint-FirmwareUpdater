@@ -287,6 +287,9 @@ $(function() {
         }
 
         self.onSettingsShown = function() {
+            var selectedProfile = self.selectedProfileIndex();
+            self.profiles(self.settingsViewModel.settings.plugins.firmwareupdater.profiles());
+            self.selectedProfileIndex(selectedProfile);
             self.flashPort(ko.toJS(self.selectedProfile()).serial_port);
             self.inSettingsDialog = true;
         };
@@ -975,8 +978,8 @@ $(function() {
 
             // Save the settings
             self.settingsViewModel.saveData(data).done(function () {
-                self.profiles(profiles)
-                self.selectedProfileIndex(index)
+                self.profiles(profiles);
+                self.selectedProfileIndex(index);
                 self.configurationDialog.modal("hide");
                 self.alertMessage(undefined);
                 self.showAlert(false);
@@ -994,14 +997,18 @@ $(function() {
         * Saves the selected profile index
         */
         self._saveSelectedProfile = function() {
-            var data = {
-                plugins: {
-                    firmwareupdater: {
-                        _selected_profile: self.selectedProfileIndex(),
+            if (self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile() == self.selectedProfileIndex()) {
+                return;
+            } else {
+                var data = {
+                    plugins: {
+                        firmwareupdater: {
+                            _selected_profile: self.selectedProfileIndex(),
+                        }
                     }
-                }
-            };
-            self.settingsViewModel.saveData(data);
+                };
+                self.settingsViewModel.saveData(data);
+            }
         }
 
         /*
