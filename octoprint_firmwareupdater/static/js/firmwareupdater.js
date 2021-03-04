@@ -265,7 +265,7 @@ $(function() {
             }
 
             // Make the profiles UI elements visible/hidden per the setting
-            self.configProfilesVisible(self.configProfilesEnabled())
+            self.configProfilesVisible(self.configProfilesEnabled());
 
             // Get all the default profile settings
             self.profileDefaults = ko.toJS(self.settingsViewModel.settings.plugins.firmwareupdater._profiles)
@@ -323,10 +323,10 @@ $(function() {
             self.showPluginSettingsInOptions(true);
             self.showProfileSettingsInOptions(!self.configProfilesEnabled());
             if (self.configProfilesEnabled()) {
-                self.optionsDialogTitle("Firmware Updater Options")
+                self.optionsDialogTitle("Firmware Updater Options");
                 $('.nav-tabs a[href="#plugin"]').tab('show');
             } else {
-                self.optionsDialogTitle("Firmware Updater Configuration")
+                self.optionsDialogTitle("Firmware Updater Configuration");
                 $('.nav-tabs a[href="#flash-method"]').tab('show');
             }
             self.showPluginConfig();
@@ -338,7 +338,7 @@ $(function() {
         self.editSelectedProfile = function(){
             self.showPluginSettingsInOptions(false);
             self.showProfileSettingsInOptions(true);
-            self.optionsDialogTitle("Update Profile Configuration")
+            self.optionsDialogTitle("Update Profile Configuration");
             $('.nav-tabs a[href="#flash-method"]').tab('show');
             self.showPluginConfig();
         }
@@ -355,9 +355,9 @@ $(function() {
         * Creates a new profile and selects it
         */
         self.addNewProfile = function() {
-            self.adding(true)
-            var profiles = ko.toJS(self.profiles())
-            var newProfile = {_name: self.newProfileName()}
+            self.adding(true);
+            var profiles = ko.toJS(self.profiles());
+            var newProfile = {_name: self.newProfileName()};
             profiles.push(newProfile);
             var data = {
                 plugins: {
@@ -371,9 +371,9 @@ $(function() {
             self.settingsViewModel.saveData(data).done(function () {
                 self.profileAddDialog.modal("hide");
                 self.adding(false);
-                self.profiles(profiles)
-                self.selectedProfileIndex(profiles.length - 1)
-                self.newProfileName(null)
+                self.profiles(profiles);
+                self.selectedProfileIndex(profiles.length - 1);
+                self.newProfileName(null);
             });
         }
 
@@ -381,15 +381,15 @@ $(function() {
         * Shows the new profile modal
         */
         self.showCopyModal = function() {
-            self.newProfileName(self.selectedProfileName() + ' - Copy')
-            self.profileCopyDialog.modal()
+            self.newProfileName(self.selectedProfileName() + ' - Copy');
+            self.profileCopyDialog.modal();
         }
 
         self.copyProfile = function() {
-            self.adding(true)
-            var profiles = ko.toJS(self.profiles())
-            var newProfile = ko.toJS(self.selectedProfile())
-            newProfile._name = self.newProfileName()
+            self.adding(true);
+            var profiles = ko.toJS(self.profiles());
+            var newProfile = ko.toJS(self.selectedProfile());
+            newProfile._name = self.newProfileName();
             profiles.push(newProfile);
             var data = {
                 plugins: {
@@ -405,7 +405,7 @@ $(function() {
                 self.adding(false);
                 self.profiles(profiles);
                 self.selectedProfileIndex(profiles.length - 1);
-                self.newProfileName(null)
+                self.newProfileName(null);
             });
         }
 
@@ -413,7 +413,7 @@ $(function() {
         * Shows the profile deletion confirmation modal
         */
         self.showDeleteModal = function() {
-            self.profileDeleteDialog.modal()
+            self.profileDeleteDialog.modal();
         }
 
         /*
@@ -421,9 +421,9 @@ $(function() {
         * Selects the n-1 profile after deleting the selected profile
         */
         self.deleteSelectedProfile = function(){
-            self.deleting(true)
-            var index = self.selectedProfileIndex()
-            var profiles = ko.toJS(self.profiles())
+            self.deleting(true);
+            var index = self.selectedProfileIndex();
+            var profiles = ko.toJS(self.profiles());
             profiles.splice(index, 1);
             var data = {
                 plugins: {
@@ -437,14 +437,14 @@ $(function() {
             self.settingsViewModel.saveData(data).done(function () {
                 self.profileDeleteDialog.modal("hide");
                 self.deleting(false);
-                self.profiles(profiles)
-                self.selectedProfileIndex(index - 1)
+                self.profiles(profiles);
+                self.selectedProfileIndex(index - 1);
             });
         }
 
         self.getProfileSetting = function(key) {
             var profile_settings = Object.assign({}, self.profileDefaults, ko.toJS(self.selectedProfile()));
-            return profile_settings[key]
+            return profile_settings[key];
         }
 
         /*
@@ -786,71 +786,71 @@ $(function() {
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
 
             // Load the profile settings
-            self.configProfileName(self.getProfileSetting("_name"))
-            self.configFlashMethod(self.getProfileSetting("flash_method"))
+            self.configProfileName(self.getProfileSetting("_name"));
+            self.configFlashMethod(self.getProfileSetting("flash_method"));
             self.configDisableBootloaderCheck(self.getProfileSetting("disable_bootloadercheck"));
             self.configLastUrl(self.getProfileSetting("last_url"));
 
             // Pre and post flash settings
-            self.configNoAutoReconnect(self.getProfileSetting("no_reconnect_after_flash"))
-            self.configEnablePreflashDelay(self.getProfileSetting("enable_preflash_delay"))
-            self.configPreflashDelay(self.getProfileSetting("preflash_delay"))
-            self.configEnablePostflashDelay(self.getProfileSetting("enable_postflash_delay"))
-            self.configPostflashDelay(self.getProfileSetting("postflash_delay"))
-            self.configEnablePreflashCommandline(self.getProfileSetting("enable_preflash_commandline"))
-            self.configPreflashCommandline(self.getProfileSetting("preflash_commandline"))
-            self.configEnablePostflashCommandline(self.getProfileSetting("enable_postflash_commandline"))
-            self.configPostflashCommandline(self.getProfileSetting("postflash_commandline"))
-            self.configEnablePreflashGcode(self.getProfileSetting("enable_preflash_gcode"))
-            self.configPreflashGcode(self.getProfileSetting("preflash_gcode"))
-            self.configEnablePostflashGcode(self.getProfileSetting("enable_postflash_gcode"))
-            self.configPostflashGcode(self.getProfileSetting("postflash_gcode"))
+            self.configNoAutoReconnect(self.getProfileSetting("no_reconnect_after_flash"));
+            self.configEnablePreflashDelay(self.getProfileSetting("enable_preflash_delay"));
+            self.configPreflashDelay(self.getProfileSetting("preflash_delay"));
+            self.configEnablePostflashDelay(self.getProfileSetting("enable_postflash_delay"));
+            self.configPostflashDelay(self.getProfileSetting("postflash_delay"));
+            self.configEnablePreflashCommandline(self.getProfileSetting("enable_preflash_commandline"));
+            self.configPreflashCommandline(self.getProfileSetting("preflash_commandline"));
+            self.configEnablePostflashCommandline(self.getProfileSetting("enable_postflash_commandline"));
+            self.configPostflashCommandline(self.getProfileSetting("postflash_commandline"));
+            self.configEnablePreflashGcode(self.getProfileSetting("enable_preflash_gcode"));
+            self.configPreflashGcode(self.getProfileSetting("preflash_gcode"));
+            self.configEnablePostflashGcode(self.getProfileSetting("enable_postflash_gcode"));
+            self.configPostflashGcode(self.getProfileSetting("postflash_gcode"));
 
             // Load the avrdude settings
-            self.configAvrdudePath(self.getProfileSetting("avrdude_path"))
-            self.configAvrdudeCommandLine(self.getProfileSetting("avrdude_commandline"))
-            self.configAvrdudeConfigFile(self.getProfileSetting("avrdude_conf"))
-            self.configAvrdudeMcu(self.getProfileSetting("avrdude_avrmcu"))
-            self.configAvrdudeMcu(self.getProfileSetting("avrdude_avrmcu"))
-            self.configAvrdudeProgrammer(self.getProfileSetting("avrdude_programmer"))
-            self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"))
-            self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"))
+            self.configAvrdudePath(self.getProfileSetting("avrdude_path"));
+            self.configAvrdudeCommandLine(self.getProfileSetting("avrdude_commandline"));
+            self.configAvrdudeConfigFile(self.getProfileSetting("avrdude_conf"));
+            self.configAvrdudeMcu(self.getProfileSetting("avrdude_avrmcu"));
+            self.configAvrdudeMcu(self.getProfileSetting("avrdude_avrmcu"));
+            self.configAvrdudeProgrammer(self.getProfileSetting("avrdude_programmer"));
+            self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"));
+            self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"));
             
             // Load the bossac settings
-            self.configBossacPath(self.getProfileSetting("bossac_path"))
-            self.configBossacDisableVerification(self.getProfileSetting("bossac_disableverify"))
-            self.configBossacCommandLine(self.getProfileSetting("bossac_commandline"))
+            self.configBossacPath(self.getProfileSetting("bossac_path"));
+            self.configBossacDisableVerification(self.getProfileSetting("bossac_disableverify"));
+            self.configBossacCommandLine(self.getProfileSetting("bossac_commandline"));
 
             // Load the dfu-programmer settings
-            self.configDfuPath(self.getProfileSetting("dfuprog_path"))
-            self.configDfuMcu(self.getProfileSetting("dfuprog_avrmcu"))
-            self.configDfuCommandLine(self.getProfileSetting("dfuprog_commandline"))
-            self.configDfuEraseCommandLine(self.getProfileSetting("dfuprog_erasecommandline"))
+            self.configDfuPath(self.getProfileSetting("dfuprog_path"));
+            self.configDfuMcu(self.getProfileSetting("dfuprog_avrmcu"));
+            self.configDfuCommandLine(self.getProfileSetting("dfuprog_commandline"));
+            self.configDfuEraseCommandLine(self.getProfileSetting("dfuprog_erasecommandline"));
 
             // Load the lpc1768 settings
-            self.configLpc1768Path(self.getProfileSetting("lpc1768_path"))
-            self.configLpc1768UnmountCommand(self.getProfileSetting("lpc1768_unmount_command"))
-            self.configLpc1768ResetBeforeFlash(self.getProfileSetting("lpc1768_preflashreset"))
-            self.configLpc1768NoResetWait(self.getProfileSetting("lpc1768_no_m997_reset_wait"))
-            self.configLpc1768NoRestartWait(self.getProfileSetting("lpc1768_no_m997_restart_wait"))
+            self.configLpc1768Path(self.getProfileSetting("lpc1768_path"));
+            self.configLpc1768UnmountCommand(self.getProfileSetting("lpc1768_unmount_command"));
+            self.configLpc1768ResetBeforeFlash(self.getProfileSetting("lpc1768_preflashreset"));
+            self.configLpc1768NoResetWait(self.getProfileSetting("lpc1768_no_m997_reset_wait"));
+            self.configLpc1768NoRestartWait(self.getProfileSetting("lpc1768_no_m997_restart_wait"));
 
             // Load the marlinbft settings
-            self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"))
-            self.configMarlinBftTimeout(self.getProfileSetting("marlinbft_timeout"))
-            self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"))
-            self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"))
-            self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"))
+            self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
+            self.configMarlinBftTimeout(self.getProfileSetting("marlinbft_timeout"));
+            self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"));
+            self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
+            self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
 
             // Load the stm32flash settings
-            self.configStm32flashPath(self.getProfileSetting("stm32flash_path"))
-            self.configStm32flashVerify(self.getProfileSetting("stm32flash_verify"))
-            self.configStm32flashBoot0Pin(self.getProfileSetting("stm32flash_boot0pin"))
-            self.configStm32flashBoot0Low(self.getProfileSetting("stm32flash_boot0low"))
-            self.configStm32flashResetPin(self.getProfileSetting("stm32flash_resetpin"))
-            self.configStm32flashResetLow(self.getProfileSetting("stm32flash_resetlow"))
-            self.configStm32flashExecute(self.getProfileSetting("stm32flash_execute"))
-            self.configStm32flashExecuteAddress(self.getProfileSetting("stm32flash_executeaddress"))
-            self.configStm32flashReset(self.getProfileSetting("stm32flash_reset"))
+            self.configStm32flashPath(self.getProfileSetting("stm32flash_path"));
+            self.configStm32flashVerify(self.getProfileSetting("stm32flash_verify"));
+            self.configStm32flashBoot0Pin(self.getProfileSetting("stm32flash_boot0pin"));
+            self.configStm32flashBoot0Low(self.getProfileSetting("stm32flash_boot0low"));
+            self.configStm32flashResetPin(self.getProfileSetting("stm32flash_resetpin"));
+            self.configStm32flashResetLow(self.getProfileSetting("stm32flash_resetlow"));
+            self.configStm32flashExecute(self.getProfileSetting("stm32flash_execute"));
+            self.configStm32flashExecuteAddress(self.getProfileSetting("stm32flash_executeaddress"));
+            self.configStm32flashReset(self.getProfileSetting("stm32flash_reset"));
 
             // Show the modal
             self.configurationDialog.modal();
@@ -866,15 +866,15 @@ $(function() {
                 var defaultValue = self.profileDefaults[key];
 
                 keyValue = (profile[key] === '' ? null : profile[key]);
-                keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue
-                keyValue = (Number.isInteger(defaultValue) && keyValue == null) ? 0 : keyValue
+                keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue;
+                keyValue = (Number.isInteger(defaultValue) && keyValue == null) ? 0 : keyValue;
                 
                 if (Number.isInteger(parseInt(keyValue))) {
                     profile[key] = parseInt(keyValue);
                 }
 
                 if (keyValue == defaultValue) {
-                    delete profile[key]
+                    delete profile[key];
                 }
             }
             return profile;
@@ -893,7 +893,7 @@ $(function() {
         self._saveConfig = function() {
             self.saving(true);
             var index = self.selectedProfileIndex();
-            var profiles = ko.toJS(self.profiles())
+            var profiles = ko.toJS(self.profiles());
 
             // Update the settings in the current profile
             profiles[index]["_name"] = self.configProfileName();
@@ -974,7 +974,7 @@ $(function() {
                         profiles: profiles,
                     }
                 }
-            }
+            };
 
             // Save the settings
             self.settingsViewModel.saveData(data).done(function () {
