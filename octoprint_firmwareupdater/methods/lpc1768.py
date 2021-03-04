@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 def _check_lpc1768(self):
-    lpc1768_path = self._settings.get(["lpc1768_path"])
+    lpc1768_path = self.get_profile_setting("lpc1768_path")
     pattern = re.compile("^(\/[^\0/]+)+$")
 
     if not pattern.match(lpc1768_path):
@@ -28,12 +28,12 @@ def _flash_lpc1768(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
 
-    no_m997_reset_wait = self._settings.get_boolean(["lpc1768_no_m997_reset_wait"])
-    lpc1768_path = self._settings.get(["lpc1768_path"])
+    no_m997_reset_wait = self.get_profile_setting_boolean("lpc1768_no_m997_reset_wait")
+    lpc1768_path = self.get_profile_setting("lpc1768_path")
 
     working_dir = os.path.dirname(lpc1768_path)
 
-    if self._settings.get_boolean(["lpc1768_preflashreset"]):
+    if self.get_profile_setting_boolean("lpc1768_preflashreset"):
         self._send_status("progress", subtype="boardreset")
 
         # Sync the filesystem to flush writes
@@ -47,7 +47,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None, **kwargs):
         time.sleep(1)
 
         if os.access(lpc1768_path, os.W_OK):
-            unmount_command = self._settings.get(["lpc1768_unmount_command"])
+            unmount_command = self.get_profile_setting("lpc1768_unmount_command")
             if unmount_command:
                 unmount_command = unmount_command.replace("{mountpoint}", lpc1768_path)
 
@@ -128,7 +128,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None, **kwargs):
         return False
     time.sleep(1)
 
-    unmount_command = self._settings.get(["lpc1768_unmount_command"])
+    unmount_command = self.get_profile_setting("lpc1768_unmount_command")
     if unmount_command:
         unmount_command = unmount_command.replace("{mountpoint}", lpc1768_path)
 
@@ -164,7 +164,7 @@ def _flash_lpc1768(self, firmware=None, printer_port=None, **kwargs):
 
 def _reset_lpc1768(self, printer_port=None, no_reset_wait=False):
     assert(printer_port is not None)
-    no_m997_restart_wait = self._settings.get_boolean(["lpc1768_no_m997_restart_wait"])
+    no_m997_restart_wait = self.get_profile_setting_boolean("lpc1768_no_m997_restart_wait")
     self._logger.info(u"Resetting LPC1768 at '{port}'".format(port=printer_port))
 
     # Configure the port

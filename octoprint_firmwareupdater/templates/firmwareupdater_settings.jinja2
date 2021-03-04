@@ -1,17 +1,33 @@
 <div id="settings_plugin_firmwareupdater">
 
     <div class="pull-right">
-        <button class="btn btn-small" data-bind="click: showPluginConfig" title="{{ _('Plugin Configuration') }}"><i class="icon-wrench"></i></button>
+        <button class="btn btn-small" data-bind="click: showPluginOptions, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
     </div>
 
     <h3>{{ _('Firmware Updater') }}</h3>
 
     <form class="form-horizontal">
 
+        <div  data-bind="visible: configProfilesVisible">
+            <div class="control-group" title="{{ _('Select the firmware update profile') }}">
+                <label class="control-label">{{ _('Update Profile') }}</label>
+                <div class="controls controls-row">
+                    <select data-bind="foreach: profiles, value: selectedProfileIndex, event: { change: selectedProfileOnChange }, css: { disabled: isBusy() }, disable: isBusy">
+                        <option data-bind="value: $index, text: _name"></option>
+                    </select>
+                    <button class="btn big-icon" data-bind="click: editSelectedProfile, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Configure selected firmware update profile') }}"><i class="icon-cog"></i></button>
+                    <button class="btn big-icon" data-bind="click: showDeleteModal, enable: canDeleteProfile, css: {disabled: !canDeleteProfile() || isBusy()}, disable: !canDeleteProfile() || isBusy" title="{{ _('Delete selected firmware update profile') }}"><i class="icon-trash"></i></button>
+                    <button class="btn big-icon" data-bind="click: showCopyModal, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Copy selected firmware update profile') }}"><i class="icon-copy"></i></button>
+                    <button class="btn big-icon" data-bind="click: showAddModal, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Add a new firmware update profile') }}"><i class="icon-plus"></i></button>
+                </div>
+            </div>
+        </div>
+
         <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
             <label class="control-label">{{ _('Serial Port') }}</label>
-            <div class="controls">
-                <select data-bind="options: connection.portOptions, value: flashPort"></select>
+            <div class="controls controls-row">
+                <select id="settings_plugin_firmwareupdater_selectSerialPort" data-bind="options: connection.portOptions, value: flashPort, css: { disabled: isBusy() }, disable: isBusy"></select>
+                <a href="#" data-bind="click: refreshPorts" title="Refresh serial ports"><i data-bind="css: { refreshdisabled: isBusy() }" class="fas fa-sync color-black leftm-5"></i></a>
             </div>
         </div>
 
@@ -21,9 +37,8 @@
                 <div class="span8">
                     <div class="input-group controls-row">
                         <span class="span3">
-                            <span class="btn input-group-btn fileinput-button">
-                                <span>{{ _('Browse...') }}</span>
-                                <input id="settings_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: filterFileTypes }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
+                            <span class="btn input-group-btn fileinput-button" data-bind="css: { disabled: isBusy() }">{{ _('Browse...') }}
+                                <input id="settings_plugin_firmwareupdater_selectFilePath" type="file" name="file" data-bind='click: function() { return !isBusy(); }, attr: { accept: filterFileTypes }, css: { disabled: isBusy() }, disable: isBusy' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
                             </span>
                         </span>
                         <span class="span9">
@@ -32,7 +47,7 @@
                     </div>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="attr: {title: fileFlashButtonText}, click: startFlashFromFile, enable: firmwareFileName, css: {disabled: !firmwareFileName() || isBusy()}">{{ _('Flash from File') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="attr: {title: fileFlashButtonText}, click: startFlashFromFile, enable: firmwareFileName && !isBusy(), css: {disabled: !firmwareFileName() || isBusy()}">{{ _('Flash from File') }}</button>
                 </div>
             </div>
         </div>
@@ -41,10 +56,10 @@
             <label class="control-label">{{ _('... from URL') }}</label>
             <div class="controls controls-row">
                 <div class="span8">
-                    <input class="input-block-level" type="text" data-bind='value: firmwareFileURL, valueUpdate: "afterkeydown"'>
+                    <input class="input-block-level" type="text" data-bind='value: firmwareFileURL, valueUpdate: "afterkeydown", css: { disabled: isBusy() }, disable: isBusy'>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind='attr: {title: urlFlashButtonText}, click: startFlashFromURL, enable: firmwareFileURL, css: {disabled: !firmwareFileURL() || isBusy()}'>{{ _('Flash from URL') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind='attr: {title: urlFlashButtonText}, click: startFlashFromURL, enable: firmwareFileURL && !isBusy(), css: {disabled: !firmwareFileURL() || isBusy()}'>{{ _('Flash from URL') }}</button>
                 </div>
             </div>
         </div>
@@ -73,613 +88,627 @@
             <i class="icon-book"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Documentation</h5>
             <p>Documentation is available on <a target=_new href="https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/blob/master/README.md">Github</a></p>
          </div>
-         <div class="pull-right" style="font-size:12px; opacity:0.6">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
+         <div class="pull-right plugin-version">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
     </form>
 
-    <div id="settings_plugin_firmwareupdater_configurationdialog" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_configurationDialog" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-            <h3>{{ _('Plugin Configuration') }}</h3>
+            <h3><span class="help-block" data-bind="text: optionsDialogTitle"></span></h3>
         </div>
         <div class="modal-body">
-            <form class="form-horizontal">
-                <div class="control-group">
-                    <label class="control-label">{{ _('Flash method') }}</label>
-                    <div class="controls">
-	                    <select style="width:285px;" data-bind="value: configFlashMethod">
-                            <option></option>
-                            <option value=avrdude>avrdude (Atmel AVR Family)</option>
-                            <option value=bossac>bossac (Atmel SAM Family)</option>
-                            <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
-                            <option value=lpc1768>lpc176x (LPC176x Boards)</option>
-                            <option value=marlinbft>marlinbft (Marlin Binary File Transfer)</option>
-                            <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
-                        </select>
-                    </div>
-                </div>
-                <hr>
+            <div>
+              <!-- Nav tabs -->
+              <ul class="nav nav-tabs" role="tablist" data-bind ="visible: showProfileSettingsInOptions">
+                <li role="presentation" class="active"><a href="#flash-method" aria-controls="required" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Flash Method') }}</a></li>
+                <li role="presentation"><a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Advanced') }}</a></li>
+                <li role="presentation"><a href="#preflash" aria-controls="preflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Pre-Flash') }}</a></li>
+                <li role="presentation"><a href="#postflash" aria-controls="postflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Post-Flash') }}</a>
+                <li role="presentation"><a href="#plugin" aria-controls="plugin" role="tab" data-toggle="tab" data-bind ="visible: showPluginSettingsInOptions">{{ _('Plugin') }}</a></li>
+              </ul>
 
-                <!-- avrdude options for 8-bit MCUs -->
-                <div data-bind="visible: showAvrdudeConfig">
-                    <div class="control-group">
-                        <label class="control-label">{{ _('AVR MCU') }}</label>
-                        <div class="controls">
-                            <select data-bind="value: configAvrdudeMcu">
-                                <option value=></option>
-                                <option value=m328p>ATmega328p</option>
-                                <option value=m644p>ATmega644p</option>
-                                <option value=m1280>ATmega1280</option>
-                                <option value=m1284p>ATmega1284p</option>
-                                <option value=m2560>ATmega2560</option>
-                                <option value=atmega32u4>ATmega32u4</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="css: {error: avrdudePathBroken, success: avrdudePathOk}">
-                        <label class="control-label">{{ _('Path to avrdude') }}</label>
-                        <div class="controls">
-                            <div class="input-append">
-                                <input type="text" class="input-block-level" data-bind='value: configAvrdudePath, valueUpdate: "afterkeydown"'>
-                                <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configAvrdudePath, css: {disabled: !configAvrdudePath()}">{{ _('Test') }}</button>
-                            </div>
-                            <span class="help-block" data-bind="visible: avrdudePathBroken() || avrdudePathOk, text: avrdudePathText"></span>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('AVR Programmer Type') }}</label>
-                        <div class="controls">
-                            <select data-bind="value: configAvrdudeProgrammer">
-                                <option value=></option>
-                                <option value=arduino>arduino</option>
-                                <option value=avr109>avr109</option>
-                                <option value=usbasp>usbasp</option>
-                                <option value=stk500v2>stk500v2</option>
-                                <option value=wiring>wiring</option>
-                                <option value=linuxgpio>linuxgpio</option>
-                            </select>
-                        </div>
-                    </div>
-                    <hr>
-                </div>
-                <!-- end avrdude options -->
-
-                <!-- bossac options for 32-bit MCUs -->
-                <div data-bind="visible: showBossacConfig">
-                    <div class="control-group" data-bind="css: {error: bossacPathBroken, success: bossacPathOk}">
-                        <label class="control-label">{{ _('Path to bossac') }}</label>
-                        <div class="controls">
-                            <div class="input-append">
-                                <input type="text" class="input-block-level" data-bind='value: configBossacPath, valueUpdate: "afterkeydown"'>
-                                <button class="btn" type="button" data-bind="click: testBossacPath, enable: configBossacPath, css: {disabled: !configBossacPath()}">{{ _('Test') }}</button>
-                            </div>
-                            <span class="help-block" data-bind="visible: bossacPathBroken() || bossacPathOk, text: bossacPathText"></span>
-                        </div>
-                    </div>
-                    <hr>
-                </div>
-                <!-- end bossac options -->
-
-                <!-- lpc1768 options for LPC1768 MCUs -->
-                <div data-bind="visible: showLpc1768Config">
-                    <div class="control-group" data-bind="css: {error: lpc1768PathBroken, success: lpc1768PathOk}">
-                        <label class="control-label">{{ _('Path to firmware folder') }}</label>
-                        <div class="controls">
-                            <div class="input-append">
-                                <input type="text" class="input-block-level" data-bind='value: configLpc1768Path, valueUpdate: "afterkeydown"'>
-                                <button class="btn" type="button" data-bind="click: testLpc1768Path, enable: configLpc1768Path, css: {disabled: !configLpc1768Path()}">{{ _('Test') }}</button>
-                            </div>
-                            <span class="help-block" data-bind="visible: lpc1768PathBroken() || lpc1768PathOk, text: lpc1768PathText"></span>
-                        </div>
-                    </div>
-                    <hr>
-                </div>
-                <!-- end lpc1768 options -->
-
-                <!-- marlinbft options for -->
-                <div data-bind="visible: showMarlinBftConfig">
-                    <div>
-                        <div>
-                            <i class="icon-list"></i><h5 style="display: inline-block; margin-left: 5px;">Prerequisite Status</h5>
-                            <div data-bind="visible: marlinbftHasCapability()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-check" style="margin-right: 5px; color: green;" title="Capability detected"></i>Marlin <code>BINARY_FILE_TRANSFER</code> firmware feature is detected</div>
-                            <div data-bind="visible: !marlinbftHasCapability()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-warning-sign" style="margin-right: 5px; color: red;" title="Capability not detected"></i>Marlin <code>BINARY_FILE_TRANSFER</code> firmware feature is <b>NOT</b> detected</div>
-                            <div data-bind="visible: marlinbftHasBinProto2Package()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-check" style="margin-right: 5px; color: green;" title="Package installed"></i>Python <code>marlin-binary-protocol</code> package is installed</div>
-                            <div data-bind="visible: !marlinbftHasBinProto2Package()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-warning-sign" style="margin-right: 5px; color: red;" title="Package not installed"></i>Python <code>marlin-binary-protocol</code> package is <b>NOT</b> installed</div>
-                            <div style="margin-left: 10px;"><p>Reload browser to refresh status.  See the <a href="https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/blob/devel/doc/marlinbft.md" target="_new">documentation</a> for more information about the prerequisites.</p></div>
-                        </div>
-                        <div>
-                            <i class="icon-warning-sign"></i><h5 style="display: inline-block; margin-left: 5px;">Warning!</h5>
-                            <div style="margin-left: 10px;">
-                                <p>The Marlin Binary File Transfer protocol is still in an <a href="https://github.com/MarlinFirmware/Marlin/pull/14817" target="_new">unfinished / experimental state</a>.  Changes in Marlin may break this method at any time.</p>
-                                <p>That said, it works quite well.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                </div>
-                <!-- end marlinbft options -->
-
-                <!-- dfu-programmer options -->
-                <div data-bind="visible: showDfuConfig">
-                    <div class="control-group">
-                        <label class="control-label">{{ _('AVR MCU') }}</label>
-                        <div class="controls">
-                            <select data-bind="value: configDfuMcu">
-                                <option value=></option>
-                                <option value=at90usb1286>AT90USB1286</option>
-                                <option value=at90usb1287>AT90USB1287</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="css: {error: dfuPathBroken, success: dfuPathOk}">
-                        <label class="control-label">{{ _('Path to dfu-programmer') }}</label>
-                        <div class="controls">
-                            <div class="input-append">
-                                <input type="text" class="input-block-level" data-bind='value: configDfuPath, valueUpdate: "afterkeydown"'>
-                                <button class="btn" type="button" data-bind="click: testDfuPath, enable: configDfuPath, css: {disabled: !configDfuPath()}">{{ _('Test') }}</button>
-                            </div>
-                            <span class="help-block" data-bind="visible: dfuPathBroken() || dfuPathOk, text: dfuPathText"></span>
-                        </div>
-                    </div>
-                    <hr>
-                </div>
-                <!-- end avrdude options -->
-
-                <!-- stm32flash options for STM32 MCUs -->
-                <div data-bind="visible: showStm32flashConfig">
-                    <div class="control-group" data-bind="css: {error: stm32flashPathBroken, success: stm32flashPathOk}">
-                        <label class="control-label">{{ _('Path to stm32flash') }}</label>
-                        <div class="controls">
-                            <div class="input-append">
-                                <input type="text" class="input-block-level" data-bind='value: configStm32flashPath, valueUpdate: "afterkeydown"'>
-                                <button class="btn" type="button" data-bind="click: testStm32flashPath, enable: configStm32flashPath, css: {disabled: !configStm32flashPath()}">{{ _('Test') }}</button>
-                            </div>
-                            <span class="help-block" data-bind="visible: stm32flashPathBroken() || stm32flashPathOk, text: stm32flashPathText"></span>
-                        </div>
-                    </div>
-                    <hr>
-                </div>
-                <!-- end stm32flash options -->
-
-                <!-- advanced options -->
-                <div data-bind="visible: !showAdvancedConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig() || showMarlinBftConfig())">
-                    <label data-bind="click: toggleAdvancedConfig" >
-                        <i class="icon-chevron-right icon-fixed-width"></i>Advanced Flash Method Settings
-                    </label>
-                </div>
-                <div data-bind="visible: showAdvancedConfig">
-                    <label data-bind="click: toggleAdvancedConfig" >
-                            <i class="icon-chevron-down icon-fixed-width"></i>Advanced Flash Method Settings
-                    </label>
-
-                    <!-- Advanced avrdude options-->
-                    <div data-bind="visible: showAvrdudeConfig">
-                        <div class="control-group">
-                            <label class="control-label">{{ _('avrdude Baud Rate') }}</label>
+              <!-- Tab panes -->
+              <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="flash-method" data-bind ="visible: showProfileSettingsInOptions">
+                    <form class="form-horizontal">
+                        <div class="control-group" data-bind="visible: configProfilesVisible">
+                            <label class="control-label">{{ _('Profile name') }}</label>
                             <div class="controls">
-                                <select data-bind="value: configAvrdudeBaudRate">
-                                    <option value=>Default</option>
-                                    <option value=19200>19200</option>
-                                    <option value=38400>38400</option>
-                                    <option value=57600>57600</option>
-                                    <option value=115200>115200</option>
-                                    <option value=250000>250000</option>
+                                <input type="text" data-bind='value: configProfileName'>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Flash method') }}</label>
+                            <div class="controls">
+                                <select style="width:285px;" data-bind="value: configFlashMethod">
+                                    <option></option>
+                                    <option value=avrdude>avrdude (Atmel AVR Family)</option>
+                                    <option value=bossac>bossac (Atmel SAM Family)</option>
+                                    <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
+                                    <option value=lpc1768>lpc176x (LPC176x Boards)</option>
+                                    <option value=marlinbft>marlinbft (Marlin Binary File Transfer)</option>
+                                    <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
                                 </select>
-                                <span class="help-block">{{ _('Override the default avrdude baud rate.') }}</span>
                             </div>
                         </div>
-                        <div class="control-group" data-bind="css: {error: avrdudeConfPathBroken, success: avrdudeConfPathOk}">
-                            <label class="control-label">{{ _('Path to avrdude config file') }}</label>
-                            <div class="controls">
-                                <div class="input-append">
-                                    <input type="text" class="input-block-level" data-bind='value: configAvrdudeConfigFile, valueUpdate: "afterkeydown"'>
-                                    <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
+                        <!-- avrdude options for 8-bit MCUs -->
+                        <div data-bind="visible: showAvrdudeConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('AVR MCU') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configAvrdudeMcu">
+                                        <option value=></option>
+                                        <option value=m328p>ATmega328p</option>
+                                        <option value=m644p>ATmega644p</option>
+                                        <option value=m1280>ATmega1280</option>
+                                        <option value=m1284p>ATmega1284p</option>
+                                        <option value=m2560>ATmega2560</option>
+                                        <option value=atmega32u4>ATmega32u4</option>
+                                    </select>
                                 </div>
-                                <span class="help-block" data-bind="visible: avrdudeConfPathBroken() || avrdudeConfPathOk, text: avrdudeConfPathText"></span>
-                                <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
                             </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Disable write verification') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" class="input-block-level" data-bind="checked: configAvrdudeDisableVerification">
+                            <div class="control-group" data-bind="css: {error: avrdudePathBroken, success: avrdudePathOk}">
+                                <label class="control-label">{{ _('Path to avrdude') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configAvrdudePath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testAvrdudePath, enable: configAvrdudePath, css: {disabled: !configAvrdudePath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: avrdudePathBroken() || avrdudePathOk, text: avrdudePathText"></span>
                                 </div>
-                                <span class="help-block">{{ _('If checked the avrdude verification phase will be skipped.') }}</span>
                             </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Command line') }}</label>
-                            <div class="controls">
-                                <div class="input-append">
-                                    <input type="text" class="input-block-level" data-bind="value: configAvrdudeCommandLine">
-                                    <button class="btn" type="button" data-bind="click: resetAvrdudeCommandLine">{{ _('Reset') }}</button>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('AVR Programmer Type') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configAvrdudeProgrammer">
+                                        <option value=></option>
+                                        <option value=arduino>arduino</option>
+                                        <option value=avr109>avr109</option>
+                                        <option value=usbasp>usbasp</option>
+                                        <option value=stk500v2>stk500v2</option>
+                                        <option value=wiring>wiring</option>
+                                        <option value=linuxgpio>linuxgpio</option>
+                                    </select>
                                 </div>
-                                <span class="help-block">{{ _('Customize the avrdude command line.') }}</span>
                             </div>
                         </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Disable bootloader warning') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" class="input-block-level" data-bind="checked: configDisableBootloaderCheck">
-                                </div>
-                                <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- End advanced avrdude options -->
+                        <!-- end avrdude options -->
 
-                    <!-- Advanced bossac options -->
-                    <div data-bind="visible: showBossacConfig">
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Disable write verification') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" class="input-block-level" data-bind="checked: configBossacDisableVerification">
+                        <!-- bossac options for 32-bit MCUs -->
+                        <div data-bind="visible: showBossacConfig">
+                            <div class="control-group" data-bind="css: {error: bossacPathBroken, success: bossacPathOk}">
+                                <label class="control-label">{{ _('Path to bossac') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configBossacPath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testBossacPath, enable: configBossacPath, css: {disabled: !configBossacPath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: bossacPathBroken() || bossacPathOk, text: bossacPathText"></span>
                                 </div>
-                                <span class="help-block">{{ _('If checked the bossac verification phase will be skipped.') }}</span>
                             </div>
                         </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Command line') }}</label>
-                            <div class="controls">
-                                <div class="input-append">
-                                    <input type="text" class="input-block-level" data-bind="value: configBossacCommandLine">
-                                    <button class="btn" type="button" data-bind="click: resetBossacCommandLine">{{ _('Reset') }}</button>
-                                </div>
-                                <span class="help-block">{{ _('Customize the bossac command line.') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- End advanced bossac options-->
+                        <!-- end bossac options -->
 
-                    <!-- Advanced lpc1768 options -->
-                    <div data-bind="visible: showLpc1768Config">
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Reset before flashing') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" data-bind="checked: configLpc1768ResetBeforeFlash">
+                        <!-- lpc1768 options for LPC1768 MCUs -->
+                        <div data-bind="visible: showLpc1768Config">
+                            <div class="control-group" data-bind="css: {error: lpc1768PathBroken, success: lpc1768PathOk}">
+                                <label class="control-label">{{ _('Path to firmware folder') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configLpc1768Path, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testLpc1768Path, enable: configLpc1768Path, css: {disabled: !configLpc1768Path()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: lpc1768PathBroken() || lpc1768PathOk, text: lpc1768PathText"></span>
                                 </div>
-                                <span class="help-block">{{ _('If checked the board will be reset before a firmware update is attempted. Helps to ensure that the SD card is properly mounted.') }}</span>
                             </div>
                         </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Unmount command') }}</label>
-                            <div class="controls">
-                                <div class="input-append">
-                                    <input type="text" class="input-block-level" data-bind='value: configLpc1768UnmountCommand'>
-                                    <button class="btn" type="button" data-bind="click: resetLpc1768UnmountCommand">{{ _('Reset') }}</button>
-                                </div>
-                                <span class="help-block">{{ _('Customize the command used to unmount the SD card. Clear to disable.') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" data-bind="checked: configLpc1768NoResetWait">
-                                </div>
-                                <span class="help-block">{{ _('Plugin won\'t wait for board to reset or check that it has restarted after sending reset command.') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" data-bind="checked: configLpc1768NoRestartWait, disable: configLpc1768NoResetWait">
-                                </div>
-                                <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Advanced lpc1768 options -->
+                        <!-- end lpc1768 options -->
 
-                    <!-- Advanced marlinbft options -->
-                    <div data-bind="visible: showMarlinBftConfig">
+                        <!-- marlinbft options for -->
+                        <div data-bind="visible: showMarlinBftConfig">
+                            <div>
+                                <div>
+                                    <i class="icon-list"></i><h5 style="display: inline-block; margin-left: 5px;">Prerequisite Status</h5>
+                                    <div data-bind="visible: marlinbftHasCapability()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-check" style="margin-right: 5px; color: green;" title="Capability detected"></i>Marlin <code>BINARY_FILE_TRANSFER</code> firmware feature is detected</div>
+                                    <div data-bind="visible: !marlinbftHasCapability()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-warning-sign" style="margin-right: 5px; color: red;" title="Capability not detected"></i>Marlin <code>BINARY_FILE_TRANSFER</code> firmware feature is <b>NOT</b> detected</div>
+                                    <div data-bind="visible: marlinbftHasBinProto2Package()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-check" style="margin-right: 5px; color: green;" title="Package installed"></i>Python <code>marlin-binary-protocol</code> package is installed</div>
+                                    <div data-bind="visible: !marlinbftHasBinProto2Package()" style="margin-left: 20px; margin-bottom: 5px;"><i class="icon-warning-sign" style="margin-right: 5px; color: red;" title="Package not installed"></i>Python <code>marlin-binary-protocol</code> package is <b>NOT</b> installed</div>
+                                    <div style="margin-left: 10px;"><p>Reload browser to refresh status.  See the <a href="https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/blob/devel/doc/marlinbft.md" target="_new">documentation</a> for more information about the prerequisites.</p></div>
+                                </div>
+                                <div>
+                                    <i class="icon-warning-sign"></i><h5 style="display: inline-block; margin-left: 5px;">Warning!</h5>
+                                    <div style="margin-left: 10px;">
+                                        <p>The Marlin Binary File Transfer protocol is still in an <a href="https://github.com/MarlinFirmware/Marlin/pull/14817" target="_new">unfinished / experimental state</a>.  Changes in Marlin may break this method at any time.</p>
+                                        <p>That said, it works quite well.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end marlinbft options -->
+
+                        <!-- dfu-programmer options -->
+                        <div data-bind="visible: showDfuConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('AVR MCU') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configDfuMcu">
+                                        <option value=></option>
+                                        <option value=at90usb1286>AT90USB1286</option>
+                                        <option value=at90usb1287>AT90USB1287</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="control-group" data-bind="css: {error: dfuPathBroken, success: dfuPathOk}">
+                                <label class="control-label">{{ _('Path to dfu-programmer') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configDfuPath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testDfuPath, enable: configDfuPath, css: {disabled: !configDfuPath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: dfuPathBroken() || dfuPathOk, text: dfuPathText"></span>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                        <!-- end avrdude options -->
+
+                        <!-- stm32flash options for STM32 MCUs -->
+                        <div data-bind="visible: showStm32flashConfig">
+                            <div class="control-group" data-bind="css: {error: stm32flashPathBroken, success: stm32flashPathOk}">
+                                <label class="control-label">{{ _('Path to stm32flash') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configStm32flashPath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testStm32flashPath, enable: configStm32flashPath, css: {disabled: !configStm32flashPath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: stm32flashPathBroken() || stm32flashPathOk, text: stm32flashPathText"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end stm32flash options -->
+
+                    </form>
+                
+                </div>
+
+                <!-- Advanced Tab -->
+                <div role="tabpanel" class="tab-pane" id="advanced" data-bind ="visible: showProfileSettingsInOptions">
+                    <form class="form-horizontal">
+                        <!-- Advanced avrdude options-->
+                        <div data-bind="visible: showAvrdudeConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('avrdude Baud Rate') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configAvrdudeBaudRate">
+                                        <option value=>Default</option>
+                                        <option value=19200>19200</option>
+                                        <option value=38400>38400</option>
+                                        <option value=57600>57600</option>
+                                        <option value=115200>115200</option>
+                                        <option value=250000>250000</option>
+                                    </select>
+                                    <span class="help-block">{{ _('Override the default avrdude baud rate.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group" data-bind="css: {error: avrdudeConfPathBroken, success: avrdudeConfPathOk}">
+                                <label class="control-label">{{ _('Path to avrdude config file') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configAvrdudeConfigFile, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testAvrdudeConf, enable: configAvrdudeConfigFile, css: {disabled: !configAvrdudeConfigFile()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: avrdudeConfPathBroken() || avrdudeConfPathOk, text: avrdudeConfPathText"></span>
+                                    <span class="help-block">{{ _('Can be left empty, in which case avrdude will use the global configuration file.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Disable write verification') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configAvrdudeDisableVerification">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the avrdude verification phase will be skipped.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configAvrdudeCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetAvrdudeCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the avrdude command line.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Disable bootloader warning') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configDisableBootloaderCheck">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End advanced avrdude options -->
+
+                        <!-- Advanced bossac options -->
+                        <div data-bind="visible: showBossacConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Disable write verification') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configBossacDisableVerification">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the bossac verification phase will be skipped.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configBossacCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetBossacCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the bossac command line.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End advanced bossac options-->
+
+                        <!-- Advanced lpc1768 options -->
+                        <div data-bind="visible: showLpc1768Config">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Reset before flashing') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configLpc1768ResetBeforeFlash">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the board will be reset before a firmware update is attempted. Helps to ensure that the SD card is properly mounted.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Unmount command') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configLpc1768UnmountCommand'>
+                                        <button class="btn" type="button" data-bind="click: resetLpc1768UnmountCommand">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the command used to unmount the SD card. Clear to disable.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configLpc1768NoResetWait">
+                                    </div>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configLpc1768NoRestartWait, disable: configLpc1768NoResetWait">
+                                    </div>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Advanced lpc1768 options -->
+
+                        <!-- Advanced marlinbft options -->
+                        <div data-bind="visible: showMarlinBftConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Wait after connect') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configMarlinBftWaitAfterConnect">
+                                        <span class="add-on">seconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('Some boards reset after getting the command to start binary transfer mode. When required, a value of 3 seconds is usually sufficient.  Default: 0s') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Communication timeout') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="0" max="10000" data-bind="value: configMarlinBftTimeout">
+                                        <span class="add-on">milliseconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('Protocol communication timeout.  Default: 1000ms') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Verbose progress logging') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
+                                    </div>
+                                    <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftNoResetWait">
+                                    </div>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftNoRestartWait, disable: configMarlinBftNoResetWait">
+                                    </div>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Advanced marlinbft options -->
+
+                        <!-- Advanced dfu-programmer options -->
+                        <div data-bind="visible: showDfuConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Erase command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configDfuEraseCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetDfuEraseCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the dfu-programmer erase command line.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Flash command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configDfuCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetDfuCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the dfu-programmer flash command line.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End advanced bossac options-->
+
+                        <!-- Advanced stm32flash options -->
+                        <div data-bind="visible: showStm32flashConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Verify while writing') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configStm32flashVerify">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the flash memory will be verified as it is written. Uncheck to disable verification.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('BOOT0 pin') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configStm32flashBoot0Pin">
+                                        <option value="dtr">DTR</option>
+                                        <option value="rts">RTS</option>
+                                    </select>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-bind="checked: configStm32flashBoot0Low"> Low
+                                    </label>
+                                    <span class="help-block">{{ _('Serial pin used to enable bootloader. Default: RTS; \'Low\' unchecked.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Reset pin') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configStm32flashResetPin">
+                                        <option value="dtr">DTR</option>
+                                        <option value="rts">RTS</option>
+                                    </select>
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-bind="checked: configStm32flashResetLow"> Low
+                                    </label>
+                                    <span class="help-block">{{ _('Serial pin used to reset MCU. Default: DTR; \'Low\' checked.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Start execution') }}</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-bind="checked: configStm32flashExecute">
+                                    </label>
+                                    <div class="input">
+                                        <input type="text" class="input-block-level" data-bind="value: configStm32flashExecuteAddress, enable: configStm32flashExecute, css: {disabled: !configStm32flashExecute()}">
+                                    </div>
+                                    <span class="help-block">{{ _('Address to execute after flashing. Default: 0x800000') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Reset after flashing') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configStm32flashReset, disable: configStm32flashExecute">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the MCU will be reset after flashing.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End stm32flash options-->
+                    </form>
+                </div>
+                <!-- End Advanced Tab -->
+
+                <!-- Pre-Flash Tab -->
+                <div role="tabpanel" class="tab-pane" id="preflash" data-bind ="visible: showProfileSettingsInOptions">
+                    <form class="form-horizontal">
+                        <!-- Pre-flash commandline -->
                         <div class="control-group">
-                            <label class="control-label">{{ _('Wait after connect') }}</label>
+                            <label class="control-label">{{ _('Pre-flash system command') }}</label>
                             <div class="controls">
+                                 <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configEnablePreflashCommandline">
+                                </label>
+                                <div class="input">
+                                    <input type="text" class="input-block-level" data-bind="value: configPreflashCommandline, enable: configEnablePreflashCommandline">
+                                </div>
+                                <span class="help-block">{{ _('System command line to execute before flashing.') }}</span>
+                            </div>
+                        </div>
+                        <!-- End pre-flash commandline -->
+
+                        <!-- Pre-flash gcode -->
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Pre-flash gcode') }}</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configEnablePreflashGcode">
+                                </label>
+                                <div class="input">
+                                    <input type="text" class="input-block-level" data-bind="value: configPreflashGcode, enable: configEnablePreflashGcode">
+                                </div>
+                                <span class="help-block">{{ _('Gcode commands to run before flashing. <b>Pre-flash gcode commands will only run if the printer is connected.</b> Separate multiple commands with a semi colon.') }}</span>
+                            </div>
+                        </div>
+                        <!-- End pre-flash gcode -->
+
+                        <!-- Pre-flash gcode delay -->
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Pre-flash gcode delay') }}</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configEnablePreflashDelay">
+                                </label>
                                 <div class="input-append">
-                                    <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configMarlinBftWaitAfterConnect">
+                                    <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configPreflashDelay, enable: configEnablePreflashDelay">
                                     <span class="add-on">seconds</span>
                                 </div>
-                                <span class="help-block">{{ _('Some boards reset after getting the command to start binary transfer mode. A value of 3 seconds is normal for when this wait is required.  Default is 0s') }}</span>
+                                <span class="help-block">{{ _('Delay after sending pre-flash gcode. Allows time for code to complete before initiating flash.') }}</span>
                             </div>
                         </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Communication timeout') }}</label>
-                            <div class="controls">
-                                <div class="input-append">
-                                    <input type="number" class="input-mini text-right" step=any min="0" max="10000" data-bind="value: configMarlinBftTimeout">
-                                    <span class="add-on">milliseconds</span>
-                                </div>
-                                <span class="help-block">{{ _('Protocol communication timeout.  Default is 1000ms') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Verbose progress logging') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
-                                </div>
-                                <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" data-bind="checked: configMarlinBftNoResetWait">
-                                </div>
-                                <span class="help-block">{{ _('Plugin won\'t wait for board to reset or check that it has restarted after sending reset command.') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
-                            <div class="controls">
-                                <div class="input">
-                                    <input type="checkbox" data-bind="checked: configMarlinBftNoRestartWait, disable: configMarlinBftNoResetWait">
-                                </div>
-                                <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Advanced marlinbft options -->
+                        <!-- End pre-flash delay -->
+                    </form>
+                </div>
+                <!-- End Pre-Flash Tab -->
 
-                    <!-- Advanced dfu-programmer options -->
-                    <div data-bind="visible: showDfuConfig">
+                <!-- Post-Flash Tab -->
+                <div role="tabpanel" class="tab-pane" id="postflash" data-bind ="visible: showProfileSettingsInOptions">
+                    <form class="form-horizontal">
                         <div class="control-group">
-                            <label class="control-label">{{ _('Erase command line') }}</label>
-                            <div class="controls">
-                                <div class="input-append">
-                                    <input type="text" class="input-block-level" data-bind="value: configDfuEraseCommandLine">
-                                    <button class="btn" type="button" data-bind="click: resetDfuEraseCommandLine">{{ _('Reset') }}</button>
-                                </div>
-                                <span class="help-block">{{ _('Customize the dfu-programmer erase command line.') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Flash command line') }}</label>
-                            <div class="controls">
-                                <div class="input-append">
-                                    <input type="text" class="input-block-level" data-bind="value: configDfuCommandLine">
-                                    <button class="btn" type="button" data-bind="click: resetDfuCommandLine">{{ _('Reset') }}</button>
-                                </div>
-                                <span class="help-block">{{ _('Customize the dfu-programmer flash command line.') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- End advanced bossac options-->
-
-                    <!-- Advanced stm32flash options -->
-                    <div data-bind="visible: showStm32flashConfig">
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Verify while writing') }}</label>
+                            <label class="control-label">{{ _('Don\'t reconnect automatically') }}</label>
                             <div class="controls">
                                 <div class="input">
-                                    <input type="checkbox" data-bind="checked: configStm32flashVerify">
+                                    <input type="checkbox" data-bind="checked: configNoAutoReconnect">
                                 </div>
-                                <span class="help-block">{{ _('If checked memory will be verified as it get flashed. Otherwise memory won\'t be verified.') }}</span>
+                                <span class="help-block">{{ _('If checked the plugin won\'t attempt to reconnect the printer after the firmware update completes.') }}</span>
                             </div>
                         </div>
+                        <!-- Post-flash commandline -->
                         <div class="control-group">
-                            <label class="control-label">{{ _('BOOT0 pin') }}</label>
-                            <div class="controls">
-                                <select data-bind="value: configStm32flashBoot0Pin">
-                                    <option value="dtr">DTR</option>
-                                    <option value="rts">RTS</option>
-                                </select>
-                                <label class="checkbox">
-                                    <input type="checkbox" data-bind="checked: configStm32flashBoot0Low"> Low
-                                </label>
-                                <span class="help-block">{{ _('Serial pin to enable bootloader') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Reset pin') }}</label>
-                            <div class="controls">
-                                <select data-bind="value: configStm32flashResetPin">
-                                    <option value="dtr">DTR</option>
-                                    <option value="rts">RTS</option>
-                                </select>
-                                <label class="checkbox">
-                                    <input type="checkbox" data-bind="checked: configStm32flashResetLow"> Low
-                                </label>
-                                <span class="help-block">{{ _('Serial pin to reset MCU') }}</span>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">{{ _('Start execution') }}</label>
+                            <label class="control-label">{{ _('Post-flash system command') }}</label>
                             <div class="controls">
                                 <label class="checkbox">
-                                    <input type="checkbox" data-bind="checked: configStm32flashExecute"> Enabled
+                                    <input type="checkbox" data-bind="checked: configEnablePostflashCommandline">
                                 </label>
                                 <div class="input">
-                                    <input type="text" class="input-block-level" data-bind="value: configStm32flashExecuteAddress, enable: configStm32flashExecute, css: {disabled: !configStm32flashExecute()}">
+                                    <input type="text" class="input-block-level" data-bind="value: configPostflashCommandline, enable: configEnablePostflashCommandline">
                                 </div>
-                                <span class="help-block">{{ _('Address to execute after flashing.') }}</span>
+                                <span class="help-block">{{ _('System command line to execute after flashing.') }}</span>
+                            </div>
+                        </div>
+                        <!-- End post-flash commandline -->
+
+                        <!-- Post-flash delay -->
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Post-flash delay') }}</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configEnablePostflashDelay">
+                                </label>
+                                <div class="input-append">
+                                    <input type="number" class="input-mini text-right" step=any min="0" max="180" data-bind="value: configPostflashDelay, enable: configEnablePostflashDelay">
+                                    <span class="add-on">seconds</span>
+                                </div>
+                                <span class="help-block">{{ _('Give the board time to boot before allowing OctoPrint to reconnect.') }}</span>
+                            </div>
+                        </div>
+                        <!-- End post-flash delay -->
+
+                        <!-- Post-flash gcode -->
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Post-flash gcode') }}</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: configEnablePostflashGcode">
+                                </label>
+                                <div class="input">
+                                    <input type="text" class="input-block-level" data-bind="value: configPostflashGcode, enable: configEnablePostflashGcode">
+                                </div>
+                                <span class="help-block">{{ _('Gcode commands which will be run when the printer reconnects after firmware is flashed. Separate multiple commands with a semi colon.') }}</span>
+                            </div>
+                        </div>
+                        <!-- End post-flash gcode -->
+                    </form>
+                </div>
+                <!-- End Post-Flash Tab -->
+
+                <!-- Plugin Options Tab -->
+                <div role="tabpanel" class="tab-pane" id="plugin" data-bind ="visible: showPluginSettingsInOptions">
+                    <form class="form-horizontal">
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Enable navbar icon') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configShowNavbarIcon">
+                                </div>
+                                <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar. Reload after enabling/disabling.') }}</span>
                             </div>
                         </div>
                         <div class="control-group">
-                            <label class="control-label">{{ _('Reset after flashing') }}</label>
+                            <label class="control-label">{{ _('Enable profiles') }}</label>
                             <div class="controls">
                                 <div class="input">
-                                    <input type="checkbox" data-bind="checked: configStm32flashReset, disable: configStm32flashExecute">
+                                    <input type="checkbox" data-bind="checked: configProfilesEnabled">
                                 </div>
-                                <span class="help-block">{{ _('If checked MCU will be reset after flashing.') }}</span>
+                                <span class="help-block">{{ _('Enables multiple configurable firmware update profiles. Useful when multiple printers are connected to the same OctoPrint instance.') }}</span>
                             </div>
                         </div>
-                    </div>
-                    <!-- End stm32flash options-->
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Remember URL') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configSaveUrl">
+                                </div>
+                                <span class="help-block">{{ _('Last-used URL will be remembered when using \'Flash from URL\'.') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Disable file filter') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configDisableFileFilter">
+                                </div>
+                                <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'.') }}</span>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <!-- End advanced options-->
-
-                <!-- Pre-flash and post-flash settings -->
-                <div data-bind="visible: !showPostflashConfig() && (showAvrdudeConfig() || showBossacConfig() || showLpc1768Config() || showDfuConfig() || showStm32flashConfig() || showMarlinBftConfig())">
-                    <label data-bind="click: togglePostflashConfig" >
-                        <i class="icon-chevron-right icon-fixed-width"></i>Pre-Flash and Post-Flash Settings
-                    </label>
-                </div>
-                <div data-bind="visible: showPostflashConfig">
-                    <label data-bind="click: togglePostflashConfig" >
-                            <i class="icon-chevron-down icon-fixed-width"></i>Pre-Flash and Post-Flash Settings
-                    </label>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Don\'t reconnect automatically') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" data-bind="checked: configNoAutoReconnect">
-                            </div>
-                            <span class="help-block">{{ _('Plugin won\'t attempt to reconnect the printer after the firmware update completes') }}</span>
-                        </div>
-                    </div>
-                    <!-- Pre-flash commandline -->
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Pre-flash system command') }}</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: configEnablePreflashCommandline"> Enabled
-                            </label>
-                            <div class="input">
-                                <input type="text" class="input-block-level" data-bind="value: configPreflashCommandline, enable: configEnablePreflashCommandline">
-                            </div>
-                            <span class="help-block">{{ _('System command line to execute before flashing.') }}</span>
-                        </div>
-                    </div>
-                    <!-- End pre-flash commandline -->
-
-                    <!-- Pre-flash gcode -->
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Pre-flash gcode') }}</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: configEnablePreflashGcode"> Enabled
-                            </label>
-                            <div class="input">
-                                <input type="text" class="input-block-level" data-bind="value: configPreflashGcode, enable: configEnablePreflashGcode">
-                            </div>
-                            <span class="help-block">{{ _('Gcode commands to run before blashing. <b>Pre-flash gcode commands will only run if the printer is connected.</b> Separate multiple commands with a semi colon.') }}</span>
-                        </div>
-                    </div>
-                    <!-- End pre-flash gcode -->
-
-                    <!-- Pre-flash gcode delay -->
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Pre-flash gcode delay') }}</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: configEnablePreflashDelay"> Enabled
-                            </label>
-                            <div class="input-append">
-                                <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configPreflashDelay, enable: configEnablePreflashDelay">
-                                <span class="add-on">seconds</span>
-                            </div>
-                            <span class="help-block">{{ _('Delay after sending pre-flash gcode. Allows time for code to complete before initiating flash.') }}</span>
-                        </div>
-                    </div>
-                    <!-- End pre-flash delay -->
-
-                    <!-- Post-flash commandline -->
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Post-flash system command') }}</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: configEnablePostflashCommandline"> Enabled
-                            </label>
-                            <div class="input">
-                                <input type="text" class="input-block-level" data-bind="value: configPostflashCommandline, enable: configEnablePostflashCommandline">
-                            </div>
-                            <span class="help-block">{{ _('System command line to execute after flashing.') }}</span>
-                        </div>
-                    </div>
-                    <!-- End post-flash commandline -->
-
-                    <!-- Post-flash delay -->
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Post-flash delay') }}</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: configEnablePostflashDelay"> Enabled
-                            </label>
-                            <div class="input-append">
-                                <input type="number" class="input-mini text-right" step=any min="0" max="180" data-bind="value: configPostflashDelay, enable: configEnablePostflashDelay">
-                                <span class="add-on">seconds</span>
-                            </div>
-                            <span class="help-block">{{ _('Give the board time to boot before allowing OctoPrint to reconnect.') }}</span>
-                        </div>
-                    </div>
-                    <!-- End post-flash delay -->
-
-                    <!-- Post-flash gcode -->
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Post-flash gcode') }}</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: configEnablePostflashGcode"> Enabled
-                            </label>
-                            <div class="input">
-                                <input type="text" class="input-block-level" data-bind="value: configPostflashGcode, enable: configEnablePostflashGcode">
-                            </div>
-                            <span class="help-block">{{ _('Gcode commands which will be run when the printer reconnects after firmware is flashed. Separate multiple commands with a semi colon.') }}</span>
-                        </div>
-                    </div>
-                    <!-- End post-flash gcode -->
-                </div>
-                <!-- End pre-flash and post-flash settings -->
-
-                <!-- Plugin Options -->
-                <div data-bind="visible: !showPluginOptions()">
-                    <label data-bind="click: togglePluginOptions" >
-                        <i class="icon-chevron-right icon-fixed-width"></i>Plugin Options
-                    </label>
-                </div>
-                <div data-bind="visible: showPluginOptions">
-                    <label data-bind="click: togglePluginOptions" >
-                            <i class="icon-chevron-down icon-fixed-width"></i>Plugin Options
-                    </label>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Enable navbar icon') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configShowNavbarIcon">
-                            </div>
-                            <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar.  (Reload after enabling/disabling.)') }}</span>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Remember URL') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configSaveUrl">
-                            </div>
-                            <span class="help-block">{{ _('Last URL will be remembered when using \'Flash from URL\'.') }}</span>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label">{{ _('Disable file filter') }}</label>
-                        <div class="controls">
-                            <div class="input">
-                                <input type="checkbox" class="input-block-level" data-bind="checked: configDisableFileFilter">
-                            </div>
-                            <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'. (For compatibility with browsers which do not support the \'accept\' attribute.)') }}</span>
-                        </div>
-                    </div>
-                </div>
-            </form>
+                <!-- End Plugin Options Tab -->
+              </div>
+            </div>
             <div class="pull-right" style="font-size:12px; opacity:0.6">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
         </div>
         <div class="modal-footer">
             <button class="btn" data-dismiss="modal" data-bind="click: onConfigHidden" aria-hidden="true">{{ _('Cancel') }}</button>
-            <button class="btn btn-primary" style="border-color: #04c #04c #002a80;" data-bind="click: onConfigClose, enable: !saving(), css: {disabled: saving()}" aria-hidden="true">
+            <button class="btn btn-primary btn-primary-fix" data-bind="click: onConfigClose, enable: !saving(), css: {disabled: saving()}" aria-hidden="true">
                 <i class="fas fa-spinner fa-spin" data-bind="visible: saving" style="display: none;"></i>{{ _(' Save') }}
             </button>
         </div>
     </div>
-    <div id="BootLoaderWarning" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_bootLoaderWarningModal" class="modal hide fade">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
-            <h3>Firmware Updater</h3>
+            <h3>Bootloader Warning</h3>
         </div>
         <div class="modal-body">
             <i class="icon-warning-sign"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Warning</h5>
@@ -688,7 +717,54 @@
             </p>
         </div>
         <div class="modal-footer">
-            <a href="#" class="btn" data-dismiss="modal" aria-hidden="true" data-bind="click: returnFalse">{{ _('OK') }}</a>
+            <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
+        </div>
+    </div>
+    <div id="settings_plugin_firmwareupdater_newProfileModal" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>Create New Profile</h3>
+        </div>
+        <div class="modal-body">
+            <label class="control-label">{{ _('New profile name') }}</label>
+            <div class="controls controls-row">
+                <input class="input-block-level" type="text" data-bind='value: newProfileName, valueUpdate: "afterkeydown"'>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Create') }}</button>
+        </div>
+    </div>
+    <div id="settings_plugin_firmwareupdater_copyProfileModal" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>Copy Profile</h3>
+        </div>
+        <div class="modal-body">
+            <label class="control-label">{{ _('New profile name') }}</label>
+            <div class="controls controls-row">
+                <input class="input-block-level" type="text" data-bind='value: newProfileName, valueUpdate: "afterkeydown"'>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="enable: !adding(), css: {disabled: adding()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Copy') }}</button>
+        </div>
+    </div>
+    <div id="settings_plugin_firmwareupdater_profileDeleteModal" class="modal hide fade">
+        <div class="modal-header">
+            <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+            <h3>Confirm Profile Deletion</h3>
+        </div>
+        <div class="modal-body">
+            <p>
+                Delete the Firmware Updater profile '<span data-bind="text: selectedProfileName"></span>'?
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" data-dismiss="modal" aria-hidden="true" data-bind="enable: !deleting(), css: {disabled: deleting()}">{{ _('Cancel') }}</button>
+            <button class="btn btn-danger" aria-hidden="true" data-bind="click: deleteSelectedProfile, enable: !deleting(), css: {disabled: deleting()}"><i class="fas fa-spinner fa-spin" data-bind="visible: deleting" style="display: none;"></i>{{ _(' Delete') }}</button>
         </div>
     </div>
 </div>

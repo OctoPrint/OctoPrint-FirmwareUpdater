@@ -9,7 +9,7 @@ DFUPROG_VALIDATING = "Validating"
 DFUPROG_NODEVICE = "no device present"
 
 def _check_dfuprog(self):
-    dfuprog_path = self._settings.get(["dfuprog_path"])
+    dfuprog_path = self.get_profile_setting("dfuprog_path")
     pattern = re.compile("^(\/[^\0/]+)+$")
 
     if not pattern.match(dfuprog_path):
@@ -36,11 +36,11 @@ def _flash_dfuprog(self, firmware=None, printer_port=None, **kwargs):
     if not _erase_dfuprog(self):
         return False
 
-    dfuprog_path = self._settings.get(["dfuprog_path"])
-    dfuprog_avrmcu = self._settings.get(["dfuprog_avrmcu"])
+    dfuprog_path = self.get_profile_setting("dfuprog_path")
+    dfuprog_avrmcu = self.get_profile_setting("dfuprog_avrmcu")
     working_dir = os.path.dirname(dfuprog_path)
 
-    dfuprog_command = self._settings.get(["dfuprog_commandline"])
+    dfuprog_command = self.get_profile_setting("dfuprog_commandline")
     dfuprog_command = dfuprog_command.replace("{dfuprogrammer}", dfuprog_path)
     dfuprog_command = dfuprog_command.replace("{mcu}", dfuprog_avrmcu)
     dfuprog_command = dfuprog_command.replace("{firmware}", firmware)
@@ -88,11 +88,12 @@ def _flash_dfuprog(self, firmware=None, printer_port=None, **kwargs):
         return False
 
 def _erase_dfuprog(self):
-    dfuprog_path = self._settings.get(["dfuprog_path"])
-    dfuprog_avrmcu = self._settings.get(["dfuprog_avrmcu"])
+    dfuprog_path = self.get_profile_setting("dfuprog_path")
+    dfuprog_avrmcu = self.get_profile_setting("dfuprog_avrmcu")
+
     working_dir = os.path.dirname(dfuprog_path)
 
-    dfuprog_erasecommand = self._settings.get(["dfuprog_erasecommandline"])
+    dfuprog_erasecommand = self.get_profile_setting("dfuprog_erasecommandline")
     dfuprog_erasecommand = dfuprog_erasecommand.replace("{dfuprogrammer}", dfuprog_path)
     dfuprog_erasecommand = dfuprog_erasecommand.replace("{mcu}", dfuprog_avrmcu)
 

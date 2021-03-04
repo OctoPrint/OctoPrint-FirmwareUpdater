@@ -6,7 +6,7 @@ def getGPIO(pin, low):
     return ('-' if low else '') + pin
 
 def _check_stm32flash(self):
-    stm32flash_path = self._settings.get(["stm32flash_path"])
+    stm32flash_path = self.get_profile_setting("stm32flash_path")
 
     pattern = re.compile("^(\/[^\0/]+)+$")
 
@@ -29,16 +29,15 @@ def _flash_stm32flash(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
 
-    stm32flash_path = self._settings.get(["stm32flash_path"])
-    stm32flash_verify = self._settings.get(["stm32flash_verify"])
-    stm32flash_boot0pin = self._settings.get(["stm32flash_boot0pin"])
-    stm32flash_boot0low = self._settings.get(["stm32flash_boot0low"])
-    stm32flash_resetpin = self._settings.get(["stm32flash_resetpin"])
-    stm32flash_resetlow = self._settings.get(["stm32flash_resetlow"])
-    stm32flash_execute = self._settings.get(["stm32flash_execute"])
-    stm32flash_executeaddress = self._settings.get(["stm32flash_executeaddress"])
-    stm32flash_reset = self._settings.get(["stm32flash_reset"])
-
+    stm32flash_path = self.get_profile_setting("stm32flash_path")
+    stm32flash_verify = self.get_profile_setting_boolean("stm32flash_verify")
+    stm32flash_boot0pin = self.get_profile_setting("stm32flash_boot0pin")
+    stm32flash_boot0low = self.get_profile_setting_boolean("stm32flash_boot0low")
+    stm32flash_resetpin = self.get_profile_setting("stm32flash_resetpin")
+    stm32flash_resetlow = self.get_profile_setting_boolean("stm32flash_resetlow")
+    stm32flash_execute = self.get_profile_setting("stm32flash_execute")
+    stm32flash_executeaddress = self.get_profile_setting("stm32flash_executeaddress")
+    stm32flash_reset = self.get_profile_setting_boolean("stm32flash_reset")
 
     working_dir = os.path.dirname(stm32flash_path)
 

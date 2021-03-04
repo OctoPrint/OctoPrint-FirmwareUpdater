@@ -1,0 +1,27 @@
+
+.big-icon {
+    font-size: 1.3em;
+    padding-top: 4px;
+    padding-bottom: 2px;
+}
+
+.plugin-version {
+    font-size:12px; 
+    opacity:0.6;
+}
+
+.btn-primary-fix {
+    border-color: #04c #04c #002a80;
+}
+
+.color-black {
+    color: #000;
+}
+
+.leftm-5 {
+    margin-left: 5px;
+}
+
+.refreshdisabled {
+    color: #808080
+}
