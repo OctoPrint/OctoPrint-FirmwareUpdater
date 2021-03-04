@@ -305,7 +305,7 @@ $(function() {
         }
 
         self.connection.portOptions.subscribe(function(value) {
-            if (value === undefined) return;
+            if (self.isBusy || value === undefined) return;
             self.selectSerialPort.val(ko.toJS(self.selectedProfile()).serial_port);
         });
 
