@@ -17,3 +17,11 @@
 .color-black {
     color: #000;
 }
+
+.leftm-5 {
+    margin-left: 5px;
+}
+
+.refreshdisabled {
+    color: #808080
+}

@@ -1,7 +1,7 @@
 <div id="settings_plugin_firmwareupdater">
 
     <div class="pull-right">
-        <button class="btn btn-small" data-bind="click: showPluginOptions" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
+        <button class="btn btn-small" data-bind="click: showPluginOptions, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Plugin Settings') }}"><i class="icon-wrench"></i></button>
     </div>
 
     <h3>{{ _('Firmware Updater') }}</h3>
@@ -12,13 +12,13 @@
             <div class="control-group" title="{{ _('Select the firmware update profile') }}">
                 <label class="control-label">{{ _('Update Profile') }}</label>
                 <div class="controls controls-row">
-                    <select data-bind="foreach: profiles, value: selectedProfileIndex, event: { change: selectedProfileOnChange }">
+                    <select data-bind="foreach: profiles, value: selectedProfileIndex, event: { change: selectedProfileOnChange }, css: { disabled: isBusy() }, disable: isBusy">
                         <option data-bind="value: $index, text: _name"></option>
                     </select>
-                    <button class="btn big-icon" data-bind="click: editSelectedProfile" title="{{ _('Configure selected firmware update profile') }}"><i class="icon-cog"></i></button>
-                    <button class="btn big-icon" data-bind="click: showDeleteModal, enable: canDeleteProfile, css: {disabled: !canDeleteProfile()}" title="{{ _('Delete selected firmware update profile') }}"><i class="icon-trash"></i></button>
-                    <button class="btn big-icon" data-bind="click: showCopyModal" title="{{ _('Copy selected firmware update profile') }}"><i class="icon-copy"></i></button>
-                    <button class="btn big-icon" data-bind="click: showAddModal" title="{{ _('Add a new firmware update profile') }}"><i class="icon-plus"></i></button>
+                    <button class="btn big-icon" data-bind="click: editSelectedProfile, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Configure selected firmware update profile') }}"><i class="icon-cog"></i></button>
+                    <button class="btn big-icon" data-bind="click: showDeleteModal, enable: canDeleteProfile, css: {disabled: !canDeleteProfile() || isBusy()}, disable: !canDeleteProfile() || isBusy" title="{{ _('Delete selected firmware update profile') }}"><i class="icon-trash"></i></button>
+                    <button class="btn big-icon" data-bind="click: showCopyModal, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Copy selected firmware update profile') }}"><i class="icon-copy"></i></button>
+                    <button class="btn big-icon" data-bind="click: showAddModal, css: { disabled: isBusy() }, disable: isBusy" title="{{ _('Add a new firmware update profile') }}"><i class="icon-plus"></i></button>
                 </div>
             </div>
         </div>
@@ -26,8 +26,8 @@
         <div class="control-group" title="{{ _('Select the serial port where your printer is connected') }}">
             <label class="control-label">{{ _('Serial Port') }}</label>
             <div class="controls controls-row">
-                <select id="settings_plugin_firmwareupdater_selectSerialPort" data-bind="options: connection.portOptions, value: flashPort"></select>
-                <a href="#" data-bind="click: refreshPorts" title="Refresh serial ports"><i class="fas fa-sync color-black"></i></a>
+                <select id="settings_plugin_firmwareupdater_selectSerialPort" data-bind="options: connection.portOptions, value: flashPort, css: { disabled: isBusy() }, disable: isBusy"></select>
+                <a href="#" data-bind="click: refreshPorts" title="Refresh serial ports"><i data-bind="css: { refreshdisabled: isBusy() }" class="fas fa-sync color-black leftm-5"></i></a>
             </div>
         </div>
 
@@ -37,9 +37,8 @@
                 <div class="span8">
                     <div class="input-group controls-row">
                         <span class="span3">
-                            <span class="btn input-group-btn fileinput-button">
-                                <span>{{ _('Browse...') }}</span>
-                                <input id="settings_plugin_firmwareupdater_selectFilePath" type="file" name="file" data-bind='attr: { accept: filterFileTypes }' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
+                            <span class="btn input-group-btn fileinput-button" data-bind="css: { disabled: isBusy() }">{{ _('Browse...') }}
+                                <input id="settings_plugin_firmwareupdater_selectFilePath" type="file" name="file" data-bind='click: function() { return !isBusy(); }, attr: { accept: filterFileTypes }, css: { disabled: isBusy() }, disable: isBusy' data-url="{{ url_for("plugin.firmwareupdater.flash_firmware") }}">
                             </span>
                         </span>
                         <span class="span9">
@@ -48,7 +47,7 @@
                     </div>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind="attr: {title: fileFlashButtonText}, click: startFlashFromFile, enable: firmwareFileName, css: {disabled: !firmwareFileName() || isBusy()}">{{ _('Flash from File') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind="attr: {title: fileFlashButtonText}, click: startFlashFromFile, enable: firmwareFileName && !isBusy(), css: {disabled: !firmwareFileName() || isBusy()}">{{ _('Flash from File') }}</button>
                 </div>
             </div>
         </div>
@@ -57,10 +56,10 @@
             <label class="control-label">{{ _('... from URL') }}</label>
             <div class="controls controls-row">
                 <div class="span8">
-                    <input class="input-block-level" type="text" data-bind='value: firmwareFileURL, valueUpdate: "afterkeydown"'>
+                    <input class="input-block-level" type="text" data-bind='value: firmwareFileURL, valueUpdate: "afterkeydown", css: { disabled: isBusy() }, disable: isBusy'>
                 </div>
                 <div class="span4">
-                    <button class="btn btn-primary btn-block" data-bind='attr: {title: urlFlashButtonText}, click: startFlashFromURL, enable: firmwareFileURL, css: {disabled: !firmwareFileURL() || isBusy()}'>{{ _('Flash from URL') }}</button>
+                    <button class="btn btn-primary btn-block" data-bind='attr: {title: urlFlashButtonText}, click: startFlashFromURL, enable: firmwareFileURL && !isBusy(), css: {disabled: !firmwareFileURL() || isBusy()}'>{{ _('Flash from URL') }}</button>
                 </div>
             </div>
         </div>
@@ -384,7 +383,7 @@
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configLpc1768NoResetWait">
                                     </div>
-                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset or check that it has restarted after sending reset command.') }}</span>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -408,7 +407,7 @@
                                         <input type="number" class="input-mini text-right" step=any min="0" max="30" data-bind="value: configMarlinBftWaitAfterConnect">
                                         <span class="add-on">seconds</span>
                                     </div>
-                                    <span class="help-block">{{ _('Some boards reset after getting the command to start binary transfer mode. A value of 3 seconds is normal for when this wait is required.  Default is 0s') }}</span>
+                                    <span class="help-block">{{ _('Some boards reset after getting the command to start binary transfer mode. When required, a value of 3 seconds is usually sufficient.  Default: 0s') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -418,7 +417,7 @@
                                         <input type="number" class="input-mini text-right" step=any min="0" max="10000" data-bind="value: configMarlinBftTimeout">
                                         <span class="add-on">milliseconds</span>
                                     </div>
-                                    <span class="help-block">{{ _('Protocol communication timeout.  Default is 1000ms') }}</span>
+                                    <span class="help-block">{{ _('Protocol communication timeout.  Default: 1000ms') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -427,7 +426,7 @@
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
                                     </div>
-                                    <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file') }}</span>
+                                    <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file.') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -436,7 +435,7 @@
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configMarlinBftNoResetWait">
                                     </div>
-                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset or check that it has restarted after sending reset command.') }}</span>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -484,7 +483,7 @@
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configStm32flashVerify">
                                     </div>
-                                    <span class="help-block">{{ _('If checked memory will be verified as it get flashed. Otherwise memory won\'t be verified.') }}</span>
+                                    <span class="help-block">{{ _('If checked the flash memory will be verified as it is written. Uncheck to disable verification.') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -497,7 +496,7 @@
                                     <label class="checkbox">
                                         <input type="checkbox" data-bind="checked: configStm32flashBoot0Low"> Low
                                     </label>
-                                    <span class="help-block">{{ _('Serial pin to enable bootloader') }}</span>
+                                    <span class="help-block">{{ _('Serial pin used to enable bootloader. Default: RTS; \'Low\' unchecked.') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -510,7 +509,7 @@
                                     <label class="checkbox">
                                         <input type="checkbox" data-bind="checked: configStm32flashResetLow"> Low
                                     </label>
-                                    <span class="help-block">{{ _('Serial pin to reset MCU') }}</span>
+                                    <span class="help-block">{{ _('Serial pin used to reset MCU. Default: DTR; \'Low\' checked.') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -522,7 +521,7 @@
                                     <div class="input">
                                         <input type="text" class="input-block-level" data-bind="value: configStm32flashExecuteAddress, enable: configStm32flashExecute, css: {disabled: !configStm32flashExecute()}">
                                     </div>
-                                    <span class="help-block">{{ _('Address to execute after flashing.') }}</span>
+                                    <span class="help-block">{{ _('Address to execute after flashing. Default: 0x800000') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -531,7 +530,7 @@
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configStm32flashReset, disable: configStm32flashExecute">
                                     </div>
-                                    <span class="help-block">{{ _('If checked MCU will be reset after flashing.') }}</span>
+                                    <span class="help-block">{{ _('If checked the MCU will be reset after flashing.') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -568,7 +567,7 @@
                                 <div class="input">
                                     <input type="text" class="input-block-level" data-bind="value: configPreflashGcode, enable: configEnablePreflashGcode">
                                 </div>
-                                <span class="help-block">{{ _('Gcode commands to run before blashing. <b>Pre-flash gcode commands will only run if the printer is connected.</b> Separate multiple commands with a semi colon.') }}</span>
+                                <span class="help-block">{{ _('Gcode commands to run before flashing. <b>Pre-flash gcode commands will only run if the printer is connected.</b> Separate multiple commands with a semi colon.') }}</span>
                             </div>
                         </div>
                         <!-- End pre-flash gcode -->
@@ -601,7 +600,7 @@
                                 <div class="input">
                                     <input type="checkbox" data-bind="checked: configNoAutoReconnect">
                                 </div>
-                                <span class="help-block">{{ _('Plugin won\'t attempt to reconnect the printer after the firmware update completes') }}</span>
+                                <span class="help-block">{{ _('If checked the plugin won\'t attempt to reconnect the printer after the firmware update completes.') }}</span>
                             </div>
                         </div>
                         <!-- Post-flash commandline -->
@@ -662,7 +661,7 @@
                                 <div class="input">
                                     <input type="checkbox" data-bind="checked: configShowNavbarIcon">
                                 </div>
-                                <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar.  (Reload after enabling/disabling.)') }}</span>
+                                <span class="help-block">{{ _('Enables a link to the Firmware Updater in the OctoPrint navbar. Reload after enabling/disabling.') }}</span>
                             </div>
                         </div>
                         <div class="control-group">
@@ -680,7 +679,7 @@
                                 <div class="input">
                                     <input type="checkbox" data-bind="checked: configSaveUrl">
                                 </div>
-                                <span class="help-block">{{ _('Last URL will be remembered when using \'Flash from URL\'.') }}</span>
+                                <span class="help-block">{{ _('Last-used URL will be remembered when using \'Flash from URL\'.') }}</span>
                             </div>
                         </div>
                         <div class="control-group">
@@ -689,7 +688,7 @@
                                 <div class="input">
                                     <input type="checkbox" data-bind="checked: configDisableFileFilter">
                                 </div>
-                                <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'. (For compatibility with browsers which do not support the \'accept\' attribute.)') }}</span>
+                                <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'.') }}</span>
                             </div>
                         </div>
                     </form>

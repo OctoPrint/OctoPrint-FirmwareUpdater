@@ -297,6 +297,7 @@ $(function() {
         };
 
         self.refreshPorts = function() {
+            if (self.isBusy()) return;
             self.connection.requestData();
         }
 
