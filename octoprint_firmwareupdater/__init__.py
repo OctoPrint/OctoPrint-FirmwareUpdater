@@ -616,8 +616,19 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     value = settings_dict[key]
 
                 # If the current value is a number stored it as a string, convert it to a number
-                if isinstance(value, str) and value.isnumeric():
-                    value = int(value)
+                try:
+                    # Python 3 compatible
+                    if isinstance(value, str) and value.isnumeric():
+                        value = int(value)
+                except:
+                    try:
+                        # Python 2 compatible
+                        uvalue = unicode(value)
+                        if isinstance(uvalue, unicode) and uvalue.isnumeric():
+                            value = int(uvalue)
+                    except:
+                        self._logger.warn(u"{}: unable to convert '{}' to a numeric value. Will be reset to default.".format(key, value))
+
 
                 # If the the default value is a number but the current value is not, reset the value to the default
                 if isinstance(default_value, int) and not isinstance(value, int):
