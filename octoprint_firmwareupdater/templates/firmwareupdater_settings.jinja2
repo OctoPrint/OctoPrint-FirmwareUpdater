@@ -447,6 +447,15 @@
                                     <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
                                 </div>
                             </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Use timestamp filenames') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftTimestampFilenames">
+                                    </div>
+                                    <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>. Needed for Ender 3 V2.') }}</span>
+                                </div>
+                            </div>
                         </div>
                         <!-- Advanced marlinbft options -->
 

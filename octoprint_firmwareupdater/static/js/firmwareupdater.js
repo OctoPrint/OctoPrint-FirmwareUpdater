@@ -98,6 +98,7 @@ $(function() {
         self.configMarlinBftProgressLogging = ko.observable();
         self.configMarlinBftNoResetWait = ko.observable();
         self.configMarlinBftNoRestartWait = ko.observable();
+        self.configMarlinBftTimestampFilenames = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
 
@@ -840,6 +841,7 @@ $(function() {
             self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"));
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
             self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
+            self.configMarlinBftTimestampFilenames(self.getProfileSetting("marlinbft_timestamp_filenames"));
 
             // Load the stm32flash settings
             self.configStm32flashPath(self.getProfileSetting("stm32flash_path"));
@@ -948,6 +950,7 @@ $(function() {
             profiles[index]["marlinbft_progresslogging"] = self.configMarlinBftProgressLogging();
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
             profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
+            profiles[index]["marlinbft_timestamp_filenames"] = self.configMarlinBftTimestampFilenames();
 
             // STM32Flash Settings
             profiles[index]["stm32flash_path"] = self.configStm32flashPath();
@@ -1059,7 +1062,6 @@ $(function() {
 
         self.resetBossacCommandLine = function() {
             self.configBossacCommandLine(self.profileDefaults["bossac_commandline"]);
-
         };
 
         self.resetDfuCommandLine = function() {
