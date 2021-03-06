@@ -60,6 +60,8 @@ The line following line must be uncommented in `Configuration_adv.h`:
 
 `#define BINARY_FILE_TRANSFER`
 
+**NOTE:** Firmware with this option enabled must be flashed to the printer manually one time before you can use the plugin with the binary file protocol.
+
 ## Plugin Configuration
 <p align="center">
   <img alt="Firmware Updater" src="../extras/img/marlinbft.png">
