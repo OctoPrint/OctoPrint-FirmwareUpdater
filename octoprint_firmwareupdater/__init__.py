@@ -564,6 +564,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_no_m997_reset_wait": False,
                 "marlinbft_no_m997_restart_wait": False,
                 "marlinbft_timestamp_filenames": False,
+                "marlinbft_last_filename": None,
                 "postflash_delay": 0,
                 "preflash_delay": 3,
                 "postflash_gcode": None,
@@ -671,7 +672,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                 # If there is something to send, send it
                 if postflash_gcode is not None:
-                    self._logger.info("Sending post-flash commands:{}".format(postflash_gcode))
+                    self._logger.info("Sending post-flash commands: {}".format(postflash_gcode))
                     self._printer.commands(postflash_gcode.split(";"))
 
                 # Clear the postflash gcode flag
