@@ -83,6 +83,7 @@ $(function() {
         self.configLpc1768UnmountCommand = ko.observable();
         self.configLpc1768NoResetWait = ko.observable();
         self.configLpc1768NoRestartWait = ko.observable();
+        self.configLpc1768TimestampFilenames = ko.observable();
 
         // Observables for lpc1768 UI messages
         self.lpc1768PathBroken = ko.observable(false);
@@ -834,6 +835,7 @@ $(function() {
             self.configLpc1768ResetBeforeFlash(self.getProfileSetting("lpc1768_preflashreset"));
             self.configLpc1768NoResetWait(self.getProfileSetting("lpc1768_no_m997_reset_wait"));
             self.configLpc1768NoRestartWait(self.getProfileSetting("lpc1768_no_m997_restart_wait"));
+            self.configLpc1768TimestampFilenames(self.getProfileSetting("lpc1768_timestamp_filenames"));
 
             // Load the marlinbft settings
             self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
@@ -943,6 +945,8 @@ $(function() {
             profiles[index]["lpc1768_preflashreset"] = self.configLpc1768ResetBeforeFlash();
             profiles[index]["lpc1768_no_m997_reset_wait"] = self.configLpc1768NoResetWait();
             profiles[index]["lpc1768_no_m997_restart_wait"] = self.configLpc1768NoRestartWait();
+            profiles[index]["lpc1768_timestamp_filenames"] = self.configLpc1768TimestampFilenames();
+            
 
             // MarlinBFT Settings
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
