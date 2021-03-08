@@ -558,11 +558,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "lpc1768_preflashreset": True,
                 "lpc1768_no_m997_reset_wait": False,
                 "lpc1768_no_m997_restart_wait": False,
+                "lpc1768_timestamp_filenames": False,
+                "lpc1768_last_filename": None,
                 "marlinbft_waitafterconnect": 0,
                 "marlinbft_timeout": 1000,
                 "marlinbft_progresslogging": False,
                 "marlinbft_no_m997_reset_wait": False,
                 "marlinbft_no_m997_restart_wait": False,
+                "marlinbft_timestamp_filenames": False,
+                "marlinbft_last_filename": None,
                 "postflash_delay": 0,
                 "preflash_delay": 3,
                 "postflash_gcode": None,
@@ -616,8 +620,19 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     value = settings_dict[key]
 
                 # If the current value is a number stored it as a string, convert it to a number
-                if isinstance(value, str) and value.isnumeric():
-                    value = int(value)
+                try:
+                    # Python 3 compatible
+                    if isinstance(value, str) and value.isnumeric():
+                        value = int(value)
+                except:
+                    try:
+                        # Python 2 compatible
+                        uvalue = unicode(value)
+                        if isinstance(uvalue, unicode) and uvalue.isnumeric():
+                            value = int(uvalue)
+                    except:
+                        self._logger.warn(u"{}: unable to convert '{}' to a numeric value. Will be reset to default.".format(key, value))
+
 
                 # If the the default value is a number but the current value is not, reset the value to the default
                 if isinstance(default_value, int) and not isinstance(value, int):
@@ -659,7 +674,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                 # If there is something to send, send it
                 if postflash_gcode is not None:
-                    self._logger.info("Sending post-flash commands:{}".format(postflash_gcode))
+                    self._logger.info("Sending post-flash commands: {}".format(postflash_gcode))
                     self._printer.commands(postflash_gcode.split(";"))
 
                 # Clear the postflash gcode flag

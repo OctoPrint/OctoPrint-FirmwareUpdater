@@ -83,6 +83,7 @@ $(function() {
         self.configLpc1768UnmountCommand = ko.observable();
         self.configLpc1768NoResetWait = ko.observable();
         self.configLpc1768NoRestartWait = ko.observable();
+        self.configLpc1768TimestampFilenames = ko.observable();
 
         // Observables for lpc1768 UI messages
         self.lpc1768PathBroken = ko.observable(false);
@@ -98,6 +99,7 @@ $(function() {
         self.configMarlinBftProgressLogging = ko.observable();
         self.configMarlinBftNoResetWait = ko.observable();
         self.configMarlinBftNoRestartWait = ko.observable();
+        self.configMarlinBftTimestampFilenames = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
 
@@ -833,6 +835,7 @@ $(function() {
             self.configLpc1768ResetBeforeFlash(self.getProfileSetting("lpc1768_preflashreset"));
             self.configLpc1768NoResetWait(self.getProfileSetting("lpc1768_no_m997_reset_wait"));
             self.configLpc1768NoRestartWait(self.getProfileSetting("lpc1768_no_m997_restart_wait"));
+            self.configLpc1768TimestampFilenames(self.getProfileSetting("lpc1768_timestamp_filenames"));
 
             // Load the marlinbft settings
             self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
@@ -840,6 +843,7 @@ $(function() {
             self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"));
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
             self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
+            self.configMarlinBftTimestampFilenames(self.getProfileSetting("marlinbft_timestamp_filenames"));
 
             // Load the stm32flash settings
             self.configStm32flashPath(self.getProfileSetting("stm32flash_path"));
@@ -941,6 +945,8 @@ $(function() {
             profiles[index]["lpc1768_preflashreset"] = self.configLpc1768ResetBeforeFlash();
             profiles[index]["lpc1768_no_m997_reset_wait"] = self.configLpc1768NoResetWait();
             profiles[index]["lpc1768_no_m997_restart_wait"] = self.configLpc1768NoRestartWait();
+            profiles[index]["lpc1768_timestamp_filenames"] = self.configLpc1768TimestampFilenames();
+            
 
             // MarlinBFT Settings
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
@@ -948,6 +954,7 @@ $(function() {
             profiles[index]["marlinbft_progresslogging"] = self.configMarlinBftProgressLogging();
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
             profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
+            profiles[index]["marlinbft_timestamp_filenames"] = self.configMarlinBftTimestampFilenames();
 
             // STM32Flash Settings
             profiles[index]["stm32flash_path"] = self.configStm32flashPath();
@@ -1059,7 +1066,6 @@ $(function() {
 
         self.resetBossacCommandLine = function() {
             self.configBossacCommandLine(self.profileDefaults["bossac_commandline"]);
-
         };
 
         self.resetDfuCommandLine = function() {

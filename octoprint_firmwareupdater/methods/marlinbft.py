@@ -1,5 +1,6 @@
 import os
 import time
+import datetime
 
 binproto2_installed = True
 try:
@@ -45,6 +46,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
     bft_timeout = self.get_profile_setting_int("marlinbft_timeout")
     bft_verbose = self.get_profile_setting_boolean("marlinbft_progresslogging")
     no_m997_reset_wait = self.get_profile_setting_boolean("marlinbft_no_m997_reset_wait")
+    timestamp_filenames = self.get_profile_setting_boolean("marlinbft_timestamp_filenames")
 
     # Loggging
     if bft_verbose:
@@ -65,6 +67,13 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
             self._logger.info("waiting %ss after protocol connect" % bft_waitafterconnect)
             time.sleep(bft_waitafterconnect)
 
+        # Try to delete the last-flashed file
+        if timestamp_filenames and self.get_profile_setting("marlinbft_last_filename") is not None:
+            last_filename = self.get_profile_setting("marlinbft_last_filename")
+            self._logger.info(u"Attempting to delete previous firmware file /{}".format(last_filename))
+            protocol.send_ascii("M21")
+            protocol.send_ascii("M30 {}".format(last_filename))
+
         # Make sure temperature auto-reporting is disabled
         protocol.send_ascii("M155 S0")
 
@@ -74,12 +83,21 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
         protocol.connect()
       
         # Copy the file
-        self._logger.info(u"Transfering file to printer using Marlin BFT '{}' -> /firmware.bin".format(firmware))
+        if timestamp_filenames:
+            target = datetime.datetime.now().strftime("fw%H%M%S.bin")
+        else:
+            target = "firmware.bin"
+        
+        self._logger.info(u"Transfering file to printer using Marlin BFT '{}' -> /{}".format(firmware, target))
         self._send_status("progress", subtype="sending")
         filetransfer = mbp.FileTransferProtocol(protocol, logger=transfer_logger)
-        filetransfer.copy(firmware, 'firmware.bin', True, False)
+        filetransfer.copy(firmware, target, True, False)
         self._logger.info(u"Binary file transfer complete")
-
+        
+        # Save the filename
+        if timestamp_filenames:
+            self.set_profile_setting("marlinbft_last_filename", target)
+        
         # Disconnect
         protocol.disconnect()
 
