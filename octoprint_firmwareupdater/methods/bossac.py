@@ -48,7 +48,7 @@ def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
     bossac_command = bossac_command.replace("{firmware}", firmware)
 
     if bossac_disableverify:
-        bossac_command = bossac_command.replace("{disableverify}", "-v")
+        bossac_command = bossac_command.replace(" {disableverify} ", " ")
     else:
         bossac_command = bossac_command.replace(" {disableverify} ", " -v ")
 
