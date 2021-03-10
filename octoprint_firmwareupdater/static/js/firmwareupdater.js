@@ -747,6 +747,10 @@ $(function() {
                                         message = gettext("Post-flash delay...");
                                         break;
                                     }
+                                    case "samreset": {
+                                        message = gettext("Resetting to SAM-BA mode...");
+                                        break;
+                                }
                                     case "boardreset": {
                                             message = gettext("Resetting the board...");
                                             break;
