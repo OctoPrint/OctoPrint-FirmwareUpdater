@@ -277,7 +277,7 @@ $(function() {
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
 
             if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
-                self.firmwareFileURL(self.settingsViewModel.settings.plugins.firmwareupdater.last_url());
+                self.firmwareFileURL(self.getProfileSetting("last_url"));
             } else {
                 self.firmwareFileURL("");
             }
@@ -790,6 +790,7 @@ $(function() {
             
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
+            self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
 
             // Load the profile settings
             self.configProfileName(self.getProfileSetting("_name"));
@@ -1002,6 +1003,9 @@ $(function() {
 
         self.selectedProfileOnChange = function(data, event) {
             self.flashPort(ko.toJS(self.selectedProfile()).serial_port);
+            if (self.configSaveUrl()) {
+                self.firmwareFileURL(ko.toJS(self.selectedProfile()).last_url);
+            }
         }
 
         /*
@@ -1026,10 +1030,14 @@ $(function() {
         * Saves the last URL
         */
         self._saveLastUrl = function() {
+            var index = self.selectedProfileIndex();
+            var profiles = ko.toJS(self.profiles());
+            profiles[index]["last_url"] = self.firmwareFileURL();
+
             var data = {
                 plugins: {
                     firmwareupdater: {
-                        last_url: self.firmwareFileURL(),
+                        profiles: profiles,
                     }
                 }
             };
