@@ -12,7 +12,7 @@ BOSSAC_NODEVICE = "No device found on"
 BOSSAC_ERROR_VERIFICATION = "verification error"
 
 def _check_bossac(self):
-    bossac_path = self._settings.get(["bossac_path"])
+    bossac_path = self.get_profile_setting("bossac_path")
     pattern = re.compile("^(\/[^\0/]+)+$")
 
     if not pattern.match(bossac_path):
@@ -37,22 +37,23 @@ def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
 
-    bossac_path = self._settings.get(["bossac_path"])
-    bossac_disableverify = self._settings.get(["bossac_disableverify"])
+    bossac_path = self.get_profile_setting("bossac_path")
+    bossac_disableverify = self.get_profile_setting_boolean("bossac_disableverify")
 
     working_dir = os.path.dirname(bossac_path)
 
-    bossac_command = self._settings.get(["bossac_commandline"])
+    bossac_command = self.get_profile_setting("bossac_commandline")
     bossac_command = bossac_command.replace("{bossac}", bossac_path)
     bossac_command = bossac_command.replace("{port}", printer_port)
     bossac_command = bossac_command.replace("{firmware}", firmware)
 
     if bossac_disableverify:
-        bossac_command = bossac_command.replace("{disableverify}", "-v")
+        bossac_command = bossac_command.replace(" {disableverify} ", " ")
     else:
         bossac_command = bossac_command.replace(" {disableverify} ", " -v ")
 
     self._logger.info(u"Attempting to reset the board to SAM-BA")
+    self._send_status("progress", subtype="samreset")
     if not _reset_1200(self, printer_port):
         self._logger.error(u"Reset failed")
         return False
@@ -65,7 +66,7 @@ def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stdout.read(timeout=0.5).decode('utf-8')
+            output = p.stdout.read(timeout=0.1).decode('utf-8')
             if not output:
                 p.commands[0].poll()
                 continue
@@ -88,6 +89,7 @@ def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
                     raise FlashException("Error verifying flash")
 
         if p.returncode == 0:
+            time.sleep(1)
             return True
         else:
             output = p.stderr.read(timeout=0.5).decode('utf-8')
