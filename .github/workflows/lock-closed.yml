@@ -7,7 +7,7 @@ name: Lock Closed Issues
 
 on:
   schedule:
-    - cron: '0 1/13 * * *'
+    - cron: '0 1,13 * * *'
 
 jobs:
   lock:
@@ -21,7 +21,7 @@ jobs:
       with:
         github-token: ${{ github.token }}
         process-only: 'issues'
-        issue-lock-inactive-days: '60'
+        issue-lock-inactive-days: '21'
         issue-exclude-created-before: ''
         issue-exclude-labels: 'no-locking'
         issue-lock-labels: ''

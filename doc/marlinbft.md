@@ -32,7 +32,7 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 ### Marlin Binary Protocol Package
 The plugin currently uses the `marlin-binary-protocol` package to implement the transfer protocol.  This package has dependencies on `heatshrink`, which is hard to install automatically due to compatibility issues with Python 2 and Python 3.  For this reason the marlin-binary-protocol package and the heatshrink dependency need to be installed manually using `pip`.
 
-NB: If you are running OctoPrint in a VirtualEnv (as recommended) you need to run the appropriate `pip` commands below inside that environment. For **OctoPi** users, this is `~/oprint/bin/pip` anywhere it says `pip`. 
+NB: If you are running OctoPrint in a VirtualEnv (as recommended) you need to run the appropriate `pip` commands below inside that environment. For **OctoPi** users, this is `~/oprint/bin/pip` anywhere it says `pip` or `pip3`.
 
 Depending on your system, the command you use to restart OctoPrint may also be different.
 
@@ -56,9 +56,26 @@ Depending on your system, the command you use to restart OctoPrint may also be d
    `sudo service octoprint restart`
    
 ## Marlin Configuration
-The line following line must be uncommented in `Configuration_adv.h`:
+Your printer must have the binary file protocol enabled in order to be able to use the protocol to copy firmware files to your printer.
+
+In other words, before you can use the Firmware Updater plugin, you must compile firmware with this feature enabled and flash it to your printer using your current update process.  You only need to do this once.
+
+To compile firmware with the binary file protocol enabled, uncomment this line in `Configuration_adv.h`:
 
 `#define BINARY_FILE_TRANSFER`
+
+You can verify that the protocol is enabled using the `M115` command to get a capability report.  The report must include this line:
+```
+Recv: Cap:BINARY_FILE_TRANSFER:1
+```
+If the value is `0` then the feature has not been enabled and the plugin will not work.
+
+## Prerequisite Check
+When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` file will contain lines like these shortly after OctoPrint is started and the ptiner is connected:
+```
+2021-03-06 09:24:58,000 - octoprint.plugins.firmwareupdater - INFO - Python binproto2 package installed: True
+2021-03-06 09:45:10,815 - octoprint.plugins.firmwareupdater - INFO - Setting BINARY_FILE_TRANSFER capability to True
+```
 
 ## Plugin Configuration
 <p align="center">
