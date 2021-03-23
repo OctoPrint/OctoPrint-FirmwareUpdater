@@ -9,6 +9,8 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 1. [Installation](#installation)
    1. [Marlin Binary Protocol Package](#marlin-binary-protocol-package)
 1. [Marlin Configuration](#marlin-configuration)
+   1. [Enable Binary File Transfer](#enable-the-binary-bile-transfer-protocol)
+   1. [Set SDCARD_CONNECTION to ONBOARD](#set-sdcard_connection-to-onboard)
 1. [Plugin Configuration](#plugin-configuration)
    1. [Required Settings](#required-settings)
    1. [Optional Settings](#optional-settings)
@@ -71,10 +73,10 @@ Recv: Cap:BINARY_FILE_TRANSFER:1
 ```
 If the value is `0` then the feature has not been enabled and the plugin will not work.
 
-### Set the SD card connection to ONBOARD
+### Set SDCARD_CONNECTION to ONBOARD
 The SD card connection must be configured for `ONBOARD`.  If it is set to `LCD` the firmware file will be copied to the SD card in the LCD and the board will not update when it is reset.
 
-To set the SD card to `ONBOARD`, modify the `#define SDCARD_CONNECTION` line in `Configuration.h`:
+To set the SD card to `ONBOARD`, modify the `#define SDCARD_CONNECTION` line in `Configuration_adv.h`:
 
 `#define SDCARD_CONNECTION ONBOARD`
 
