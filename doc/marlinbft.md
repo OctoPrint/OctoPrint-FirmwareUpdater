@@ -9,6 +9,8 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 1. [Installation](#installation)
    1. [Marlin Binary Protocol Package](#marlin-binary-protocol-package)
 1. [Marlin Configuration](#marlin-configuration)
+   1. [Enable Binary File Transfer](#enable-the-binary-bile-transfer-protocol)
+   1. [Set SDCARD_CONNECTION to ONBOARD](#set-sdcard_connection-to-onboard)
 1. [Plugin Configuration](#plugin-configuration)
    1. [Required Settings](#required-settings)
    1. [Optional Settings](#optional-settings)
@@ -56,6 +58,7 @@ Depending on your system, the command you use to restart OctoPrint may also be d
    `sudo service octoprint restart`
    
 ## Marlin Configuration
+### Enable the Binary File Transfer protocol
 Your printer must have the binary file protocol enabled in order to be able to use the protocol to copy firmware files to your printer.
 
 In other words, before you can use the Firmware Updater plugin, you must compile firmware with this feature enabled and flash it to your printer using your current update process.  You only need to do this once.
@@ -69,6 +72,13 @@ You can verify that the protocol is enabled using the `M115` command to get a ca
 Recv: Cap:BINARY_FILE_TRANSFER:1
 ```
 If the value is `0` then the feature has not been enabled and the plugin will not work.
+
+### Set SDCARD_CONNECTION to ONBOARD
+The SD card connection must be configured for `ONBOARD`.  If it is set to `LCD` the firmware file will be copied to the SD card in the LCD and the board will not update when it is reset.
+
+To set the SD card to `ONBOARD`, modify the `#define SDCARD_CONNECTION` line in `Configuration_adv.h`:
+
+`#define SDCARD_CONNECTION ONBOARD`
 
 ## Prerequisite Check
 When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` file will contain lines like these shortly after OctoPrint is started and the ptiner is connected:

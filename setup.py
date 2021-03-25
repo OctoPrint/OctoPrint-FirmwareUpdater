@@ -16,7 +16,6 @@ plugin_name = "OctoPrint-FirmwareUpdater"
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
 plugin_version = "1.10.10b2"
 
-
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Printer Firmware Updater"""
