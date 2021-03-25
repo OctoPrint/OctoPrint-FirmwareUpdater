@@ -30,6 +30,14 @@ sudo apt-get install stm32flash
 brew install stm32flash
 ```
 
+### Check the installation 
+
+Use the command  `which stm32flash` to check the installation and find the full path to the executable
+```
+pi@octopi:~ $ which stm32flash
+/usr/bin/stm32flash
+```
+
 ### Windows
 You can install a Windows binary from https://sourceforge.net/projects/stm32flash/ however the plugin hasn't been tested on that platform.
 
