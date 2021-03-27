@@ -100,16 +100,16 @@
             <div>
               <!-- Nav tabs -->
               <ul class="nav nav-tabs" role="tablist" data-bind ="visible: showProfileSettingsInOptions">
-                <li role="presentation" class="active"><a href="#flash-method" aria-controls="required" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Flash Method') }}</a></li>
-                <li role="presentation"><a href="#advanced" aria-controls="advanced" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Advanced') }}</a></li>
-                <li role="presentation"><a href="#preflash" aria-controls="preflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Pre-Flash') }}</a></li>
-                <li role="presentation"><a href="#postflash" aria-controls="postflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Post-Flash') }}</a>
-                <li role="presentation"><a href="#plugin" aria-controls="plugin" role="tab" data-toggle="tab" data-bind ="visible: showPluginSettingsInOptions">{{ _('Plugin') }}</a></li>
+                <li role="presentation" class="active"><a href="#settings_plugin_firmwareupdater_flash_method" aria-controls="settings_plugin_firmwareupdater_required" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Flash Method') }}</a></li>
+                <li role="presentation"><a href="#settings_plugin_firmwareupdater_advanced" aria-controls="settings_plugin_firmwareupdater_advanced" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Advanced') }}</a></li>
+                <li role="presentation"><a href="#settings_plugin_firmwareupdater_preflash" aria-controls="settings_plugin_firmwareupdater_preflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Pre-Flash') }}</a></li>
+                <li role="presentation"><a href="#settings_plugin_firmwareupdater_postflash" aria-controls="settings_plugin_firmwareupdater_postflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Post-Flash') }}</a>
+                <li role="presentation"><a href="#settings_plugin_firmwareupdater_plugin" aria-controls="settings_plugin_firmwareupdater_plugin" role="tab" data-toggle="tab" data-bind ="visible: showPluginSettingsInOptions">{{ _('Plugin') }}</a></li>
               </ul>
 
               <!-- Tab panes -->
               <div class="tab-content">
-                <div role="tabpanel" class="tab-pane active" id="flash-method" data-bind ="visible: showProfileSettingsInOptions">
+                <div role="tabpanel" class="tab-pane active" id="settings_plugin_firmwareupdater_flash_method" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
                         <div class="control-group" data-bind="visible: configProfilesVisible">
                             <label class="control-label">{{ _('Profile name') }}</label>
@@ -272,7 +272,7 @@
                 </div>
 
                 <!-- Advanced Tab -->
-                <div role="tabpanel" class="tab-pane" id="advanced" data-bind ="visible: showProfileSettingsInOptions">
+                <div role="tabpanel" class="tab-pane" id="settings_plugin_firmwareupdater_advanced" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
                         <!-- Advanced avrdude options-->
                         <div data-bind="visible: showAvrdudeConfig">
@@ -558,7 +558,7 @@
                 <!-- End Advanced Tab -->
 
                 <!-- Pre-Flash Tab -->
-                <div role="tabpanel" class="tab-pane" id="preflash" data-bind ="visible: showProfileSettingsInOptions">
+                <div role="tabpanel" class="tab-pane" id="settings_plugin_firmwareupdater_preflash" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
                         <!-- Pre-flash commandline -->
                         <div class="control-group">
@@ -610,7 +610,7 @@
                 <!-- End Pre-Flash Tab -->
 
                 <!-- Post-Flash Tab -->
-                <div role="tabpanel" class="tab-pane" id="postflash" data-bind ="visible: showProfileSettingsInOptions">
+                <div role="tabpanel" class="tab-pane" id="settings_plugin_firmwareupdater_postflash" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
                         <div class="control-group">
                             <label class="control-label">{{ _('Don\'t reconnect automatically') }}</label>
@@ -671,7 +671,7 @@
                 <!-- End Post-Flash Tab -->
 
                 <!-- Plugin Options Tab -->
-                <div role="tabpanel" class="tab-pane" id="plugin" data-bind ="visible: showPluginSettingsInOptions">
+                <div role="tabpanel" class="tab-pane" id="settings_plugin_firmwareupdater_plugin" data-bind ="visible: showPluginSettingsInOptions">
                     <form class="form-horizontal">
                         <div class="control-group">
                             <label class="control-label">{{ _('Enable navbar icon') }}</label>

@@ -326,10 +326,10 @@ $(function() {
             self.showProfileSettingsInOptions(!self.configProfilesEnabled());
             if (self.configProfilesEnabled()) {
                 self.optionsDialogTitle("Firmware Updater Options");
-                $('.nav-tabs a[href="#plugin"]').tab('show');
+                $('.nav-tabs a[href="#settings_plugin_firmwareupdater_plugin"]').tab('show');
             } else {
                 self.optionsDialogTitle("Firmware Updater Configuration");
-                $('.nav-tabs a[href="#flash-method"]').tab('show');
+                $('.nav-tabs a[href="#settings_plugin_firmwareupdater_flash_method"]').tab('show');
             }
             self.showPluginConfig();
         }
@@ -341,7 +341,7 @@ $(function() {
             self.showPluginSettingsInOptions(false);
             self.showProfileSettingsInOptions(true);
             self.optionsDialogTitle("Update Profile Configuration");
-            $('.nav-tabs a[href="#flash-method"]').tab('show');
+            $('.nav-tabs a[href="#settings_plugin_firmwareupdater_flash_method"]').tab('show');
             self.showPluginConfig();
         }
 
