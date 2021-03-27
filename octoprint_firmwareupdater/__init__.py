@@ -206,7 +206,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
     def _flash_worker(self, method, firmware, printer_port):
         # Run pre-flash system command
         preflash_command = self.get_profile_setting("preflash_commandline")
-        if preflash_command is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
+        if preflash_command is not None and self.get_profile_setting_boolean("enable_preflash_commandline"):
             self._logger.info("Executing pre-flash commandline '{}'".format(preflash_command))
             try:
                 r = os.system(preflash_command)

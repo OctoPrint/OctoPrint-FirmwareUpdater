@@ -89,7 +89,7 @@ def _flash_avrdude(self, firmware=None, printer_port=None, **kwargs):
         avrdude_command = avrdude_command.replace(" -C {conffile} ", " ")
 
     if avrdude_baudrate is not None and avrdude_baudrate != "":
-        avrdude_command = avrdude_command.replace("{baudrate}", avrdude_baudrate)
+        avrdude_command = avrdude_command.replace("{baudrate}", str(avrdude_baudrate))
     else:
         avrdude_command = avrdude_command.replace(" -b {baudrate} ", " ")
 

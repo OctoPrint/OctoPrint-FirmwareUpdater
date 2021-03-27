@@ -8,20 +8,20 @@ $(function() {
         self.connection = parameters[2];
         self.printerState = parameters[3];
         self.access = parameters[4];
-        
+
         // Observables for plugin options
         self.configShowNavbarIcon = ko.observable();                    // enable_navbar
         self.configProfilesEnabled = ko.observable();                   // enable_profiles
         self.configDisableFileFilter = ko.observable();
-        
+
         // Observables for profiles
-        self.selectedProfileIndex = ko.observable();                    // _selected_profile 
+        self.selectedProfileIndex = ko.observable();                    // _selected_profile
         self.profiles = ko.observableArray();                           // profiles
         self.configProfilesVisible = ko.observable();                   // Indicates if profiles should be displayed in the UI. Updated on load and settings save.
         self.configProfileName = ko.observable();
 
         // Observables for general profile settings
-        self.configFlashMethod = ko.observable();                       // flash_method 
+        self.configFlashMethod = ko.observable();                       // flash_method
         self.configSaveUrl = ko.observable();                           // save_url
         self.configLastUrl = ko.observable();                           // last_url
         self.configDisableBootloaderCheck = ko.observable();            // disable_bootloadercheck
@@ -159,7 +159,7 @@ $(function() {
         self.isBusy = ko.observable(false);
         self.fileFlashButtonText = ko.observable("");
         self.urlFlashButtonText = ko.observable("");
-        
+
         self.saving = ko.observable(false);
         self.deleting = ko.observable(false);
         self.adding = ko.observable(false);
@@ -183,7 +183,7 @@ $(function() {
         self.canDeleteProfile = ko.computed(function() {
             return self.selectedProfileIndex() != 0;
         });
-        
+
         // Disables the navbar icon if the logged-in user is not an admin
         self.showFirmwareUpdaterNavbarIcon = ko.computed(function() {
             return self.loginState.isAdmin() && self.configShowNavbarIcon();
@@ -252,7 +252,7 @@ $(function() {
 
             // Get the index of the selected profile
             self.selectedProfileIndex(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
-            
+
             // Make sure the selected profile is valid, reset it to 0 if not
             if (self.selectedProfileIndex() >= self.profiles().length) {
                 self.selectedProfileIndex(0);
@@ -326,10 +326,10 @@ $(function() {
             self.showProfileSettingsInOptions(!self.configProfilesEnabled());
             if (self.configProfilesEnabled()) {
                 self.optionsDialogTitle("Firmware Updater Options");
-                $('.nav-tabs a[href="#plugin"]').tab('show');
+                $('.nav-tabs a[href="#settings_plugin_firmwareupdater_plugin"]').tab('show');
             } else {
                 self.optionsDialogTitle("Firmware Updater Configuration");
-                $('.nav-tabs a[href="#flash-method"]').tab('show');
+                $('.nav-tabs a[href="#settings_plugin_firmwareupdater_flash_method"]').tab('show');
             }
             self.showPluginConfig();
         }
@@ -341,7 +341,7 @@ $(function() {
             self.showPluginSettingsInOptions(false);
             self.showProfileSettingsInOptions(true);
             self.optionsDialogTitle("Update Profile Configuration");
-            $('.nav-tabs a[href="#flash-method"]').tab('show');
+            $('.nav-tabs a[href="#settings_plugin_firmwareupdater_flash_method"]').tab('show');
             self.showPluginConfig();
         }
 
@@ -460,7 +460,7 @@ $(function() {
             self.showDfuConfig(false);
             self.showStm32flashConfig(false);
             self.showMarlinBftConfig(false);
-            
+
             // Show only the selected method's settings
             if(value == 'avrdude') {
                 self.showAvrdudeConfig(true);
@@ -530,11 +530,11 @@ $(function() {
             if (self.getProfileSetting("flash_method") == "dfuprogrammer" && !self.getProfileSetting("dfuprog_avrmcu")) {
                 alert = gettext("The AVR MCU type is not selected.");
             }
-            
+
             if (self.getProfileSetting("flash_method") == "marlinbft" && !self.printerState.isReady()) {
                 alert = gettext("The printer is not connected.");
             }
-            
+
             if (self.getProfileSetting("flash_method") == "marlinbft" && self.printerState.isReady() && !self.marlinbftHasBinProto2Package()) {
                 alert = gettext("The marlin-binary-protocol Python package is not installed.");
             }
@@ -570,7 +570,7 @@ $(function() {
             if (!self._checkIfReadyToFlash("file")) {
                 return;
             }
-           
+
             self.progressBarText("Flashing firmware...");
             self.isBusy(true);
             self.showAlert(false);
@@ -787,7 +787,7 @@ $(function() {
             self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles());
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
-            
+
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
@@ -822,7 +822,7 @@ $(function() {
             self.configAvrdudeProgrammer(self.getProfileSetting("avrdude_programmer"));
             self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"));
             self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"));
-            
+
             // Load the bossac settings
             self.configBossacPath(self.getProfileSetting("bossac_path"));
             self.configBossacDisableVerification(self.getProfileSetting("bossac_disableverify"));
@@ -877,7 +877,7 @@ $(function() {
                 keyValue = (profile[key] === '' ? null : profile[key]);
                 keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue;
                 keyValue = (Number.isInteger(defaultValue) && keyValue == null) ? 0 : keyValue;
-                
+
                 if (Number.isInteger(parseInt(keyValue))) {
                     profile[key] = parseInt(keyValue);
                 }
@@ -888,7 +888,7 @@ $(function() {
             }
             return profile;
         }
-        
+
         /*
         * Saves the configuration when the settings are closed
         */
@@ -951,7 +951,7 @@ $(function() {
             profiles[index]["lpc1768_no_m997_reset_wait"] = self.configLpc1768NoResetWait();
             profiles[index]["lpc1768_no_m997_restart_wait"] = self.configLpc1768NoRestartWait();
             profiles[index]["lpc1768_timestamp_filenames"] = self.configLpc1768TimestampFilenames();
-            
+
 
             // MarlinBFT Settings
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
@@ -974,7 +974,7 @@ $(function() {
 
             // Remove all the settings which are the same as the defaults so we only store what's needed
             profiles[index] = self.removeProfileDefaultBeforeSave(profiles[index]);
-          
+
             // Construct the settings object
             var data = {
                 plugins: {
