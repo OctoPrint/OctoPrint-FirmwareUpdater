@@ -1,1 +1,7 @@
+# Use UNIX line endings
 text eol=lf
+
+*.css text
+*.jinja2 text
+*.js text
+*.py text
