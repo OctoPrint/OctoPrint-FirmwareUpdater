@@ -471,10 +471,11 @@
                                 <label class="control-label">{{ _('Use timestamp filenames') }}</label>
                                 <div class="controls">
                                     <div class="input">
-                                        <input type="checkbox" data-bind="checked: configMarlinBftTimestampFilenames, disable: configMarlinBftUseCustomFilename, click: toggleMarlinBftFilenames">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftTimestampFilenames">
                                     </div>
                                     <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>. Needed for Ender 3 V2.') }}</span>
                                 </div>
+                                <!--
                                 <label class="control-label">{{ _('Customize firmware filename') }}</label>
                                 <div class="controls">
                                     <label class="checkbox">
@@ -486,6 +487,7 @@
                                     </div>
                                     <span class="help-block">{{ _('Firmware file will be saved on the printer using the specified name.') }}</span>
                                 </div>
+                                -->
                             </div>
                         </div>
                         <!-- Advanced marlinbft options -->
