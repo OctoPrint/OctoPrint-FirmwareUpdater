@@ -524,7 +524,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
-            "show_sd_firmware": False,
             "profiles": {},
             "_profiles": {
                 "_name": None,
@@ -559,6 +558,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "lpc1768_preflashreset": True,
                 "lpc1768_no_m997_reset_wait": False,
                 "lpc1768_no_m997_restart_wait": False,
+                "lpc1768_use_custom_filename": False,
+                "lpc1768_custom_filename": "firmware.bin",
                 "lpc1768_timestamp_filenames": False,
                 "lpc1768_last_filename": None,
                 "marlinbft_waitafterconnect": 0,
@@ -566,6 +567,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_progresslogging": False,
                 "marlinbft_no_m997_reset_wait": False,
                 "marlinbft_no_m997_restart_wait": False,
+                "marlinbft_use_custom_filename": False,
+                "marlinbft_custom_filename": "firmware.bin",
                 "marlinbft_timestamp_filenames": False,
                 "marlinbft_last_filename": None,
                 "postflash_delay": 0,
@@ -702,16 +705,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._settings.save()
             self._send_capability("BINARY_FILE_TRANSFER", enabled)
 
-    ##~~ Extension Tree hook
-    def extension_tree_hook(self):
-        show_sd_firmware = self._settings.get_boolean("show_sd_firmware")
-        if show_sd_firmware:
-            return dict(
-                machinecode = dict(
-                    firmware = ["bin", "cur", "srec"]
-                )
-            )
-
     ##~~ Bodysize hook
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         return [("POST", r"/flash", 1000 * 1024)]
@@ -772,6 +765,5 @@ def __plugin_load__():
     __plugin_hooks__ = {
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
-        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook,
-        "octoprint.filemanager.extension_tree": __plugin_implementation__.extension_tree_hook
+        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook
     }
