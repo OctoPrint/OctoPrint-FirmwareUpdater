@@ -558,6 +558,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "lpc1768_preflashreset": True,
                 "lpc1768_no_m997_reset_wait": False,
                 "lpc1768_no_m997_restart_wait": False,
+                "lpc1768_use_custom_filename": False,
+                "lpc1768_custom_filename": "firmware.bin",
                 "lpc1768_timestamp_filenames": False,
                 "lpc1768_last_filename": None,
                 "marlinbft_waitafterconnect": 0,
@@ -565,6 +567,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_progresslogging": False,
                 "marlinbft_no_m997_reset_wait": False,
                 "marlinbft_no_m997_restart_wait": False,
+                "marlinbft_use_custom_filename": False,
+                "marlinbft_custom_filename": "firmware.bin",
                 "marlinbft_timestamp_filenames": False,
                 "marlinbft_last_filename": None,
                 "postflash_delay": 0,
@@ -657,7 +661,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
             # Set the profile to the new one
             self._settings.set_int(['_selected_profile'], 0)
-
 
     #~~ EventHandlerPlugin API
     def on_event(self, event, payload):
