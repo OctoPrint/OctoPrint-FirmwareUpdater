@@ -524,6 +524,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
+            "show_sd_firmware": False,
             "profiles": {},
             "_profiles": {
                 "_name": None,
@@ -658,7 +659,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             # Set the profile to the new one
             self._settings.set_int(['_selected_profile'], 0)
 
-
     #~~ EventHandlerPlugin API
     def on_event(self, event, payload):
         # Only handle the CONNECTED event
@@ -701,6 +701,16 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._settings.set_boolean(["has_bftcapability"], enabled)
             self._settings.save()
             self._send_capability("BINARY_FILE_TRANSFER", enabled)
+
+    ##~~ Extension Tree hook
+    def extension_tree_hook(self):
+        show_sd_firmware = self._settings.get_boolean("show_sd_firmware")
+        if show_sd_firmware:
+            return dict(
+                machinecode = dict(
+                    firmware = ["bin", "cur", "srec"]
+                )
+            )
 
     ##~~ Bodysize hook
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
@@ -762,5 +772,6 @@ def __plugin_load__():
     __plugin_hooks__ = {
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
-        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook
+        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook,
+        "octoprint.filemanager.extension_tree": __plugin_implementation__.extension_tree_hook
     }
