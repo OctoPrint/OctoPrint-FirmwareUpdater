@@ -123,6 +123,7 @@
                                 <select style="width:285px;" data-bind="value: configFlashMethod">
                                     <option></option>
                                     <option value=avrdude>avrdude (Atmel AVR Family)</option>
+                                    <option value=bootcmdr>bootcommander (OpenBLT Bootloader)</option>
                                     <option value=bossac>bossac (Atmel SAM Family)</option>
                                     <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
                                     <option value=lpc1768>lpc176x (LPC176x Boards)</option>
@@ -173,6 +174,21 @@
                             </div>
                         </div>
                         <!-- end avrdude options -->
+
+                        <!-- bootcommander options for OpenBLT Bootloader -->
+                        <div data-bind="visible: showBootCmdrConfig">
+                            <div class="control-group" data-bind="css: {error: bootCmdrPathBroken, success: bootCmdrPathOk}">
+                                <label class="control-label">{{ _('Path to BootCommander') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configBootCmdrPath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testBootCmdrPath, enable: configBootCmdrPath, css: {disabled: !configBootCmdrPath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: bootCmdrPathBroken() || bootCmdrPathOk, text: bootCmdrPathText"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end bootcommander options -->
 
                         <!-- bossac options for 32-bit MCUs -->
                         <div data-bind="visible: showBossacConfig">
@@ -331,6 +347,45 @@
                             </div>
                         </div>
                         <!-- End advanced avrdude options -->
+
+                        <!-- Advanced BootCommander options -->
+                        <div data-bind="visible: showBootCmdrConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Command timeout') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="10" max="90" data-bind="value: configBootCmdrCommandTimeout">
+                                        <span class="add-on">seconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('BootCommand command timeout.  Default: 30s') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('BootCommander Baud Rate') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configBootCmdrBaudRate">
+                                        <option value=9600>9600</option>
+                                        <option value=19200>19200</option>
+                                        <option value=38400>38400</option>
+                                        <option value=57600>57600</option>
+                                        <option value=115200>115200</option>
+                                        <option value=250000>250000</option>
+                                    </select>
+                                    <span class="help-block">{{ _('Set the baud rate.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configBootCmdrCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetBootCmdrCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the BootCommander command line.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End advanced BootCommander options-->
 
                         <!-- Advanced bossac options -->
                         <div data-bind="visible: showBossacConfig">
