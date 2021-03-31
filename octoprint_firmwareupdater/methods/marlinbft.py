@@ -47,7 +47,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
     bft_verbose = self.get_profile_setting_boolean("marlinbft_progresslogging")
     no_m997_reset_wait = self.get_profile_setting_boolean("marlinbft_no_m997_reset_wait")
     timestamp_filenames = self.get_profile_setting_boolean("marlinbft_timestamp_filenames")
-    use_custom_filenames = self.get_profile_setting_boolean("marlinbft_custom_filename")
+    use_custom_filename = self.get_profile_setting_boolean("marlinbft_use_custom_filename")
     custom_filename = self.get_profile_setting("marlinbft_custom_filename").strip()
 
     # Loggging
@@ -87,7 +87,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
         # Copy the file
         if timestamp_filenames:
             target = datetime.datetime.now().strftime("fw%H%M%S.bin")
-        elif use_custom_filenames and custom_filename is not None:
+        elif use_custom_filename and custom_filename is not None:
             target = custom_filename
         else:
             target = "firmware.bin"
