@@ -64,6 +64,20 @@ $(function() {
             return self.avrdudeConfPathBroken() || self.avrdudeConfPathOk();
         });
 
+        // Observables for BootCommander config settings
+        self.configBootCmdrPath = ko.observable();
+        self.configBootCmdrBaudRate = ko.observable();
+        self.configBootCmdrCommandLine = ko.observable();
+        self.configBootCmdrCommandTimeout = ko.observable();
+
+        // Observables for BootCommander UI messages
+        self.bootCmdrPathBroken = ko.observable(false);
+        self.bootCmdrPathOk = ko.observable(false);
+        self.bootCmdrPathText = ko.observable();
+        self.bootCmdrPathHelpVisible = ko.computed(function() {
+            return self.bootCmdrPathBroken() || self.bootCmdrPathOk();
+        });
+
         // Observables for bossac config settings
         self.configBossacPath = ko.observable();
         self.configBossacDisableVerification = ko.observable()
@@ -142,6 +156,7 @@ $(function() {
 
         // Observables to control which settings to show
         self.showAvrdudeConfig = ko.observable(false);
+        self.showBootCmdrConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
@@ -179,7 +194,7 @@ $(function() {
             if (self.configDisableFileFilter()) {
                 return null;
             } else {
-                return '.hex,.bin';
+                return '.hex,.bin,.srec';
             }
         });
 
@@ -459,6 +474,7 @@ $(function() {
         self.configFlashMethod.subscribe(function(value) {
             // Hide all the flash method settings
             self.showAvrdudeConfig(false);
+            self.showBootCmdrConfig(false);
             self.showBossacConfig(false);
             self.showLpc1768Config(false);
             self.showDfuConfig(false);
@@ -468,6 +484,8 @@ $(function() {
             // Show only the selected method's settings
             if(value == 'avrdude') {
                 self.showAvrdudeConfig(true);
+            } else if(value == 'bootcmdr') {
+                self.showBootCmdrConfig(true);
             } else if(value == 'bossac') {
                 self.showBossacConfig(true);
             } else if(value == 'lpc1768'){
@@ -702,6 +720,14 @@ $(function() {
                                         message = gettext("Disconnecting printer...");
                                         break;
                                     }
+                                    case "connecting": {
+                                        message = gettext("Connecting to bootloader...");
+                                        break;
+                                    }
+                                    case "backdoor": {
+                                        message = gettext("Trying bootloader backdoor...");
+                                        break;
+                                    }
                                     case "startingflash": {
                                         self.isBusy(true);
                                         message = gettext("Starting flash...");
@@ -827,6 +853,12 @@ $(function() {
             self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"));
             self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"));
 
+            // Load the BootCommander settings
+            self.configBootCmdrPath(self.getProfileSetting("bootcmdr_path"));
+            self.configBootCmdrBaudRate(self.getProfileSetting("bootcmdr_baudrate"));
+            self.configBootCmdrCommandLine(self.getProfileSetting("bootcmdr_commandline"));
+            self.configBootCmdrCommandTimeout(self.getProfileSetting("bootcmdr_command_timeout"));
+
             // Load the bossac settings
             self.configBossacPath(self.getProfileSetting("bossac_path"));
             self.configBossacDisableVerification(self.getProfileSetting("bossac_disableverify"));
@@ -940,6 +972,12 @@ $(function() {
             profiles[index]["avrdude_baudrate"] = self.configAvrdudeBaudRate();
             profiles[index]["avrdude_disableverify"] = self.configAvrdudeDisableVerification();
             profiles[index]["avrdude_commandline"] = self.configAvrdudeCommandLine();
+
+            // BootCommander settings
+            profiles[index]["bootcmdr_path"] = self.configBootCmdrPath();
+            profiles[index]["bootcmdr_baudrate"] = self.configBootCmdrBaudRate();
+            profiles[index]["bootcmdr_commandline"] = self.configBootCmdrCommandLine();
+            profiles[index]["bootcmdr_command_timeout"] = self.configBootCmdrCommandTimeout();
 
             // Bossac settings
             profiles[index]["bossac_path"] = self.configBossacPath();
@@ -1066,6 +1104,10 @@ $(function() {
             self.avrdudeConfPathOk(false);
             self.avrdudeConfPathText("");
 
+            self.bootCmdrPathBroken(false);
+            self.bootCmdrPathOk(false);
+            self.bootCmdrPathText("");
+
             self.bossacPathBroken(false);
             self.bossacPathOk(false);
             self.bossacPathText("");
@@ -1085,6 +1127,10 @@ $(function() {
 
         self.resetAvrdudeCommandLine = function() {
             self.configAvrdudeCommandLine(self.profileDefaults["avrdude_commandline"]);
+        };
+
+        self.resetBootCmdrCommandLine = function() {
+            self.configBootCmdrCommandLine(self.profileDefaults["bootcmdr_commandline"]);
         };
 
         self.resetBossacCommandLine = function() {
@@ -1130,6 +1176,45 @@ $(function() {
             }
             return true;
         }
+
+        self.testBootCmdrPath = function() {
+            var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");
+            var filePathRegEx_Windows = new RegExp("^[A-z]\:\\\\.+.exe$");
+
+            if ( !filePathRegEx_Linux.test(self.configBootCmdrPath()) && !filePathRegEx_Windows.test(self.configBootCmdrPath()) ) {
+                self.bootCmdrPathText(gettext("The path is not valid"));
+                self.bootCmdrPathText(false);
+                self.bootCmdrPathText(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configBootCmdrPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.bootCmdrPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.bootCmdrPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.bootCmdrPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.bootCmdrPathText(gettext("The path is valid"));
+                        }
+                        self.bootCmdrPathOk(response.result);
+                        self.bootCmdrPathBroken(!response.result);
+                    }
+                })
+            }            
+        };
 
         self.testAvrdudePath = function() {
             var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");

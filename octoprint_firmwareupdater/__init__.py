@@ -21,6 +21,7 @@ from past.builtins import basestring
 
 # import the flash methods
 from octoprint_firmwareupdater.methods import avrdude
+from octoprint_firmwareupdater.methods import bootcmdr
 from octoprint_firmwareupdater.methods import bossac
 from octoprint_firmwareupdater.methods import dfuprog
 from octoprint_firmwareupdater.methods import lpc1768
@@ -48,6 +49,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         # also include prechecks
         self._flash_prechecks = dict(
             avrdude=avrdude._check_avrdude,
+            bootcmdr=bootcmdr._check_bootcmdr,
             bossac=bossac._check_bossac,
             dfuprogrammer=dfuprog._check_dfuprog,
             lpc1768=lpc1768._check_lpc1768,
@@ -56,6 +58,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         )
         self._flash_methods = dict(
             avrdude=avrdude._flash_avrdude,
+            bootcmdr=bootcmdr._flash_bootcmdr,
             bossac=bossac._flash_bossac,
             dfuprogrammer=dfuprog._flash_dfuprog,
             lpc1768=lpc1768._flash_lpc1768,
@@ -537,6 +540,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "avrdude_baudrate": None,
                 "avrdude_disableverify": False,
                 "avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
+                "bootcmdr_path": None,
+                "bootcmdr_commandline": "{bootcommander} -d={port} -b={baudrate} {firmware}",
+                "bootcmdr_baudrate": 115200,
+                "bootcmdr_command_timeout": 30,
                 "bossac_path": None,
                 "bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
                 "bossac_disableverify": False,
