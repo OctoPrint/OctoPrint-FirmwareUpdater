@@ -3,13 +3,11 @@ import os
 import sarge
 import time
 
-ERASING = "Erasing flash"
-WRITING = "Programming"
-VERIFYING = "Reading"
-VALIDATING = "Validating"
-NODEVICE = "no device present"
-LOADING = "Loading firmware data from file"
 CONNECTING = "Connecting to target bootloader"
+ERASING = "Erasing"
+WRITING = "Programming"
+FINISHING = "Finishing"
+LOADING = "Loading firmware data from file"
 BACKDOOR = "Attempting backdoor entry"
 
 def _check_bootcmdr(self):
@@ -55,7 +53,6 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
     bootcmdr_command = bootcmdr_command.replace("{firmware}", firmware)
 
     self._logger.info(u"Running '{}' in {}".format(bootcmdr_command, working_dir))
-    self._send_status("progress", subtype="writing")
     self._console_logger.info(bootcmdr_command)
     try:
         starttime = time.time()
@@ -90,10 +87,15 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
                     connecting = True
                     self._logger.info(u"Connecting to backdoor...")
                     self._send_status("progress", subtype="backdoor")
-                elif NODEVICE in line:
-                    raise FlashException("No device found")
+                if ERASING in line:
+                    self._logger.info(u"Erasing memory...")
+                    self._send_status("progress", subtype="erasing")
+                if FINISHING in line:
+                    self._logger.info(u"Finishing programming...")
+                    self._send_status("progress", subtype="finishing")
 
         if p.returncode == 0:
+            time.sleep(2)
             return True
         else:
             raise FlashException("BootCommander returned code {returncode}".format(returncode=p.returncode))

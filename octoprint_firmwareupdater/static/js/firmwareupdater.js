@@ -720,6 +720,14 @@ $(function() {
                                         message = gettext("Disconnecting printer...");
                                         break;
                                     }
+                                    case "connecting": {
+                                        message = gettext("Connecting to bootloader...");
+                                        break;
+                                    }
+                                    case "backdoor": {
+                                        message = gettext("Trying bootloader backdoor...");
+                                        break;
+                                    }
                                     case "startingflash": {
                                         self.isBusy(true);
                                         message = gettext("Starting flash...");
