@@ -54,6 +54,13 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
 
     self._logger.info(u"Running '{}' in {}".format(bootcmdr_command, working_dir))
     self._console_logger.info(bootcmdr_command)
+
+    if self.get_profile_setting_boolean("bootcmdr_preflashreset"):
+        self._send_status("progress", subtype="boardreset")
+        self._logger.info(u"Attempting to reset the board")
+        if not _reset_board(self, printer_port, bootcmdr_baudrate):
+            raise FlashException("Reset failed")
+
     try:
         starttime = time.time()
         connecting = False
@@ -108,6 +115,38 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
         self._logger.exception(u"Flashing failed. Unexpected error.")
         self._send_status("flasherror")
         return False
+
+def _reset_board(self, printer_port=None, baudrate=None):
+    assert(printer_port is not None)
+    assert(baudrate is not None)
+    
+    self._logger.info(u"Resetting printer at '{port}'".format(port=printer_port))
+
+    # Configure the port
+    try:
+        os.system('stty -F ' + printer_port + ' speed ' + str(baudrate) + ' -echo > /dev/null')
+    except:
+        self._logger.exception(u"Error configuring serial port.")
+        self._send_status("flasherror", message="Board reset failed")
+        return False
+
+    # Smoothie reset command
+    try:
+        os.system('echo reset >> ' + printer_port)
+    except:
+        self._logger.exception(u"Error sending Smoothie 'reset' command.")
+        self._send_status("flasherror", message="Board reset failed")
+        return False
+
+    # Marlin reset command
+    try:
+        os.system('echo M997 >> ' + printer_port)
+    except:
+        self._logger.exception(u"Error sending Marlin 'M997' command.")
+        self._send_status("flasherror", message="Board reset failed")
+        return False
+
+    return True
 
 class FlashException(Exception):
 	def __init__(self, reason, *args, **kwargs):

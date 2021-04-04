@@ -351,6 +351,15 @@
                         <!-- Advanced BootCommander options -->
                         <div data-bind="visible: showBootCmdrConfig">
                             <div class="control-group">
+                                <label class="control-label">{{ _('Reset before flashing') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configBootCmdrResetBeforeFlash">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the board will be reset before a firmware update is attempted to ensure that the bootloader is active when BootCommander is run.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
                                 <label class="control-label">{{ _('Command timeout') }}</label>
                                 <div class="controls">
                                     <div class="input-append">

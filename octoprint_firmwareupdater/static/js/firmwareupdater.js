@@ -69,6 +69,7 @@ $(function() {
         self.configBootCmdrBaudRate = ko.observable();
         self.configBootCmdrCommandLine = ko.observable();
         self.configBootCmdrCommandTimeout = ko.observable();
+        self.configBootCmdrResetBeforeFlash = ko.observable();
 
         // Observables for BootCommander UI messages
         self.bootCmdrPathBroken = ko.observable(false);
@@ -725,7 +726,7 @@ $(function() {
                                         break;
                                     }
                                     case "backdoor": {
-                                        message = gettext("Trying bootloader backdoor...");
+                                        message = gettext("Trying bootloader backdoor - (reset the board if this takes too long)...");
                                         break;
                                     }
                                     case "startingflash": {
@@ -858,6 +859,7 @@ $(function() {
             self.configBootCmdrBaudRate(self.getProfileSetting("bootcmdr_baudrate"));
             self.configBootCmdrCommandLine(self.getProfileSetting("bootcmdr_commandline"));
             self.configBootCmdrCommandTimeout(self.getProfileSetting("bootcmdr_command_timeout"));
+            self.configBootCmdrResetBeforeFlash(self.getProfileSetting("bootcmdr_preflashreset"));
 
             // Load the bossac settings
             self.configBossacPath(self.getProfileSetting("bossac_path"));
@@ -978,6 +980,7 @@ $(function() {
             profiles[index]["bootcmdr_baudrate"] = self.configBootCmdrBaudRate();
             profiles[index]["bootcmdr_commandline"] = self.configBootCmdrCommandLine();
             profiles[index]["bootcmdr_command_timeout"] = self.configBootCmdrCommandTimeout();
+            profiles[index]["bootcmdr_preflashreset"] = self.configBootCmdrResetBeforeFlash();
 
             // Bossac settings
             profiles[index]["bossac_path"] = self.configBossacPath();
