@@ -527,6 +527,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
+            "prevent_connection_when_flashing": True,
             "profiles": {},
             "_profiles": {
                 "_name": None,
@@ -717,6 +718,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         return [("POST", r"/flash", 1000 * 1024)]
 
+    ##~~ Connect hook
+    def handle_connect_hook(self, *args, **kwargs):
+        if self._settings.get_boolean(["prevent_connection_when_flashing"]) and self._flash_thread:
+            self._logger.info("Flash in progress, preventing connection to printer")
+            return True
+        else:
+            return False
+
     ##~~ Update hook
     def update_hook(self):
         return dict(
@@ -773,5 +782,6 @@ def __plugin_load__():
     __plugin_hooks__ = {
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
-        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook
+        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook,
+        "octoprint.printer.handle_connect": __plugin_implementation__.handle_connect_hook
     }

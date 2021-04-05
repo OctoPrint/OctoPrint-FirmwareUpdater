@@ -797,6 +797,15 @@
                                 <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'.') }}</span>
                             </div>
                         </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Prevent connection when flashing') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configPreventConnectionWhenFlashing">
+                                </div>
+                                <span class="help-block">{{ _('Block OctoPring serial connections when a firmware update is in progress. Requires OctoPrint >=1.6.0.') }}</span>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <!-- End Plugin Options Tab -->
