@@ -123,6 +123,7 @@
                                 <select style="width:285px;" data-bind="value: configFlashMethod">
                                     <option></option>
                                     <option value=avrdude>avrdude (Atmel AVR Family)</option>
+                                    <option value=bootcmdr>bootcommander (OpenBLT Bootloader)</option>
                                     <option value=bossac>bossac (Atmel SAM Family)</option>
                                     <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
                                     <option value=lpc1768>lpc176x (LPC176x Boards)</option>
@@ -173,6 +174,21 @@
                             </div>
                         </div>
                         <!-- end avrdude options -->
+
+                        <!-- bootcommander options for OpenBLT Bootloader -->
+                        <div data-bind="visible: showBootCmdrConfig">
+                            <div class="control-group" data-bind="css: {error: bootCmdrPathBroken, success: bootCmdrPathOk}">
+                                <label class="control-label">{{ _('Path to BootCommander') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configBootCmdrPath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testBootCmdrPath, enable: configBootCmdrPath, css: {disabled: !configBootCmdrPath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: bootCmdrPathBroken() || bootCmdrPathOk, text: bootCmdrPathText"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end bootcommander options -->
 
                         <!-- bossac options for 32-bit MCUs -->
                         <div data-bind="visible: showBossacConfig">
@@ -332,6 +348,54 @@
                         </div>
                         <!-- End advanced avrdude options -->
 
+                        <!-- Advanced BootCommander options -->
+                        <div data-bind="visible: showBootCmdrConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Reset before flashing') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configBootCmdrResetBeforeFlash">
+                                    </div>
+                                    <span class="help-block">{{ _('If checked the board will be reset before a firmware update is attempted to ensure that the bootloader is active when BootCommander is run.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Command timeout') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="10" max="90" data-bind="value: configBootCmdrCommandTimeout">
+                                        <span class="add-on">seconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('BootCommand command timeout.  Default: 30s') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('BootCommander Baud Rate') }}</label>
+                                <div class="controls">
+                                    <select data-bind="value: configBootCmdrBaudRate">
+                                        <option value=9600>9600</option>
+                                        <option value=19200>19200</option>
+                                        <option value=38400>38400</option>
+                                        <option value=57600>57600</option>
+                                        <option value=115200>115200</option>
+                                        <option value=250000>250000</option>
+                                    </select>
+                                    <span class="help-block">{{ _('Set the baud rate.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configBootCmdrCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetBootCmdrCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the BootCommander command line.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End advanced BootCommander options-->
+
                         <!-- Advanced bossac options -->
                         <div data-bind="visible: showBossacConfig">
                             <div class="control-group">
@@ -399,9 +463,20 @@
                                 <label class="control-label">{{ _('Use timestamp filenames') }}</label>
                                 <div class="controls">
                                     <div class="input">
-                                        <input type="checkbox" data-bind="checked: configLpc1768TimestampFilenames">
+                                        <input type="checkbox" data-bind="checked: configLpc1768TimestampFilenames, disable: configLpc1768UseCustomFilename, click: toggleLpc1768Filenames">
                                     </div>
                                     <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>. Needed for Ender 3 V2.') }}</span>
+                                </div>
+                                <label class="control-label">{{ _('Customize firmware filename') }}</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-bind="checked: configLpc1768UseCustomFilename, disable: configLpc1768TimestampFilenames, click: toggleLpc1768Filenames">
+                                    </label>
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configLpc1768CustomFilename, enable: configLpc1768UseCustomFilename">
+                                        <button class="btn" type="button" data-bind="click: resetLpc1768CustomFilename, enable: configLpc1768UseCustomFilename">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Firmware file will be saved on the printer using the specified name.') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -464,6 +539,19 @@
                                     </div>
                                     <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>. Needed for Ender 3 V2.') }}</span>
                                 </div>
+                                <!--
+                                <label class="control-label">{{ _('Customize firmware filename') }}</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftUseCustomFilename, disable: configMarlinBftTimestampFilenames, click: toggleMarlinBftFilenames">
+                                    </label>
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configMarlinBftCustomFilename, enable: configMarlinBftUseCustomFilename">
+                                        <button class="btn" type="button" data-bind="click: resetMarlinBftCustomFilename, enable: configMarlinBftUseCustomFilename">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Firmware file will be saved on the printer using the specified name.') }}</span>
+                                </div>
+                                -->
                             </div>
                         </div>
                         <!-- Advanced marlinbft options -->
@@ -707,6 +795,15 @@
                                     <input type="checkbox" data-bind="checked: configDisableFileFilter">
                                 </div>
                                 <span class="help-block">{{ _('Disable the file extension filters when selecting a file for \'Flash from file\'.') }}</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">{{ _('Prevent serial connections when flashing') }}</label>
+                            <div class="controls">
+                                <div class="input">
+                                    <input type="checkbox" data-bind="checked: configPreventConnectionWhenFlashing">
+                                </div>
+                                <span class="help-block">{{ _('Block OctoPrint serial connections when a firmware update is in progress. Requires OctoPrint >=1.6.0.') }}</span>
                             </div>
                         </div>
                     </form>

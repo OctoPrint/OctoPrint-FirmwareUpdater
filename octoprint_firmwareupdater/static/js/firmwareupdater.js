@@ -13,6 +13,7 @@ $(function() {
         self.configShowNavbarIcon = ko.observable();                    // enable_navbar
         self.configProfilesEnabled = ko.observable();                   // enable_profiles
         self.configDisableFileFilter = ko.observable();
+        self.configPreventConnectionWhenFlashing = ko.observable();
 
         // Observables for profiles
         self.selectedProfileIndex = ko.observable();                    // _selected_profile
@@ -64,6 +65,21 @@ $(function() {
             return self.avrdudeConfPathBroken() || self.avrdudeConfPathOk();
         });
 
+        // Observables for BootCommander config settings
+        self.configBootCmdrPath = ko.observable();
+        self.configBootCmdrBaudRate = ko.observable();
+        self.configBootCmdrCommandLine = ko.observable();
+        self.configBootCmdrCommandTimeout = ko.observable();
+        self.configBootCmdrResetBeforeFlash = ko.observable();
+
+        // Observables for BootCommander UI messages
+        self.bootCmdrPathBroken = ko.observable(false);
+        self.bootCmdrPathOk = ko.observable(false);
+        self.bootCmdrPathText = ko.observable();
+        self.bootCmdrPathHelpVisible = ko.computed(function() {
+            return self.bootCmdrPathBroken() || self.bootCmdrPathOk();
+        });
+
         // Observables for bossac config settings
         self.configBossacPath = ko.observable();
         self.configBossacDisableVerification = ko.observable()
@@ -84,6 +100,8 @@ $(function() {
         self.configLpc1768NoResetWait = ko.observable();
         self.configLpc1768NoRestartWait = ko.observable();
         self.configLpc1768TimestampFilenames = ko.observable();
+        self.configLpc1768UseCustomFilename = ko.observable();
+        self.configLpc1768CustomFilename = ko.observable();
 
         // Observables for lpc1768 UI messages
         self.lpc1768PathBroken = ko.observable(false);
@@ -100,6 +118,8 @@ $(function() {
         self.configMarlinBftNoResetWait = ko.observable();
         self.configMarlinBftNoRestartWait = ko.observable();
         self.configMarlinBftTimestampFilenames = ko.observable();
+        self.configMarlinBftUseCustomFilename = ko.observable();
+        self.configMarlinBftCustomFilename = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
 
@@ -138,6 +158,7 @@ $(function() {
 
         // Observables to control which settings to show
         self.showAvrdudeConfig = ko.observable(false);
+        self.showBootCmdrConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
@@ -175,7 +196,7 @@ $(function() {
             if (self.configDisableFileFilter()) {
                 return null;
             } else {
-                return '.hex,.bin';
+                return '.hex,.bin,.srec';
             }
         });
 
@@ -455,6 +476,7 @@ $(function() {
         self.configFlashMethod.subscribe(function(value) {
             // Hide all the flash method settings
             self.showAvrdudeConfig(false);
+            self.showBootCmdrConfig(false);
             self.showBossacConfig(false);
             self.showLpc1768Config(false);
             self.showDfuConfig(false);
@@ -464,6 +486,8 @@ $(function() {
             // Show only the selected method's settings
             if(value == 'avrdude') {
                 self.showAvrdudeConfig(true);
+            } else if(value == 'bootcmdr') {
+                self.showBootCmdrConfig(true);
             } else if(value == 'bossac') {
                 self.showBossacConfig(true);
             } else if(value == 'lpc1768'){
@@ -698,6 +722,14 @@ $(function() {
                                         message = gettext("Disconnecting printer...");
                                         break;
                                     }
+                                    case "connecting": {
+                                        message = gettext("Connecting to bootloader...");
+                                        break;
+                                    }
+                                    case "backdoor": {
+                                        message = gettext("Trying bootloader backdoor - (reset the board if this takes too long)...");
+                                        break;
+                                    }
                                     case "startingflash": {
                                         self.isBusy(true);
                                         message = gettext("Starting flash...");
@@ -787,7 +819,7 @@ $(function() {
             self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles());
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
-
+            self.configPreventConnectionWhenFlashing(self.settingsViewModel.settings.plugins.firmwareupdater.prevent_connection_when_flashing());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
@@ -823,6 +855,13 @@ $(function() {
             self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"));
             self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"));
 
+            // Load the BootCommander settings
+            self.configBootCmdrPath(self.getProfileSetting("bootcmdr_path"));
+            self.configBootCmdrBaudRate(self.getProfileSetting("bootcmdr_baudrate"));
+            self.configBootCmdrCommandLine(self.getProfileSetting("bootcmdr_commandline"));
+            self.configBootCmdrCommandTimeout(self.getProfileSetting("bootcmdr_command_timeout"));
+            self.configBootCmdrResetBeforeFlash(self.getProfileSetting("bootcmdr_preflashreset"));
+
             // Load the bossac settings
             self.configBossacPath(self.getProfileSetting("bossac_path"));
             self.configBossacDisableVerification(self.getProfileSetting("bossac_disableverify"));
@@ -841,6 +880,8 @@ $(function() {
             self.configLpc1768NoResetWait(self.getProfileSetting("lpc1768_no_m997_reset_wait"));
             self.configLpc1768NoRestartWait(self.getProfileSetting("lpc1768_no_m997_restart_wait"));
             self.configLpc1768TimestampFilenames(self.getProfileSetting("lpc1768_timestamp_filenames"));
+            self.configLpc1768UseCustomFilename(self.getProfileSetting("lpc1768_use_custom_filename"));
+            self.configLpc1768CustomFilename(self.getProfileSetting("lpc1768_custom_filename"));
 
             // Load the marlinbft settings
             self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
@@ -849,6 +890,8 @@ $(function() {
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
             self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
             self.configMarlinBftTimestampFilenames(self.getProfileSetting("marlinbft_timestamp_filenames"));
+            self.configMarlinBftUseCustomFilename(self.getProfileSetting("marlinbft_use_custom_filename"));
+            self.configMarlinBftCustomFilename(self.getProfileSetting("marlinbft_custom_filename"));
 
             // Load the stm32flash settings
             self.configStm32flashPath(self.getProfileSetting("stm32flash_path"));
@@ -933,6 +976,13 @@ $(function() {
             profiles[index]["avrdude_disableverify"] = self.configAvrdudeDisableVerification();
             profiles[index]["avrdude_commandline"] = self.configAvrdudeCommandLine();
 
+            // BootCommander settings
+            profiles[index]["bootcmdr_path"] = self.configBootCmdrPath();
+            profiles[index]["bootcmdr_baudrate"] = self.configBootCmdrBaudRate();
+            profiles[index]["bootcmdr_commandline"] = self.configBootCmdrCommandLine();
+            profiles[index]["bootcmdr_command_timeout"] = self.configBootCmdrCommandTimeout();
+            profiles[index]["bootcmdr_preflashreset"] = self.configBootCmdrResetBeforeFlash();
+
             // Bossac settings
             profiles[index]["bossac_path"] = self.configBossacPath();
             profiles[index]["bossac_disableverify"] = self.configBossacDisableVerification();
@@ -951,7 +1001,8 @@ $(function() {
             profiles[index]["lpc1768_no_m997_reset_wait"] = self.configLpc1768NoResetWait();
             profiles[index]["lpc1768_no_m997_restart_wait"] = self.configLpc1768NoRestartWait();
             profiles[index]["lpc1768_timestamp_filenames"] = self.configLpc1768TimestampFilenames();
-
+            profiles[index]["lpc1768_use_custom_filename"] = self.configLpc1768UseCustomFilename();
+            profiles[index]["lpc1768_custom_filename"] = self.configLpc1768CustomFilename();
 
             // MarlinBFT Settings
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
@@ -960,6 +1011,8 @@ $(function() {
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
             profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
             profiles[index]["marlinbft_timestamp_filenames"] = self.configMarlinBftTimestampFilenames();
+            profiles[index]["marlinbft_use_custom_filename"] = self.configMarlinBftUseCustomFilename();
+            profiles[index]["marlinbft_custom_filename"] = self.configMarlinBftCustomFilename();
 
             // STM32Flash Settings
             profiles[index]["stm32flash_path"] = self.configStm32flashPath();
@@ -983,6 +1036,7 @@ $(function() {
                         enable_profiles: self.configProfilesEnabled(),
                         save_url: self.configSaveUrl(),
                         disable_filefilter: self.configDisableFileFilter(),
+                        prevent_connection_when_flashing: self.configPreventConnectionWhenFlashing(),
                         profiles: profiles,
                     }
                 }
@@ -1055,6 +1109,10 @@ $(function() {
             self.avrdudeConfPathOk(false);
             self.avrdudeConfPathText("");
 
+            self.bootCmdrPathBroken(false);
+            self.bootCmdrPathOk(false);
+            self.bootCmdrPathText("");
+
             self.bossacPathBroken(false);
             self.bossacPathOk(false);
             self.bossacPathText("");
@@ -1076,6 +1134,10 @@ $(function() {
             self.configAvrdudeCommandLine(self.profileDefaults["avrdude_commandline"]);
         };
 
+        self.resetBootCmdrCommandLine = function() {
+            self.configBootCmdrCommandLine(self.profileDefaults["bootcmdr_commandline"]);
+        };
+
         self.resetBossacCommandLine = function() {
             self.configBossacCommandLine(self.profileDefaults["bossac_commandline"]);
         };
@@ -1091,6 +1153,73 @@ $(function() {
         self.resetLpc1768UnmountCommand = function() {
             self.configLpc1768UnmountCommand(self.profileDefaults["lpc1768_unmount_command"]);
         }
+
+        self.resetLpc1768CustomFilename = function() {
+            self.configLpc1768CustomFilename(self.profileDefaults["lpc1768_custom_filename"]);
+        }
+
+        self.toggleLpc1768Filenames = function() {
+            if (self.configLpc1768UseCustomFilename() == true){
+                self.configLpc1768TimestampFilenames(false);
+            }
+            if (self.configLpc1768TimestampFilenames() == true){
+                self.configLpc1768UseCustomFilename(false);
+            }
+            return true;
+        }
+
+        self.resetMarlinBftCustomFilename = function() {
+            self.configLpc1768CustomFilename(self.profileDefaults["marlinbft_custom_filename"]);
+        }
+
+        self.toggleMarlinBftFilenames = function() {
+            if (self.configMarlinBftUseCustomFilename() == true){
+                self.configMarlinBftTimestampFilenames(false);
+            }
+            if (self.configMarlinBftTimestampFilenames() == true){
+                self.configMarlinBftUseCustomFilename(false);
+            }
+            return true;
+        }
+
+        self.testBootCmdrPath = function() {
+            var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");
+            var filePathRegEx_Windows = new RegExp("^[A-z]\:\\\\.+.exe$");
+
+            if ( !filePathRegEx_Linux.test(self.configBootCmdrPath()) && !filePathRegEx_Windows.test(self.configBootCmdrPath()) ) {
+                self.bootCmdrPathText(gettext("The path is not valid"));
+                self.bootCmdrPathText(false);
+                self.bootCmdrPathText(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configBootCmdrPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.bootCmdrPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.bootCmdrPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.bootCmdrPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.bootCmdrPathText(gettext("The path is valid"));
+                        }
+                        self.bootCmdrPathOk(response.result);
+                        self.bootCmdrPathBroken(!response.result);
+                    }
+                })
+            }            
+        };
 
         self.testAvrdudePath = function() {
             var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");

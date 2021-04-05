@@ -21,6 +21,7 @@ from past.builtins import basestring
 
 # import the flash methods
 from octoprint_firmwareupdater.methods import avrdude
+from octoprint_firmwareupdater.methods import bootcmdr
 from octoprint_firmwareupdater.methods import bossac
 from octoprint_firmwareupdater.methods import dfuprog
 from octoprint_firmwareupdater.methods import lpc1768
@@ -48,6 +49,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         # also include prechecks
         self._flash_prechecks = dict(
             avrdude=avrdude._check_avrdude,
+            bootcmdr=bootcmdr._check_bootcmdr,
             bossac=bossac._check_bossac,
             dfuprogrammer=dfuprog._check_dfuprog,
             lpc1768=lpc1768._check_lpc1768,
@@ -56,6 +58,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         )
         self._flash_methods = dict(
             avrdude=avrdude._flash_avrdude,
+            bootcmdr=bootcmdr._flash_bootcmdr,
             bossac=bossac._flash_bossac,
             dfuprogrammer=dfuprog._flash_dfuprog,
             lpc1768=lpc1768._flash_lpc1768,
@@ -282,7 +285,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                         self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
 
-                    # Run post-flash gcode
+                    # Set run post-flash gcode flag
                     postflash_gcode = self.get_profile_setting("postflash_gcode")
                     if postflash_gcode is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
                         self._logger.info(u"Setting run_postflash_gcode flag to true")
@@ -303,6 +306,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 except:
                     self._logger.exception(u"Could not delete temporary hex file at {}".format(firmware))
 
+        finally:
+            self._flash_thread = None
+
             if self.get_profile_setting_boolean("no_reconnect_after_flash"):
                 self._logger.info("Automatic reconnection is disabled")
             else:
@@ -311,9 +317,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     self._logger.info("Reconnecting to printer: port={}, baudrate={}, profile={}".format(port, baudrate, profile))
                     self._send_status("progress", subtype="reconnecting")
                     self._printer.connect(port=port, baudrate=baudrate, profile=profile)
-
-        finally:
-            self._flash_thread = None
 
     # Checks for a valid profile in the plugin's settings
     #   Returns True if the settings contain one or more profiles, otherwise false
@@ -524,6 +527,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
+            "prevent_connection_when_flashing": True,
             "profiles": {},
             "_profiles": {
                 "_name": None,
@@ -537,6 +541,11 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "avrdude_baudrate": None,
                 "avrdude_disableverify": False,
                 "avrdude_commandline": "{avrdude} -v -q -p {mcu} -c {programmer} -P {port} -D -C {conffile} -b {baudrate} {disableverify} -U flash:w:{firmware}:i",
+                "bootcmdr_path": None,
+                "bootcmdr_preflashreset": True,
+                "bootcmdr_commandline": "{bootcommander} -d={port} -b={baudrate} {firmware}",
+                "bootcmdr_baudrate": 115200,
+                "bootcmdr_command_timeout": 30,
                 "bossac_path": None,
                 "bossac_commandline": "{bossac} -i -p {port} -U true -e -w {disableverify} -b {firmware} -R",
                 "bossac_disableverify": False,
@@ -558,6 +567,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "lpc1768_preflashreset": True,
                 "lpc1768_no_m997_reset_wait": False,
                 "lpc1768_no_m997_restart_wait": False,
+                "lpc1768_use_custom_filename": False,
+                "lpc1768_custom_filename": "firmware.bin",
                 "lpc1768_timestamp_filenames": False,
                 "lpc1768_last_filename": None,
                 "marlinbft_waitafterconnect": 0,
@@ -565,6 +576,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_progresslogging": False,
                 "marlinbft_no_m997_reset_wait": False,
                 "marlinbft_no_m997_restart_wait": False,
+                "marlinbft_use_custom_filename": False,
+                "marlinbft_custom_filename": "firmware.bin",
                 "marlinbft_timestamp_filenames": False,
                 "marlinbft_last_filename": None,
                 "postflash_delay": 0,
@@ -658,7 +671,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             # Set the profile to the new one
             self._settings.set_int(['_selected_profile'], 0)
 
-
     #~~ EventHandlerPlugin API
     def on_event(self, event, payload):
         # Only handle the CONNECTED event
@@ -705,6 +717,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
     ##~~ Bodysize hook
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         return [("POST", r"/flash", 1000 * 1024)]
+
+    ##~~ Connect hook
+    def handle_connect_hook(self, *args, **kwargs):
+        if self._settings.get_boolean(["prevent_connection_when_flashing"]) and self._flash_thread:
+            self._logger.info("Flash in progress, preventing connection to printer")
+            return True
+        else:
+            return False
 
     ##~~ Update hook
     def update_hook(self):
@@ -762,5 +782,6 @@ def __plugin_load__():
     __plugin_hooks__ = {
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
-        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook
+        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook,
+        "octoprint.printer.handle_connect": __plugin_implementation__.handle_connect_hook
     }
