@@ -13,6 +13,7 @@ $(function() {
         self.configShowNavbarIcon = ko.observable();                    // enable_navbar
         self.configProfilesEnabled = ko.observable();                   // enable_profiles
         self.configDisableFileFilter = ko.observable();
+        self.configPreventConnectionWhenFlashing = ko.observable();
 
         // Observables for profiles
         self.selectedProfileIndex = ko.observable();                    // _selected_profile
@@ -818,7 +819,7 @@ $(function() {
             self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles());
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
-
+            self.configPreventConnectionWhenFlashing(self.settingsViewModel.settings.plugins.firmwareupdater.prevent_connection_when_flashing());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
@@ -1035,6 +1036,7 @@ $(function() {
                         enable_profiles: self.configProfilesEnabled(),
                         save_url: self.configSaveUrl(),
                         disable_filefilter: self.configDisableFileFilter(),
+                        prevent_connection_when_flashing: self.configPreventConnectionWhenFlashing(),
                         profiles: profiles,
                     }
                 }

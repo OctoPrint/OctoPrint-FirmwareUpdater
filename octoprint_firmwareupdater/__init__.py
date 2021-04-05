@@ -285,7 +285,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                         self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
 
-                    # Run post-flash gcode
+                    # Set run post-flash gcode flag
                     postflash_gcode = self.get_profile_setting("postflash_gcode")
                     if postflash_gcode is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
                         self._logger.info(u"Setting run_postflash_gcode flag to true")
@@ -306,6 +306,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 except:
                     self._logger.exception(u"Could not delete temporary hex file at {}".format(firmware))
 
+        finally:
+            self._flash_thread = None
+
             if self.get_profile_setting_boolean("no_reconnect_after_flash"):
                 self._logger.info("Automatic reconnection is disabled")
             else:
@@ -314,9 +317,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     self._logger.info("Reconnecting to printer: port={}, baudrate={}, profile={}".format(port, baudrate, profile))
                     self._send_status("progress", subtype="reconnecting")
                     self._printer.connect(port=port, baudrate=baudrate, profile=profile)
-
-        finally:
-            self._flash_thread = None
 
     # Checks for a valid profile in the plugin's settings
     #   Returns True if the settings contain one or more profiles, otherwise false
@@ -527,6 +527,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_bftcapability": False,
             "has_binproto2package": False,
             "disable_filefilter": False,
+            "prevent_connection_when_flashing": True,
             "profiles": {},
             "_profiles": {
                 "_name": None,
@@ -717,6 +718,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
         return [("POST", r"/flash", 1000 * 1024)]
 
+    ##~~ Connect hook
+    def handle_connect_hook(self, *args, **kwargs):
+        if self._settings.get_boolean(["prevent_connection_when_flashing"]) and self._flash_thread:
+            self._logger.info("Flash in progress, preventing connection to printer")
+            return True
+        else:
+            return False
+
     ##~~ Update hook
     def update_hook(self):
         return dict(
@@ -773,5 +782,6 @@ def __plugin_load__():
     __plugin_hooks__ = {
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
-        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook
+        "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook,
+        "octoprint.printer.handle_connect": __plugin_implementation__.handle_connect_hook
     }
