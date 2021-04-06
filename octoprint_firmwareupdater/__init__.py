@@ -528,6 +528,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "has_binproto2package": False,
             "disable_filefilter": False,
             "prevent_connection_when_flashing": True,
+            "maximum_fw_size_kb": 5120,
             "profiles": {},
             "_profiles": {
                 "_name": None,
@@ -716,7 +717,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
     ##~~ Bodysize hook
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-        return [("POST", r"/flash", 1000 * 1024)]
+        # Max size is (maximum_fw_size_kb * 1024) + 1024B to allow for API overhead
+        max_size = (self._settings.get(["maximum_fw_size_kb"]) * 1024) + 1024
+        self._logger.info("Setting maximum upload size for /flash to %s" % (max_size))
+        return [("POST", r"/flash", max_size)]
 
     ##~~ Connect hook
     def handle_connect_hook(self, *args, **kwargs):
