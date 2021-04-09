@@ -14,6 +14,7 @@ $(function() {
         self.configProfilesEnabled = ko.observable();                   // enable_profiles
         self.configDisableFileFilter = ko.observable();
         self.configPreventConnectionWhenFlashing = ko.observable();
+        self.configMaxFirmwareSizeKb = ko.observable();
 
         // Observables for profiles
         self.selectedProfileIndex = ko.observable();                    // _selected_profile
@@ -306,6 +307,7 @@ $(function() {
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
+            self.configMaxFirmwareSizeKb(self.settingsViewModel.settings.plugins.firmwareupdater.maximum_fw_size_kb())
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater._plugin_version());
         }
 
@@ -575,6 +577,10 @@ $(function() {
                 alert = gettext("Firmware file is not specified");
             } else if (source === "url" && !self.firmwareFileURL()) {
                 alert = gettext("Firmware URL is not specified");
+            }
+
+            if (source === "file" && self.hexData.files[0].size > self.configMaxFirmwareSizeKb() * 1024) {
+                alert = gettext("The firmware file is too large. File is " + Math.round(self.hexData.files[0].size / 1024) + "KB, limit is " + self.configMaxFirmwareSizeKb() + "KB.");
             }
 
             if (alert !== undefined) {
