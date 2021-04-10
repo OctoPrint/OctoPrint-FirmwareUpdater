@@ -14,8 +14,10 @@ Flashing a board from the SD requires that the host can mount the board's on-boa
       1. [File System Permissions](#file-system-permissions)
    1. [Sudo Rights](#sudo-rights)
       1. [Configure sudo](#configure-sudo)
-1. [lpc176x Configuration]
-1. [Troubleshooting](#troubleshooting)
+1. [lpc176x Configuration](#lpc176x-configuration)
+1. [Hardware Notes](#hardware-notes)
+   1. [Creality Ender 3](#creality-ender-3)
+3. [Troubleshooting](#troubleshooting)
    1. [Board Reset Failed](#board-reset-failed)
    1. [SD Card Mounting](#sd-card-mounting)
 
@@ -124,6 +126,12 @@ The only required setting is the path to the firmware update folder.  If using u
 | --- | --- |
 | Reset before flashing | Adds an extra board reset prior to flashing - can help ensure that the SD card is mounted correctly. |
 | Unmount command | The command used to unmount the SD card prior to resetting the board.  Clear the command line to disable it |
+
+## Hardware Notes
+### Creality Ender 3
+Ender 3 V2 printers with 4.2.x boards don't seem to reset the COM port when an `M997` command is set making the plugin unable to detect the board resetting.  To avoid receiving an error after a successful flash, the **Don't wait for reset** option in the advanced flash method settings must be enabled.
+
+Ender 3 V2 boards also require that the firmware filename for each firmware update is different than the filename for the previous update, and the previous firmware file must no longer be present on the SD card.  To enable unique filenames, and removal of previous firmware files, enable the **Use timestamp filenames** option in the advanced flash method settings.
 
 ## Troubleshooting
 ### Board reset failed
