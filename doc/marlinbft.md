@@ -106,6 +106,6 @@ There are no required settings.
 
 ## Hardware Notes
 ### Creality Ender 3
-Ender 3 V2 printers with 4.2.x boards don't seem to reset the COM port when an `M997` command is set making the plugin unable to detect the board resetting.  To avoid receiving an error after a successful flash, the **Don't wait for reset** option in the advanced flash method settings must be enabled.
+Ender 3 V2 printers with 4.2.x boards don't seem to reset the COM port when an `M997` command is sent, making the plugin unable to detect the board resetting.  To avoid receiving an error after a successful flash, the **Don't wait for reset** option in the advanced flash method settings must be enabled.
 
 Ender 3 V2 boards also require that the firmware filename for each firmware update is different than the filename for the previous update, and the previous firmware file must no longer be present on the SD card.  To enable unique filenames, and removal of previous firmware files, enable the **Use timestamp filenames** option in the advanced flash method settings.
