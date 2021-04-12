@@ -730,14 +730,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         else:
             return False
 
-    ##~~ Connect hook
-    def handle_connect_hook(self, *args, **kwargs):
-        if self._settings.get_boolean(["prevent_connection_when_flashing"]) and self._flash_thread:
-            self._logger.info("Flash in progress, preventing connection to printer")
-            return True
-        else:
-            return False
-
     ##~~ Update hook
     def update_hook(self):
         return dict(

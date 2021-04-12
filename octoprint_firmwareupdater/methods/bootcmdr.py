@@ -1,6 +1,7 @@
 import re
 import os
 import sarge
+import serial
 import time
 
 CONNECTING = "Connecting to target bootloader"
@@ -9,6 +10,8 @@ WRITING = "Programming"
 FINISHING = "Finishing"
 LOADING = "Loading firmware data from file"
 BACKDOOR = "Attempting backdoor entry"
+
+current_baudrate = None
 
 def _check_bootcmdr(self):
     bootcmdr_path = self.get_profile_setting("bootcmdr_path")
@@ -29,11 +32,20 @@ def _check_bootcmdr(self):
     elif not os.access(bootcmdr_path, os.X_OK):
         self._logger.error(u"Path to BootCommander is not executable: {path}".format(path=bootcmdr_path))
         return False
+    elif not self._printer.is_operational():
+        self._logger.error("Printer is not connected")
+        self._send_status("flasherror", subtype="notconnected")
+        return False
     else:
+        global current_baudrate
+        _, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
         return True
+
 
 def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
+    assert(printer_port is not None)
+    assert(current_baudrate is not None)
 
     bootcmdr_path = self.get_profile_setting("bootcmdr_path")
     bootcmdr_baudrate = self.get_profile_setting("bootcmdr_baudrate")
@@ -52,14 +64,14 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
     bootcmdr_command = bootcmdr_command.replace("{baudrate}", str(bootcmdr_baudrate))
     bootcmdr_command = bootcmdr_command.replace("{firmware}", firmware)
 
-    self._logger.info(u"Running '{}' in {}".format(bootcmdr_command, working_dir))
-    self._console_logger.info(bootcmdr_command)
-
     if self.get_profile_setting_boolean("bootcmdr_preflashreset"):
         self._send_status("progress", subtype="boardreset")
         self._logger.info(u"Attempting to reset the board")
-        if not _reset_board(self, printer_port, bootcmdr_baudrate):
+        if not _reset_board(self, printer_port, current_baudrate):
             raise FlashException("Reset failed")
+
+    self._logger.info(u"Running '{}' in {}".format(bootcmdr_command, working_dir))
+    self._console_logger.info(bootcmdr_command)
 
     try:
         starttime = time.time()
@@ -119,31 +131,17 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
 def _reset_board(self, printer_port=None, baudrate=None):
     assert(printer_port is not None)
     assert(baudrate is not None)
-    
+
     self._logger.info(u"Resetting printer at '{port}'".format(port=printer_port))
 
-    # Configure the port
     try:
-        os.system('stty -F ' + printer_port + ' speed ' + str(baudrate) + ' -echo > /dev/null')
-    except:
-        self._logger.exception(u"Error configuring serial port.")
-        self._send_status("flasherror", message="Board reset failed")
-        return False
-
-    # Smoothie reset command
-    try:
-        os.system('echo reset >> ' + printer_port)
-    except:
-        self._logger.exception(u"Error sending Smoothie 'reset' command.")
-        self._send_status("flasherror", message="Board reset failed")
-        return False
-
-    # Marlin reset command
-    try:
-        os.system('echo M997 >> ' + printer_port)
-    except:
-        self._logger.exception(u"Error sending Marlin 'M997' command.")
-        self._send_status("flasherror", message="Board reset failed")
+        ser = serial.Serial(printer_port, baudrate, timeout=1)
+        ser.write(b'reset\r\n')
+        ser.write(b'M997\r\n')
+        ser.flush()
+        ser.close()
+    except serial.SerialException:
+        self._logger.error(u"Board reset failed")
         return False
 
     return True

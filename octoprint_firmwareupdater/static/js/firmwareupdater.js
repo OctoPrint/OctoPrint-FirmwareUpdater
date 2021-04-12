@@ -557,7 +557,7 @@ $(function() {
                 alert = gettext("The AVR MCU type is not selected.");
             }
 
-            if (self.getProfileSetting("flash_method") == "marlinbft" && !self.printerState.isReady()) {
+            if ((self.getProfileSetting("flash_method") == "marlinbft" || self.getProfileSetting("flash_method") == "bootcmdr") && !self.printerState.isReady()) {
                 alert = gettext("The printer is not connected.");
             }
 
