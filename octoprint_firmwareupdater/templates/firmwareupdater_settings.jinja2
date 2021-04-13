@@ -126,6 +126,7 @@
                                     <option value=bootcmdr>bootcommander (OpenBLT Bootloader)</option>
                                     <option value=bossac>bossac (Atmel SAM Family)</option>
                                     <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
+                                    <option value=dfuutil>dfu-util (STM32 with DFU)</option>
                                     <option value=lpc1768>lpc176x (LPC176x Boards)</option>
                                     <option value=marlinbft>marlinbft (Marlin Binary File Transfer)</option>
                                     <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
@@ -266,7 +267,23 @@
                             </div>
                             <hr>
                         </div>
-                        <!-- end avrdude options -->
+                        <!-- end dfu-programmer options -->
+
+                        <!-- dfu-util options -->
+                        <div data-bind="visible: showDfuUtilConfig">
+                            <div class="control-group" data-bind="css: {error: dfuUtilPathBroken, success: dfuUtilPathOk}">
+                                <label class="control-label">{{ _('Path to dfu-programmer') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configDfuUtilPath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testDfuUtilPath, enable: configDfuUtilPath, css: {disabled: !configDfuUtilPath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: dfuUtilPathBroken() || dfuUtilPathOk, text: dfuUtilPathText"></span>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                        <!-- end dfu-util options -->
 
                         <!-- stm32flash options for STM32 MCUs -->
                         <div data-bind="visible: showStm32flashConfig">
@@ -579,7 +596,22 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- End advanced bossac options-->
+                        <!-- End advanced dfu-programmer options-->
+
+                        <!-- Advanced dfu-util options -->
+                        <div data-bind="visible: showDfuUtilConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Flash command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configDfuUtilCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetDfuUtilCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the dfu-util command line.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End advanced dfu-util options-->
 
                         <!-- Advanced stm32flash options -->
                         <div data-bind="visible: showStm32flashConfig">

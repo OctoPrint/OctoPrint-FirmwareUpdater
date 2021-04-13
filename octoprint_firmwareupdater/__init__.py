@@ -24,6 +24,7 @@ from octoprint_firmwareupdater.methods import avrdude
 from octoprint_firmwareupdater.methods import bootcmdr
 from octoprint_firmwareupdater.methods import bossac
 from octoprint_firmwareupdater.methods import dfuprog
+from octoprint_firmwareupdater.methods import dfuutil
 from octoprint_firmwareupdater.methods import lpc1768
 from octoprint_firmwareupdater.methods import stm32flash
 from octoprint_firmwareupdater.methods import marlinbft
@@ -52,6 +53,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             bootcmdr=bootcmdr._check_bootcmdr,
             bossac=bossac._check_bossac,
             dfuprogrammer=dfuprog._check_dfuprog,
+            dfuutil=dfuutil._check_dfuutil,
             lpc1768=lpc1768._check_lpc1768,
             stm32flash=stm32flash._check_stm32flash,
             marlinbft=marlinbft._check_marlinbft
@@ -61,6 +63,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             bootcmdr=bootcmdr._flash_bootcmdr,
             bossac=bossac._flash_bossac,
             dfuprogrammer=dfuprog._flash_dfuprog,
+            dfuutil=dfuutil._flash_dfuutil,
             lpc1768=lpc1768._flash_lpc1768,
             stm32flash=stm32flash._flash_stm32flash,
             marlinbft=marlinbft._flash_marlinbft
@@ -116,7 +119,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
         # Save the printer port
         self._logger.info("Printer port: {}".format(printer_port))
-        self.set_profile_setting("serial_port", printer_port)
+        if printer_port != "undefined":
+            self.set_profile_setting("serial_port", printer_port)
         
         method = self.get_profile_setting("flash_method")
         self._logger.info("Flash method: {}".format(method))
@@ -554,6 +558,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "dfuprog_avrmcu": None,
                 "dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
                 "dfuprog_erasecommandline": "sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force",
+                "dfuutil_path": None,
+                "dfuutil_commandline": "sudo {dfuutil} -a 0 -s 0x8000000:leave -D {firmware}",
                 "stm32flash_path": None,
                 "stm32flash_verify": True,
                 "stm32flash_boot0pin": "rts",
