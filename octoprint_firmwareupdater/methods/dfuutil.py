@@ -2,8 +2,8 @@ import re
 import os
 import sarge
 
-DFUUTIL_ERASING = "Erase "
-DFUUTIL_WRITING = "Download "
+DFUUTIL_ERASING = "Erase"
+DFUUTIL_WRITING = "Downloading"
 DFUUTIL_NOACCESS = "Cannot open DFU device"
 DFUUTIL_NODEVICE = "No DFU capable USB device available"
 
@@ -41,15 +41,16 @@ def _flash_dfuutil(self, firmware=None, printer_port=None, **kwargs):
 
     import sarge
     self._logger.info(u"Running '{}' in {}".format(dfuutil_command, working_dir))
-    self._send_status("progress", subtype="writing")
     self._console_logger.info(dfuutil_command)
     try:
         p = sarge.run(dfuutil_command, cwd=working_dir, async_=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stderr.read(timeout=0.2).decode('utf-8')
-            if not output:
+            output = p.stdout.read(timeout=0.2).decode('utf-8')
+            error = p.stderr.read(timeout=0.2).decode('utf-8')
+
+            if not output and not error:
                 p.commands[0].poll()
                 continue
 
@@ -64,7 +65,13 @@ def _flash_dfuutil(self, firmware=None, printer_port=None, **kwargs):
                 elif DFUUTIL_WRITING in line:
                     self._logger.info(u"Writing memory...")
                     self._send_status("progress", subtype="writing")
-                elif DFUUTIL_NOACCESS in line:
+
+            for line in error.split("\n"):
+                if line.endswith("\r"):
+                    line = line[:-1]
+                self._console_logger.info(u"> {}".format(line))
+                
+                if DFUUTIL_NOACCESS in line:
                     raise FlashException("Cannot access DFU device")
                 elif DFUUTIL_NODEVICE in line:
                     raise FlashException("No DFU device found")
