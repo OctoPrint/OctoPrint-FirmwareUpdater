@@ -121,12 +121,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         self._logger.info("Printer port: {}".format(printer_port))
         if printer_port != "undefined":
             self.set_profile_setting("serial_port", printer_port)
-        
+
         method = self.get_profile_setting("flash_method")
         self._logger.info("Flash method: {}".format(method))
 
         self._settings.save()
-        
+
         if method in self._flash_prechecks:
             if not self._flash_prechecks[method](self):
                 if method == "marlinbft":
@@ -332,7 +332,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         # Catches case when there are no profiles and the defaults are returned
         if not isinstance(profiles, list):
             profiles = [profiles]
-        
+
         # If there is only one profile and the name is None there were no real profiles and we have the defaults
         if len(profiles) == 1 and profiles[0]["_name"] == None:
             return False
@@ -379,10 +379,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         if profile_settings != None:
             # Get the profile defaults
             profile_defaults = self.get_settings_defaults()["_profiles"]
-            
+
             # Merge the profile settings with the defaults
             profile = dict_merge(profile_defaults, profile_settings)
-            
+
             # Return the superset of settings
             return profile
         else:
@@ -454,12 +454,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
     def set_profile_setting(self, key, value):
         # Get the current value
         current_value = self.get_profile_setting(key)
-        
+
         # Check if the new value matches the current value
         if current_value == value:
             # Don't need to modify a setting which isn't changing
             return
-        
+
         # Get the default value
         default_value = self.get_settings_defaults()["_profiles"][key]
 
@@ -473,7 +473,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         else:
             # Update this setting in the profile
             profiles[self._settings.get_int(["_selected_profile"])][key] = value
-        
+
         # Save the settings
         profiles = self._settings.set(["profiles"], profiles)
 
@@ -613,10 +613,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         if current is None or current < 2:
             # Migrate single printer settings to a profile
             self._logger.info("Migrating plugin settings to a profile")
-            
+
             # Create a new empty array of printer profiles
             profiles_new = []
-            
+
             # Get a dictionary of the default printer profile settings
             settings_dict = self.get_settings_defaults()["_profiles"]
 
@@ -634,7 +634,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 # If the current value is an empty string, and the default is 'None' set the value to 'None'
                 if (value == "" and settings_dict[key] == None):
                     value = None
-                
+
                 # If the current value is None, and the default is a string set the value to the default
                 if (value == None and settings_dict[key] != None):
                     value = settings_dict[key]
@@ -665,7 +665,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     settings_dict[key] = value
                 else:
                     del settings_dict[key]
-                
+
                 self._settings.set([key], None)
 
             # Give the new profile a default name

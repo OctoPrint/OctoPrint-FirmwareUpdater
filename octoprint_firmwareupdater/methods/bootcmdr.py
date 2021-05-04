@@ -41,7 +41,6 @@ def _check_bootcmdr(self):
         _, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
         return True
 
-
 def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
     assert(firmware is not None)
     assert(printer_port is not None)
@@ -50,7 +49,7 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
     bootcmdr_path = self.get_profile_setting("bootcmdr_path")
     bootcmdr_baudrate = self.get_profile_setting("bootcmdr_baudrate")
     bootcmdr_command_timeout = self.get_profile_setting("bootcmdr_command_timeout")
-    if not bootcmdr_command_timeout or bootcmdr_command_timeout < 10 or bootcmdr_command_timeout > 90:
+    if not bootcmdr_command_timeout or bootcmdr_command_timeout < 10 or bootcmdr_command_timeout > 180:
         self._logger.warn(u"BootCommander command timeout '{}' is invalid. Defaulting to 30s.".format(bootcmdr_command_timeout))
         self.set_profile_setting_int("bootcmdr_command_timeout", 30)
         self._settings.save()
@@ -64,26 +63,21 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
     bootcmdr_command = bootcmdr_command.replace("{baudrate}", str(bootcmdr_baudrate))
     bootcmdr_command = bootcmdr_command.replace("{firmware}", firmware)
 
-    if self.get_profile_setting_boolean("bootcmdr_preflashreset"):
-        self._send_status("progress", subtype="boardreset")
-        self._logger.info(u"Attempting to reset the board")
-        if not _reset_board(self, printer_port, current_baudrate):
-            raise FlashException("Reset failed")
-
     self._logger.info(u"Running '{}' in {}".format(bootcmdr_command, working_dir))
     self._console_logger.info(bootcmdr_command)
 
     try:
         starttime = time.time()
         connecting = False
+        reset = False
         p = sarge.run(bootcmdr_command, cwd=working_dir, async_=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
         p.wait_events()
 
         while p.returncode is None:
-            output = p.stdout.read(timeout=0.1).decode('utf-8')
+            output = p.stdout.read(timeout=0.02).decode('utf-8')
             if not output:
                 p.commands[0].poll()
-                if (time.time() > (starttime + bootcmdr_command_timeout)):
+                if (connecting and time.time() > (starttime + bootcmdr_command_timeout)):
                     self._logger.error(u"Timeout waiting for command to complete")
                     p.commands[0].kill()
                     if connecting:
@@ -96,22 +90,38 @@ def _flash_bootcmdr(self, firmware=None, printer_port=None, **kwargs):
                 self._console_logger.info(u"> {}".format(line))
 
                 if WRITING in line:
+                    connecting = False
+                    reset = False
                     self._logger.info(u"Writing memory...")
                     self._send_status("progress", subtype="writing")
                 if CONNECTING in line:
                     connecting = True
+                    reset = False
                     self._logger.info(u"Connecting to bootloader...")
                     self._send_status("progress", subtype="connecting")
                 if BACKDOOR in line:
                     connecting = True
+                    reset = True
                     self._logger.info(u"Connecting to backdoor...")
                     self._send_status("progress", subtype="backdoor")
                 if ERASING in line:
+                    connecting = False
+                    reset = False
                     self._logger.info(u"Erasing memory...")
                     self._send_status("progress", subtype="erasing")
                 if FINISHING in line:
+                    connecting = False
+                    reset = False
                     self._logger.info(u"Finishing programming...")
                     self._send_status("progress", subtype="finishing")
+
+                if connecting and reset and self.get_profile_setting_boolean("bootcmdr_preflashreset"):
+                    reset = False
+                    self._logger.info(u"Attempting to reset the board")
+                    self._send_status("progress", subtype="boardreset")
+                    if not _reset_board(self, printer_port, current_baudrate):
+                        raise FlashException("Reset failed")
+                    time.sleep(2)
 
         if p.returncode == 0:
             time.sleep(2)
