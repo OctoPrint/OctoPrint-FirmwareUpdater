@@ -138,6 +138,18 @@ $(function() {
             return self.dfuPathBroken() || self.dfuPathOk();
         });
 
+        // Observables for dfu-util config settings
+        self.configDfuUtilPath = ko.observable();
+        self.configDfuUtilCommandLine = ko.observable();
+
+        // Observables for dfu-util UI messages
+        self.dfuUtilPathBroken = ko.observable(false);
+        self.dfuUtilPathOk = ko.observable(false);
+        self.dfuUtilPathText = ko.observable();
+        self.dfuUtilPathHelpVisible = ko.computed(function() {
+            return self.dfuUtilPathBroken() || self.dfuUtilPathOk();
+        });
+
         // Observables for stm32flash config settings
         self.configStm32flashPath = ko.observable();
         self.configStm32flashVerify = ko.observable();
@@ -163,6 +175,7 @@ $(function() {
         self.showBossacConfig = ko.observable(false);
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
+        self.showDfuUtilConfig = ko.observable(false);
         self.showStm32flashConfig = ko.observable(false);
         self.showMarlinBftConfig = ko.observable(false);
 
@@ -482,6 +495,7 @@ $(function() {
             self.showBossacConfig(false);
             self.showLpc1768Config(false);
             self.showDfuConfig(false);
+            self.showDfuUtilConfig(false);
             self.showStm32flashConfig(false);
             self.showMarlinBftConfig(false);
 
@@ -496,6 +510,8 @@ $(function() {
                 self.showLpc1768Config(true);
             } else if(value == 'dfuprogrammer'){
                 self.showDfuConfig(true);
+            } else if(value == 'dfuutil'){
+                self.showDfuUtilConfig(true);
             } else if(value == 'stm32flash'){
                 self.showStm32flashConfig(true);
             } else if(value == 'marlinbft'){
@@ -557,7 +573,7 @@ $(function() {
                 alert = gettext("The AVR MCU type is not selected.");
             }
 
-            if (self.getProfileSetting("flash_method") == "marlinbft" && !self.printerState.isReady()) {
+            if ((self.getProfileSetting("flash_method") == "marlinbft" || self.getProfileSetting("flash_method") == "bootcmdr") && !self.printerState.isReady()) {
                 alert = gettext("The printer is not connected.");
             }
 
@@ -879,6 +895,10 @@ $(function() {
             self.configDfuCommandLine(self.getProfileSetting("dfuprog_commandline"));
             self.configDfuEraseCommandLine(self.getProfileSetting("dfuprog_erasecommandline"));
 
+            // Load the dfu-util settings
+            self.configDfuUtilPath(self.getProfileSetting("dfuutil_path"));
+            self.configDfuUtilCommandLine(self.getProfileSetting("dfuutil_commandline"));
+
             // Load the lpc1768 settings
             self.configLpc1768Path(self.getProfileSetting("lpc1768_path"));
             self.configLpc1768UnmountCommand(self.getProfileSetting("lpc1768_unmount_command"));
@@ -999,6 +1019,10 @@ $(function() {
             profiles[index]["dfuprog_avrmcu"] = self.configDfuMcu();
             profiles[index]["dfuprog_commandline"] = self.configDfuCommandLine();
             profiles[index]["dfuprog_erasecommandline"] = self.configDfuEraseCommandLine();
+
+            // DFU-Util settings
+            profiles[index]["dfuutil_path"] = self.configDfuUtilPath();
+            profiles[index]["dfuutil_commandline"] = self.configDfuUtilCommandLine();
 
             // LPC176x settings
             profiles[index]["lpc1768_path"] = self.configLpc1768Path();
@@ -1127,6 +1151,10 @@ $(function() {
             self.dfuPathOk(false);
             self.dfuPathText("");
 
+            self.dfuUtilPathBroken(false);
+            self.dfuUtilPathOk(false);
+            self.dfuUtilPathText("");
+
             self.lpc1768PathBroken(false);
             self.lpc1768PathOk(false);
             self.lpc1768PathText("");
@@ -1154,6 +1182,10 @@ $(function() {
 
         self.resetDfuEraseCommandLine = function() {
             self.configDfuEraseCommandLine(self.profileDefaults["dfuprog_erasecommandline"]);
+        };
+
+        self.resetDfuUtilCommandLine = function() {
+            self.configDfuUtilCommandLine(self.profileDefaults["dfuutil_commandline"]);
         };
 
         self.resetLpc1768UnmountCommand = function() {
@@ -1338,6 +1370,44 @@ $(function() {
                         }
                         self.dfuPathOk(response.result);
                         self.dfuPathBroken(!response.result);
+                    }
+                })
+            }
+        };
+
+        self.testDfuUtilPath = function() {
+            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+
+            if (!filePathRegEx.test(self.configDfuUtilPath())) {
+                self.dfuUtilPathText(gettext("The path is not valid"));
+                self.dfuUtilPathOk(false);
+                self.dfuUtilPathBroken(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configDfuUtilPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.dfuUtilPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.dfuUtilPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.dfuUtilPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.dfuUtilPathText(gettext("The path is valid"));
+                        }
+                        self.dfuUtilPathOk(response.result);
+                        self.dfuUtilPathBroken(!response.result);
                     }
                 })
             }

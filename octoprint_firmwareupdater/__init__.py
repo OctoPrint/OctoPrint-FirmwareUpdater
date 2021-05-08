@@ -24,6 +24,7 @@ from octoprint_firmwareupdater.methods import avrdude
 from octoprint_firmwareupdater.methods import bootcmdr
 from octoprint_firmwareupdater.methods import bossac
 from octoprint_firmwareupdater.methods import dfuprog
+from octoprint_firmwareupdater.methods import dfuutil
 from octoprint_firmwareupdater.methods import lpc1768
 from octoprint_firmwareupdater.methods import stm32flash
 from octoprint_firmwareupdater.methods import marlinbft
@@ -52,6 +53,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             bootcmdr=bootcmdr._check_bootcmdr,
             bossac=bossac._check_bossac,
             dfuprogrammer=dfuprog._check_dfuprog,
+            dfuutil=dfuutil._check_dfuutil,
             lpc1768=lpc1768._check_lpc1768,
             stm32flash=stm32flash._check_stm32flash,
             marlinbft=marlinbft._check_marlinbft
@@ -61,6 +63,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             bootcmdr=bootcmdr._flash_bootcmdr,
             bossac=bossac._flash_bossac,
             dfuprogrammer=dfuprog._flash_dfuprog,
+            dfuutil=dfuutil._flash_dfuutil,
             lpc1768=lpc1768._flash_lpc1768,
             stm32flash=stm32flash._flash_stm32flash,
             marlinbft=marlinbft._flash_marlinbft
@@ -116,13 +119,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
         # Save the printer port
         self._logger.info("Printer port: {}".format(printer_port))
-        self.set_profile_setting("serial_port", printer_port)
-        
+        if printer_port != "undefined":
+            self.set_profile_setting("serial_port", printer_port)
+
         method = self.get_profile_setting("flash_method")
         self._logger.info("Flash method: {}".format(method))
 
         self._settings.save()
-        
+
         if method in self._flash_prechecks:
             if not self._flash_prechecks[method](self):
                 if method == "marlinbft":
@@ -328,7 +332,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         # Catches case when there are no profiles and the defaults are returned
         if not isinstance(profiles, list):
             profiles = [profiles]
-        
+
         # If there is only one profile and the name is None there were no real profiles and we have the defaults
         if len(profiles) == 1 and profiles[0]["_name"] == None:
             return False
@@ -375,10 +379,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         if profile_settings != None:
             # Get the profile defaults
             profile_defaults = self.get_settings_defaults()["_profiles"]
-            
+
             # Merge the profile settings with the defaults
             profile = dict_merge(profile_defaults, profile_settings)
-            
+
             # Return the superset of settings
             return profile
         else:
@@ -450,12 +454,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
     def set_profile_setting(self, key, value):
         # Get the current value
         current_value = self.get_profile_setting(key)
-        
+
         # Check if the new value matches the current value
         if current_value == value:
             # Don't need to modify a setting which isn't changing
             return
-        
+
         # Get the default value
         default_value = self.get_settings_defaults()["_profiles"][key]
 
@@ -469,7 +473,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         else:
             # Update this setting in the profile
             profiles[self._settings.get_int(["_selected_profile"])][key] = value
-        
+
         # Save the settings
         profiles = self._settings.set(["profiles"], profiles)
 
@@ -554,6 +558,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "dfuprog_avrmcu": None,
                 "dfuprog_commandline": "sudo {dfuprogrammer} {mcu} flash {firmware} --debug-level 10",
                 "dfuprog_erasecommandline": "sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force",
+                "dfuutil_path": None,
+                "dfuutil_commandline": "sudo {dfuutil} -a 0 -s 0x8000000:leave -D {firmware}",
                 "stm32flash_path": None,
                 "stm32flash_verify": True,
                 "stm32flash_boot0pin": "rts",
@@ -607,10 +613,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         if current is None or current < 2:
             # Migrate single printer settings to a profile
             self._logger.info("Migrating plugin settings to a profile")
-            
+
             # Create a new empty array of printer profiles
             profiles_new = []
-            
+
             # Get a dictionary of the default printer profile settings
             settings_dict = self.get_settings_defaults()["_profiles"]
 
@@ -628,7 +634,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 # If the current value is an empty string, and the default is 'None' set the value to 'None'
                 if (value == "" and settings_dict[key] == None):
                     value = None
-                
+
                 # If the current value is None, and the default is a string set the value to the default
                 if (value == None and settings_dict[key] != None):
                     value = settings_dict[key]
@@ -659,7 +665,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                     settings_dict[key] = value
                 else:
                     del settings_dict[key]
-                
+
                 self._settings.set([key], None)
 
             # Give the new profile a default name
@@ -721,14 +727,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         max_size = (self._settings.get(["maximum_fw_size_kb"]) * 1024) + 1024
         self._logger.info("Setting maximum upload size for /flash to %s" % (max_size))
         return [("POST", r"/flash", max_size)]
-
-    ##~~ Connect hook
-    def handle_connect_hook(self, *args, **kwargs):
-        if self._settings.get_boolean(["prevent_connection_when_flashing"]) and self._flash_thread:
-            self._logger.info("Flash in progress, preventing connection to printer")
-            return True
-        else:
-            return False
 
     ##~~ Connect hook
     def handle_connect_hook(self, *args, **kwargs):
