@@ -12,7 +12,7 @@ You will need to know how to configure avrdude to flash your board before you ca
    1. [Required Settings](#required-settings)
    1. [Optional Settings](#optional-settings)
 1. [Hardware Notes](#hardware-notes)
-   1. [Creality Ender 3](#creality-ender-3)
+   1. [Creality Ender](#creality-ender)
    1. [Prusa MMU and CW1](#prusa-mmu-and-cw1)
 
 ## Avrdude Installation
