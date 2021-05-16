@@ -13,6 +13,8 @@ $(function() {
         self.configShowNavbarIcon = ko.observable();                    // enable_navbar
         self.configProfilesEnabled = ko.observable();                   // enable_profiles
         self.configDisableFileFilter = ko.observable();
+        self.configPreventConnectionWhenFlashing = ko.observable();
+        self.configMaxFirmwareSizeKb = ko.observable();
 
         // Observables for profiles
         self.selectedProfileIndex = ko.observable();                    // _selected_profile
@@ -64,6 +66,21 @@ $(function() {
             return self.avrdudeConfPathBroken() || self.avrdudeConfPathOk();
         });
 
+        // Observables for BootCommander config settings
+        self.configBootCmdrPath = ko.observable();
+        self.configBootCmdrBaudRate = ko.observable();
+        self.configBootCmdrCommandLine = ko.observable();
+        self.configBootCmdrCommandTimeout = ko.observable();
+        self.configBootCmdrResetBeforeFlash = ko.observable();
+
+        // Observables for BootCommander UI messages
+        self.bootCmdrPathBroken = ko.observable(false);
+        self.bootCmdrPathOk = ko.observable(false);
+        self.bootCmdrPathText = ko.observable();
+        self.bootCmdrPathHelpVisible = ko.computed(function() {
+            return self.bootCmdrPathBroken() || self.bootCmdrPathOk();
+        });
+
         // Observables for bossac config settings
         self.configBossacPath = ko.observable();
         self.configBossacDisableVerification = ko.observable()
@@ -84,6 +101,8 @@ $(function() {
         self.configLpc1768NoResetWait = ko.observable();
         self.configLpc1768NoRestartWait = ko.observable();
         self.configLpc1768TimestampFilenames = ko.observable();
+        self.configLpc1768UseCustomFilename = ko.observable();
+        self.configLpc1768CustomFilename = ko.observable();
 
         // Observables for lpc1768 UI messages
         self.lpc1768PathBroken = ko.observable(false);
@@ -100,6 +119,8 @@ $(function() {
         self.configMarlinBftNoResetWait = ko.observable();
         self.configMarlinBftNoRestartWait = ko.observable();
         self.configMarlinBftTimestampFilenames = ko.observable();
+        self.configMarlinBftUseCustomFilename = ko.observable();
+        self.configMarlinBftCustomFilename = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
 
@@ -115,6 +136,18 @@ $(function() {
         self.dfuPathText = ko.observable();
         self.dfuPathHelpVisible = ko.computed(function() {
             return self.dfuPathBroken() || self.dfuPathOk();
+        });
+
+        // Observables for dfu-util config settings
+        self.configDfuUtilPath = ko.observable();
+        self.configDfuUtilCommandLine = ko.observable();
+
+        // Observables for dfu-util UI messages
+        self.dfuUtilPathBroken = ko.observable(false);
+        self.dfuUtilPathOk = ko.observable(false);
+        self.dfuUtilPathText = ko.observable();
+        self.dfuUtilPathHelpVisible = ko.computed(function() {
+            return self.dfuUtilPathBroken() || self.dfuUtilPathOk();
         });
 
         // Observables for stm32flash config settings
@@ -138,9 +171,11 @@ $(function() {
 
         // Observables to control which settings to show
         self.showAvrdudeConfig = ko.observable(false);
+        self.showBootCmdrConfig = ko.observable(false);
         self.showBossacConfig = ko.observable(false);
         self.showLpc1768Config = ko.observable(false);
         self.showDfuConfig = ko.observable(false);
+        self.showDfuUtilConfig = ko.observable(false);
         self.showStm32flashConfig = ko.observable(false);
         self.showMarlinBftConfig = ko.observable(false);
 
@@ -175,7 +210,7 @@ $(function() {
             if (self.configDisableFileFilter()) {
                 return null;
             } else {
-                return '.hex,.bin';
+                return '.hex,.bin,.srec';
             }
         });
 
@@ -285,6 +320,7 @@ $(function() {
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
+            self.configMaxFirmwareSizeKb(self.settingsViewModel.settings.plugins.firmwareupdater.maximum_fw_size_kb())
             self.pluginVersion(self.settingsViewModel.settings.plugins.firmwareupdater._plugin_version());
         }
 
@@ -455,21 +491,27 @@ $(function() {
         self.configFlashMethod.subscribe(function(value) {
             // Hide all the flash method settings
             self.showAvrdudeConfig(false);
+            self.showBootCmdrConfig(false);
             self.showBossacConfig(false);
             self.showLpc1768Config(false);
             self.showDfuConfig(false);
+            self.showDfuUtilConfig(false);
             self.showStm32flashConfig(false);
             self.showMarlinBftConfig(false);
 
             // Show only the selected method's settings
             if(value == 'avrdude') {
                 self.showAvrdudeConfig(true);
+            } else if(value == 'bootcmdr') {
+                self.showBootCmdrConfig(true);
             } else if(value == 'bossac') {
                 self.showBossacConfig(true);
             } else if(value == 'lpc1768'){
                 self.showLpc1768Config(true);
             } else if(value == 'dfuprogrammer'){
                 self.showDfuConfig(true);
+            } else if(value == 'dfuutil'){
+                self.showDfuUtilConfig(true);
             } else if(value == 'stm32flash'){
                 self.showStm32flashConfig(true);
             } else if(value == 'marlinbft'){
@@ -531,7 +573,7 @@ $(function() {
                 alert = gettext("The AVR MCU type is not selected.");
             }
 
-            if (self.getProfileSetting("flash_method") == "marlinbft" && !self.printerState.isReady()) {
+            if ((self.getProfileSetting("flash_method") == "marlinbft" || self.getProfileSetting("flash_method") == "bootcmdr") && !self.printerState.isReady()) {
                 alert = gettext("The printer is not connected.");
             }
 
@@ -551,6 +593,10 @@ $(function() {
                 alert = gettext("Firmware file is not specified");
             } else if (source === "url" && !self.firmwareFileURL()) {
                 alert = gettext("Firmware URL is not specified");
+            }
+
+            if (source === "file" && self.hexData.files[0].size > self.configMaxFirmwareSizeKb() * 1024) {
+                alert = gettext("The firmware file is too large. File is " + Math.round(self.hexData.files[0].size / 1024) + "KB, limit is " + self.configMaxFirmwareSizeKb() + "KB.");
             }
 
             if (alert !== undefined) {
@@ -698,6 +744,14 @@ $(function() {
                                         message = gettext("Disconnecting printer...");
                                         break;
                                     }
+                                    case "connecting": {
+                                        message = gettext("Connecting to bootloader...");
+                                        break;
+                                    }
+                                    case "backdoor": {
+                                        message = gettext("Trying bootloader backdoor - (reset the board if this takes too long)...");
+                                        break;
+                                    }
                                     case "startingflash": {
                                         self.isBusy(true);
                                         message = gettext("Starting flash...");
@@ -787,7 +841,7 @@ $(function() {
             self.configProfilesEnabled(self.settingsViewModel.settings.plugins.firmwareupdater.enable_profiles());
             self.configShowNavbarIcon(self.settingsViewModel.settings.plugins.firmwareupdater.enable_navbar());
             self.configSaveUrl(self.settingsViewModel.settings.plugins.firmwareupdater.save_url());
-
+            self.configPreventConnectionWhenFlashing(self.settingsViewModel.settings.plugins.firmwareupdater.prevent_connection_when_flashing());
             self.configDisableFileFilter(self.settingsViewModel.settings.plugins.firmwareupdater.disable_filefilter());
             self.marlinbftHasBinProto2Package(self.settingsViewModel.settings.plugins.firmwareupdater.has_binproto2package());
             self.marlinbftHasCapability(self.settingsViewModel.settings.plugins.firmwareupdater.has_bftcapability());
@@ -823,6 +877,13 @@ $(function() {
             self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"));
             self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"));
 
+            // Load the BootCommander settings
+            self.configBootCmdrPath(self.getProfileSetting("bootcmdr_path"));
+            self.configBootCmdrBaudRate(self.getProfileSetting("bootcmdr_baudrate"));
+            self.configBootCmdrCommandLine(self.getProfileSetting("bootcmdr_commandline"));
+            self.configBootCmdrCommandTimeout(self.getProfileSetting("bootcmdr_command_timeout"));
+            self.configBootCmdrResetBeforeFlash(self.getProfileSetting("bootcmdr_preflashreset"));
+
             // Load the bossac settings
             self.configBossacPath(self.getProfileSetting("bossac_path"));
             self.configBossacDisableVerification(self.getProfileSetting("bossac_disableverify"));
@@ -834,6 +895,10 @@ $(function() {
             self.configDfuCommandLine(self.getProfileSetting("dfuprog_commandline"));
             self.configDfuEraseCommandLine(self.getProfileSetting("dfuprog_erasecommandline"));
 
+            // Load the dfu-util settings
+            self.configDfuUtilPath(self.getProfileSetting("dfuutil_path"));
+            self.configDfuUtilCommandLine(self.getProfileSetting("dfuutil_commandline"));
+
             // Load the lpc1768 settings
             self.configLpc1768Path(self.getProfileSetting("lpc1768_path"));
             self.configLpc1768UnmountCommand(self.getProfileSetting("lpc1768_unmount_command"));
@@ -841,6 +906,8 @@ $(function() {
             self.configLpc1768NoResetWait(self.getProfileSetting("lpc1768_no_m997_reset_wait"));
             self.configLpc1768NoRestartWait(self.getProfileSetting("lpc1768_no_m997_restart_wait"));
             self.configLpc1768TimestampFilenames(self.getProfileSetting("lpc1768_timestamp_filenames"));
+            self.configLpc1768UseCustomFilename(self.getProfileSetting("lpc1768_use_custom_filename"));
+            self.configLpc1768CustomFilename(self.getProfileSetting("lpc1768_custom_filename"));
 
             // Load the marlinbft settings
             self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
@@ -849,6 +916,8 @@ $(function() {
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
             self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
             self.configMarlinBftTimestampFilenames(self.getProfileSetting("marlinbft_timestamp_filenames"));
+            self.configMarlinBftUseCustomFilename(self.getProfileSetting("marlinbft_use_custom_filename"));
+            self.configMarlinBftCustomFilename(self.getProfileSetting("marlinbft_custom_filename"));
 
             // Load the stm32flash settings
             self.configStm32flashPath(self.getProfileSetting("stm32flash_path"));
@@ -933,6 +1002,13 @@ $(function() {
             profiles[index]["avrdude_disableverify"] = self.configAvrdudeDisableVerification();
             profiles[index]["avrdude_commandline"] = self.configAvrdudeCommandLine();
 
+            // BootCommander settings
+            profiles[index]["bootcmdr_path"] = self.configBootCmdrPath();
+            profiles[index]["bootcmdr_baudrate"] = self.configBootCmdrBaudRate();
+            profiles[index]["bootcmdr_commandline"] = self.configBootCmdrCommandLine();
+            profiles[index]["bootcmdr_command_timeout"] = self.configBootCmdrCommandTimeout();
+            profiles[index]["bootcmdr_preflashreset"] = self.configBootCmdrResetBeforeFlash();
+
             // Bossac settings
             profiles[index]["bossac_path"] = self.configBossacPath();
             profiles[index]["bossac_disableverify"] = self.configBossacDisableVerification();
@@ -944,6 +1020,10 @@ $(function() {
             profiles[index]["dfuprog_commandline"] = self.configDfuCommandLine();
             profiles[index]["dfuprog_erasecommandline"] = self.configDfuEraseCommandLine();
 
+            // DFU-Util settings
+            profiles[index]["dfuutil_path"] = self.configDfuUtilPath();
+            profiles[index]["dfuutil_commandline"] = self.configDfuUtilCommandLine();
+
             // LPC176x settings
             profiles[index]["lpc1768_path"] = self.configLpc1768Path();
             profiles[index]["lpc1768_unmount_command"] = self.configLpc1768UnmountCommand();
@@ -951,7 +1031,8 @@ $(function() {
             profiles[index]["lpc1768_no_m997_reset_wait"] = self.configLpc1768NoResetWait();
             profiles[index]["lpc1768_no_m997_restart_wait"] = self.configLpc1768NoRestartWait();
             profiles[index]["lpc1768_timestamp_filenames"] = self.configLpc1768TimestampFilenames();
-
+            profiles[index]["lpc1768_use_custom_filename"] = self.configLpc1768UseCustomFilename();
+            profiles[index]["lpc1768_custom_filename"] = self.configLpc1768CustomFilename();
 
             // MarlinBFT Settings
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
@@ -960,6 +1041,8 @@ $(function() {
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
             profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
             profiles[index]["marlinbft_timestamp_filenames"] = self.configMarlinBftTimestampFilenames();
+            profiles[index]["marlinbft_use_custom_filename"] = self.configMarlinBftUseCustomFilename();
+            profiles[index]["marlinbft_custom_filename"] = self.configMarlinBftCustomFilename();
 
             // STM32Flash Settings
             profiles[index]["stm32flash_path"] = self.configStm32flashPath();
@@ -983,6 +1066,7 @@ $(function() {
                         enable_profiles: self.configProfilesEnabled(),
                         save_url: self.configSaveUrl(),
                         disable_filefilter: self.configDisableFileFilter(),
+                        prevent_connection_when_flashing: self.configPreventConnectionWhenFlashing(),
                         profiles: profiles,
                     }
                 }
@@ -1055,6 +1139,10 @@ $(function() {
             self.avrdudeConfPathOk(false);
             self.avrdudeConfPathText("");
 
+            self.bootCmdrPathBroken(false);
+            self.bootCmdrPathOk(false);
+            self.bootCmdrPathText("");
+
             self.bossacPathBroken(false);
             self.bossacPathOk(false);
             self.bossacPathText("");
@@ -1062,6 +1150,10 @@ $(function() {
             self.dfuPathBroken(false);
             self.dfuPathOk(false);
             self.dfuPathText("");
+
+            self.dfuUtilPathBroken(false);
+            self.dfuUtilPathOk(false);
+            self.dfuUtilPathText("");
 
             self.lpc1768PathBroken(false);
             self.lpc1768PathOk(false);
@@ -1076,6 +1168,10 @@ $(function() {
             self.configAvrdudeCommandLine(self.profileDefaults["avrdude_commandline"]);
         };
 
+        self.resetBootCmdrCommandLine = function() {
+            self.configBootCmdrCommandLine(self.profileDefaults["bootcmdr_commandline"]);
+        };
+
         self.resetBossacCommandLine = function() {
             self.configBossacCommandLine(self.profileDefaults["bossac_commandline"]);
         };
@@ -1088,9 +1184,80 @@ $(function() {
             self.configDfuEraseCommandLine(self.profileDefaults["dfuprog_erasecommandline"]);
         };
 
+        self.resetDfuUtilCommandLine = function() {
+            self.configDfuUtilCommandLine(self.profileDefaults["dfuutil_commandline"]);
+        };
+
         self.resetLpc1768UnmountCommand = function() {
             self.configLpc1768UnmountCommand(self.profileDefaults["lpc1768_unmount_command"]);
         }
+
+        self.resetLpc1768CustomFilename = function() {
+            self.configLpc1768CustomFilename(self.profileDefaults["lpc1768_custom_filename"]);
+        }
+
+        self.toggleLpc1768Filenames = function() {
+            if (self.configLpc1768UseCustomFilename() == true){
+                self.configLpc1768TimestampFilenames(false);
+            }
+            if (self.configLpc1768TimestampFilenames() == true){
+                self.configLpc1768UseCustomFilename(false);
+            }
+            return true;
+        }
+
+        self.resetMarlinBftCustomFilename = function() {
+            self.configLpc1768CustomFilename(self.profileDefaults["marlinbft_custom_filename"]);
+        }
+
+        self.toggleMarlinBftFilenames = function() {
+            if (self.configMarlinBftUseCustomFilename() == true){
+                self.configMarlinBftTimestampFilenames(false);
+            }
+            if (self.configMarlinBftTimestampFilenames() == true){
+                self.configMarlinBftUseCustomFilename(false);
+            }
+            return true;
+        }
+
+        self.testBootCmdrPath = function() {
+            var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");
+            var filePathRegEx_Windows = new RegExp("^[A-z]\:\\\\.+.exe$");
+
+            if ( !filePathRegEx_Linux.test(self.configBootCmdrPath()) && !filePathRegEx_Windows.test(self.configBootCmdrPath()) ) {
+                self.bootCmdrPathText(gettext("The path is not valid"));
+                self.bootCmdrPathText(false);
+                self.bootCmdrPathText(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configBootCmdrPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.bootCmdrPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.bootCmdrPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.bootCmdrPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.bootCmdrPathText(gettext("The path is valid"));
+                        }
+                        self.bootCmdrPathOk(response.result);
+                        self.bootCmdrPathBroken(!response.result);
+                    }
+                })
+            }            
+        };
 
         self.testAvrdudePath = function() {
             var filePathRegEx_Linux = new RegExp("^(\/[^\0/]+)+$");
@@ -1203,6 +1370,44 @@ $(function() {
                         }
                         self.dfuPathOk(response.result);
                         self.dfuPathBroken(!response.result);
+                    }
+                })
+            }
+        };
+
+        self.testDfuUtilPath = function() {
+            var filePathRegEx = new RegExp("^(\/[^\0/]+)+$");
+
+            if (!filePathRegEx.test(self.configDfuUtilPath())) {
+                self.dfuUtilPathText(gettext("The path is not valid"));
+                self.dfuUtilPathOk(false);
+                self.dfuUtilPathBroken(true);
+            } else {
+                $.ajax({
+                    url: API_BASEURL + "util/test",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSON.stringify({
+                        command: "path",
+                        path: self.configDfuUtilPath(),
+                        check_type: "file",
+                        check_access: "x"
+                    }),
+                    contentType: "application/json; charset=UTF-8",
+                    success: function(response) {
+                        if (!response.result) {
+                            if (!response.exists) {
+                                self.dfuUtilPathText(gettext("The path doesn't exist"));
+                            } else if (!response.typeok) {
+                                self.dfuUtilPathText(gettext("The path is not a file"));
+                            } else if (!response.access) {
+                                self.dfuUtilPathText(gettext("The path is not an executable"));
+                            }
+                        } else {
+                            self.dfuUtilPathText(gettext("The path is valid"));
+                        }
+                        self.dfuUtilPathOk(response.result);
+                        self.dfuUtilPathBroken(!response.result);
                     }
                 })
             }

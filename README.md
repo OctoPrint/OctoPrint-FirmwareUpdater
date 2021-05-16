@@ -28,6 +28,8 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 | Atmel SAM 32-bit MCUs | Arduino DUE, etc. | [bossac](doc/bossac.md) |
 | STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) or [marlinbft](doc/marlinbft.md) |
 | STM32 32-bit MCUs (ST Bootloader) | FYSETC Cheetah | [stm32flash](doc/stm32flash.md) |
+| STM32 32-bit MCUs (DFU Mode) | MKS Rumba 32 | [dfu-util](doc/dfu-util.md) |
+| OpenBLT Bootloader | Any board with the OpenBLT bootloader | [lpc176x](doc/lpc176x.md) or [bootcommander](doc/bootcommander.md) |
 
 Please open a [Github issue](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues) if you would like a new board or MCU to be supported. If it's a new type of board which requires hardware testing please consider making a [donation](#Donations) to help fund the costs.
 
@@ -60,6 +62,8 @@ Plugin settings vary depending on the flashing tool and are documented on the pa
   * Option 2 - [File transfer using serial protocol](doc/marlinbft.md)
 * [SAM based boards](doc/bossac.md)
 * [STM32 based boards which do not update from the SD card](doc/stm32flash.md)
+* [STM32 based board with DFU mode](doc/dfu-util.md)
+* [Any board with an OpenBLT bootloader](doc/bootcommander.md)
 
 ## Flashing Firmware
 Once the plugin is configured, flashing firmware is a simple operation:

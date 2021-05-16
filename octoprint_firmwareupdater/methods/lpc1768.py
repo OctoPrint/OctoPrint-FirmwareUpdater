@@ -32,6 +32,8 @@ def _flash_lpc1768(self, firmware=None, printer_port=None, **kwargs):
     no_m997_reset_wait = self.get_profile_setting_boolean("lpc1768_no_m997_reset_wait")
     lpc1768_path = self.get_profile_setting("lpc1768_path")
     timestamp_filenames = self.get_profile_setting_boolean("lpc1768_timestamp_filenames")
+    use_custom_filename = self.get_profile_setting_boolean("lpc1768_use_custom_filename")
+    custom_filename = self.get_profile_setting("lpc1768_custom_filename").strip()
 
     if self.get_profile_setting_boolean("lpc1768_preflashreset"):
         self._send_status("progress", subtype="boardreset")
@@ -120,6 +122,8 @@ def _flash_lpc1768(self, firmware=None, printer_port=None, **kwargs):
     # Copy the new firmware file
     if timestamp_filenames:
         target = datetime.datetime.now().strftime("fw%H%M%S.bin")
+    elif use_custom_filename and custom_filename is not None:
+        target = custom_filename
     else:
         target = "firmware.bin"
 

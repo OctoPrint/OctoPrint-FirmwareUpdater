@@ -14,8 +14,10 @@ Flashing a board from the SD requires that the host can mount the board's on-boa
       1. [File System Permissions](#file-system-permissions)
    1. [Sudo Rights](#sudo-rights)
       1. [Configure sudo](#configure-sudo)
-1. [lpc176x Configuration]
-1. [Troubleshooting](#troubleshooting)
+1. [lpc176x Configuration](#lpc176x-configuration)
+1. [Hardware Notes](#hardware-notes)
+   1. [Creality Ender 3](#creality-ender-3)
+3. [Troubleshooting](#troubleshooting)
    1. [Board Reset Failed](#board-reset-failed)
    1. [SD Card Mounting](#sd-card-mounting)
 
@@ -124,6 +126,10 @@ The only required setting is the path to the firmware update folder.  If using u
 | --- | --- |
 | Reset before flashing | Adds an extra board reset prior to flashing - can help ensure that the SD card is mounted correctly. |
 | Unmount command | The command used to unmount the SD card prior to resetting the board.  Clear the command line to disable it |
+
+## Hardware Notes
+### Creality Ender 3
+Ender 3 V2 printers with 4.2.x boards do not expose the SD card via the USB port.  They cannot be updated using this method.
 
 ## Troubleshooting
 ### Board reset failed
