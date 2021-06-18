@@ -14,6 +14,8 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 1. [Plugin Configuration](#plugin-configuration)
    1. [Required Settings](#required-settings)
    1. [Optional Settings](#optional-settings)
+1. [Hardware Notes](#hardware-notes)
+   1. [Creality Ender 3](#creality-ender-3)
 
 ## Warnings and Caveats
 1. **The binary file transfer protocol is still work in progress**
@@ -81,7 +83,7 @@ To set the SD card to `ONBOARD`, modify the `#define SDCARD_CONNECTION` line in 
 `#define SDCARD_CONNECTION ONBOARD`
 
 ## Prerequisite Check
-When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` file will contain lines like these shortly after OctoPrint is started and the ptiner is connected:
+When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` file will contain lines like these shortly after OctoPrint is started and the printer is connected:
 ```
 2021-03-06 09:24:58,000 - octoprint.plugins.firmwareupdater - INFO - Python binproto2 package installed: True
 2021-03-06 09:45:10,815 - octoprint.plugins.firmwareupdater - INFO - Setting BINARY_FILE_TRANSFER capability to True
@@ -101,3 +103,9 @@ There are no required settings.
 | Wait after connect | Some boards reset after getting the command to start binary transfer mode. A value of 3 seconds is normal for when this wait is required. Default is 0. |
 | Communication timeout | Protocol communication timeout. Default is 1000ms. |
 | Verbose progress logging | Log verbose transfer progress to the OctoPrint log file |
+
+## Hardware Notes
+### Creality Ender 3
+Ender 3 V2 printers with 4.2.x boards don't seem to reset the COM port when an `M997` command is sent, making the plugin unable to detect the board resetting.  To avoid receiving an error after a successful flash, the **Don't wait for reset** option in the advanced flash method settings must be enabled.
+
+Ender 3 V2 boards also require that the firmware filename for each firmware update is different than the filename for the previous update, and the previous firmware file must no longer be present on the SD card.  To enable unique filenames, and removal of previous firmware files, enable the **Use timestamp filenames** option in the advanced flash method settings.

@@ -12,7 +12,7 @@ You will need to know how to configure avrdude to flash your board before you ca
    1. [Required Settings](#required-settings)
    1. [Optional Settings](#optional-settings)
 1. [Hardware Notes](#hardware-notes)
-   1. [Creality Ender 3](#creality-ender-3)
+   1. [Creality Ender](#creality-ender)
    1. [Prusa MMU and CW1](#prusa-mmu-and-cw1)
 
 ## Avrdude Installation
@@ -49,8 +49,8 @@ Typical MCU/programmer combinations are:
 
 | AVR MCU | Programmer | Example Board |
 | --- | --- | --- |
-| Atmega1284p | arduino | Anet A series, Creality, Ender, etc. |
-| Atmega2560 | wiring | RAMPS, RAMbo, etc. |
+| Atmega1284p | arduino | Anet A series, most Creality boards, Ender, etc. |
+| Atmega2560 | wiring | Creality CR-10 Max, RAMPS, RAMbo, etc. |
 | Atmega644p | arduino | Sanguinololu, Melzi |
 | Atmega32u4 | avr109 | Prusa MMU, Prusa CW1 |
 
