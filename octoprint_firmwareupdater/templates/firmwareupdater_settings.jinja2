@@ -91,7 +91,7 @@
          <div class="pull-right plugin-version">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
     </form>
 
-    <div id="settings_plugin_firmwareupdater_configurationDialog" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_configurationDialog" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3><span class="help-block" data-bind="text: optionsDialogTitle"></span></h3>
@@ -852,7 +852,7 @@
             </button>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_bootLoaderWarningModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_bootLoaderWarningModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Bootloader Warning</h3>
@@ -867,7 +867,7 @@
             <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_newProfileModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_newProfileModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Create New Profile</h3>
@@ -883,7 +883,7 @@
             <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Create') }}</button>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_copyProfileModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_copyProfileModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Copy Profile</h3>
@@ -899,7 +899,7 @@
             <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Copy') }}</button>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_profileDeleteModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_profileDeleteModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Confirm Profile Deletion</h3>
