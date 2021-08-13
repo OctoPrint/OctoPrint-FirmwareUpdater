@@ -83,7 +83,7 @@ To set the SD card to `ONBOARD`, modify the `#define SDCARD_CONNECTION` line in 
 `#define SDCARD_CONNECTION ONBOARD`
 
 ## Prerequisite Check
-When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` file will contain lines like these shortly after OctoPrint is started and the ptiner is connected:
+When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` file will contain lines like these shortly after OctoPrint is started and the printer is connected:
 ```
 2021-03-06 09:24:58,000 - octoprint.plugins.firmwareupdater - INFO - Python binproto2 package installed: True
 2021-03-06 09:45:10,815 - octoprint.plugins.firmwareupdater - INFO - Setting BINARY_FILE_TRANSFER capability to True
