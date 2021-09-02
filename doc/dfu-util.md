@@ -5,7 +5,7 @@ MKS Rumba 32 boards, and other STM32 boards with DFU mode, can be flashed with d
 ## Table of Contents
 1. [Dfu-util Installation](#dfu-util-installation)
    1. [Linux (including Raspberry Pi)](#linux-including-raspberry-pi)
-   2. [Sudo rights](#sudo-rights)
+   1. [Sudo rights](#sudo-rights)
       1. [Configure Sudo](#configure-sudo)
 1. [Bossac Configuration](#bossac-configuration)
    1. [Required Settings](#required-settings)
@@ -41,11 +41,11 @@ If you need to enter a password when running `sudo` commands as `pi` you will ne
 1. Run this command in an SSH prompt on your OctoPrint host to create a new sudo rule file:
 
    `sudo nano /etc/sudoers.d/020_firmware_updater`
-   
+
 2. Paste this line into the new file:
 
    `pi ALL=NOPASSWD: /usr/bin/dfu-util`
-   
+
 3. Save and close the file
 
 ## Dfu-util Configuration

@@ -69,7 +69,7 @@
             <div class="bar" style="width: 100%;"><label data-bind="text: progressBarText()"></label></div>
             <hr>
         </div>
-        <div class="alert" style="text-align: center;" data-bind="text: alertMessage, visible: showAlert(), css: alertType"></div>
+        <div id="settings_plugin_firmwareupdater_alertMsg" class="alert" style="text-align: center;" data-bind="text: alertMessage, visible: showAlert(), css: alertType"></div>
         <div>
             <i class="icon-list"></i>&nbsp;&nbsp;<h5 style="display: inline-block">Instructions</h5>
             <ol>
@@ -91,7 +91,7 @@
          <div class="pull-right plugin-version">Plugin Version: <span data-bind="text: pluginVersion"></span></div>
     </form>
 
-    <div id="settings_plugin_firmwareupdater_configurationDialog" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_configurationDialog" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3><span class="help-block" data-bind="text: optionsDialogTitle"></span></h3>
@@ -552,23 +552,23 @@
                                 <label class="control-label">{{ _('Use timestamp filenames') }}</label>
                                 <div class="controls">
                                     <div class="input">
-                                        <input type="checkbox" data-bind="checked: configMarlinBftTimestampFilenames">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftTimestampFilenames, disable: configMarlinBftUseCustomFilename, click: toggleMarlinBftFilenames">
                                     </div>
                                     <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>. Needed for Ender 3 V2.') }}</span>
                                 </div>
-                                <!--
+                            </div>
+                            <div class="control-group" data-bind="css: {error: marlinBftCustomFileNameBroken}">
                                 <label class="control-label">{{ _('Customize firmware filename') }}</label>
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" data-bind="checked: configMarlinBftUseCustomFilename, disable: configMarlinBftTimestampFilenames, click: toggleMarlinBftFilenames">
                                     </label>
                                     <div class="input-append">
-                                        <input type="text" class="input-block-level" data-bind="value: configMarlinBftCustomFilename, enable: configMarlinBftUseCustomFilename">
+                                        <input type="text" class="input-block-level" data-bind='value: configMarlinBftCustomFilename, enable: configMarlinBftUseCustomFilename, valueUpdate: "afterkeydown"'>
                                         <button class="btn" type="button" data-bind="click: resetMarlinBftCustomFilename, enable: configMarlinBftUseCustomFilename">{{ _('Reset') }}</button>
                                     </div>
-                                    <span class="help-block">{{ _('Firmware file will be saved on the printer using the specified name.') }}</span>
+                                    <span class="help-block">{{ _('Firmware file will be saved on the printer using the specified name. Filename must be in <a href=https://en.wikipedia.org/wiki/8.3_filename>8dot3 format</a> (up 8 character name, up to 3 character extension).') }}</span>
                                 </div>
-                                -->
                             </div>
                         </div>
                         <!-- Advanced marlinbft options -->
@@ -852,7 +852,7 @@
             </button>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_bootLoaderWarningModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_bootLoaderWarningModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Bootloader Warning</h3>
@@ -867,7 +867,7 @@
             <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">{{ _('OK') }}</a>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_newProfileModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_newProfileModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Create New Profile</h3>
@@ -883,7 +883,7 @@
             <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: addNewProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Create') }}</button>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_copyProfileModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_copyProfileModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Copy Profile</h3>
@@ -899,7 +899,7 @@
             <button class="btn btn-primary btn-primary-fix" aria-hidden="true" data-bind="click: copyProfile, enable: !adding(), css: {disabled: adding()}"><i class="fas fa-spinner fa-spin" data-bind="visible: adding" style="display: none;"></i>{{ _(' Copy') }}</button>
         </div>
     </div>
-    <div id="settings_plugin_firmwareupdater_profileDeleteModal" class="modal hide fade">
+    <div id="settings_plugin_firmwareupdater_profileDeleteModal" class="modal hide">
         <div class="modal-header">
             <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
             <h3>Confirm Profile Deletion</h3>

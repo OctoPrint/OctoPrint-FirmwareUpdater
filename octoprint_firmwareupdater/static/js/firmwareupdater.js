@@ -123,6 +123,14 @@ $(function() {
         self.configMarlinBftCustomFilename = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
+        self.marlinBftCustomFileNameOk = ko.computed(function() {
+            var filename = self.configMarlinBftCustomFilename();
+            var filenamePattern = new RegExp("^[A-z0-9_-]{1,8}\\.[A-z0-9]{1,3}$");
+            return filenamePattern.test(filename);
+        });
+        self.marlinBftCustomFileNameBroken = ko.computed(function() {
+            return !self.marlinBftCustomFileNameOk();
+        });
 
         // Observables for dfu-programmer config settings
         self.configDfuMcu = ko.observable();
@@ -585,6 +593,10 @@ $(function() {
                 alert = gettext("The printer does not support Binary File Transfer.");
             }
 
+            if (self.getProfileSetting("flash_method") == "marlinbft" && self.getProfileSetting("marlinbft_use_custom_filename") && !self.checkMarlinBftCustomFileName()) {
+                alert = gettext("The target filename is invalid. Filename must be 8dot3 format.");
+            }
+
             if (!self.flashPort() &! self.getProfileSetting("flash_method") == "dfuprogrammer") {
                 alert = gettext("The printer port is not selected.");
             }
@@ -698,6 +710,10 @@ $(function() {
                                     }
                                     case "notconnected": {
                                         message = gettext("Printer is not connected.");
+                                        break;
+                                    }
+                                    case "badbftname": {
+                                        message = gettext("Target file name is invalid. Filename must be less than 8 characters.");
                                         break;
                                     }
                                     case "nobftcap": {
@@ -1207,7 +1223,7 @@ $(function() {
         }
 
         self.resetMarlinBftCustomFilename = function() {
-            self.configLpc1768CustomFilename(self.profileDefaults["marlinbft_custom_filename"]);
+            self.configMarlinBftCustomFilename(self.profileDefaults["marlinbft_custom_filename"]);
         }
 
         self.toggleMarlinBftFilenames = function() {
@@ -1218,6 +1234,12 @@ $(function() {
                 self.configMarlinBftUseCustomFilename(false);
             }
             return true;
+        }
+
+        self.checkMarlinBftCustomFileName = function() {
+            var filename = self.getProfileSetting("marlinbft_custom_filename")
+            var filenamePattern = new RegExp("^[A-z0-9_-]{1,8}\\.[A-z0-9]{1,3}$");
+            return filenamePattern.test(filename);
         }
 
         self.testBootCmdrPath = function() {
