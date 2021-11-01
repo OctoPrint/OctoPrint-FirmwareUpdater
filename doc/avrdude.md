@@ -95,3 +95,10 @@ and for CW1:
 ```
 
 The Firmware Updater plugin will automatically detect these headers and handle the files accordingly.
+
+#### Plugin Settings for Prusa MMU
+| Setting | Selection |
+| --- | --- |
+| Flash Method | avrdude |
+| AVR MCU | ATmega32u4 |
+| AVR Programmer | avr109 |
