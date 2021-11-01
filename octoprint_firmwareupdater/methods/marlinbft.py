@@ -63,7 +63,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
         self._logger.info(u"Initializing Marlin BFT protocol")
         self._send_status("progress", subtype="bftinit")
         protocol = mbp.Protocol(printer_port, current_baudrate, 512, bft_timeout, self._logger)
-        
+
         # Wait after connect protocol
         if bft_waitafterconnect > 0:
             self._logger.info("waiting %ss after protocol connect" % bft_waitafterconnect)
@@ -83,7 +83,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
         self._logger.info(u"Connecting to printer at '{}' using Marlin BFT protocol".format(printer_port))
         self._send_status("progress", subtype="bftconnect")
         protocol.connect()
-      
+
         # Copy the file
         if timestamp_filenames:
             target = datetime.datetime.now().strftime("fw%H%M%S.bin")
@@ -91,17 +91,17 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
             target = custom_filename
         else:
             target = "firmware.bin"
-        
+
         self._logger.info(u"Transfering file to printer using Marlin BFT '{}' -> /{}".format(firmware, target))
         self._send_status("progress", subtype="sending")
         filetransfer = mbp.FileTransferProtocol(protocol, logger=transfer_logger)
         filetransfer.copy(firmware, target, True, False)
         self._logger.info(u"Binary file transfer complete")
-        
+
         # Save the filename
         if timestamp_filenames:
             self.set_profile_setting("marlinbft_last_filename", target)
-        
+
         # Disconnect
         protocol.disconnect()
 
@@ -112,7 +112,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
         self._logger.exception(u"Flashing failed. Unable to connect to printer.")
         self._send_status("flasherror", message="Unable to open binary file transfer connection")
         return False
-    
+
     except mbp.exceptions.FatalError:
         self._logger.exception(u"Flashing failed. Too many retries.")
         self._send_status("flasherror", message="Unable to transfer firmware file to printer - too many retries")
@@ -122,7 +122,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
         self._logger.exception(u"Flashing failed. Unable to transfer file.")
         self._send_status("flasherror", message="Unable to transfer firmware file to printer")
         return False
-    
+
     finally:
         if (protocol):
             protocol.shutdown()
@@ -138,7 +138,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
 def _reset_board(self, printer_port=None, current_baudrate=None, no_reset_wait=False):
     assert(printer_port is not None)
     assert(current_baudrate is not None)
-    
+
     no_m997_restart_wait = self.get_profile_setting_boolean("marlinbft_no_m997_restart_wait")
     self._logger.info(u"Resetting printer at '{port}'".format(port=printer_port))
 
@@ -181,12 +181,16 @@ def _reset_board(self, printer_port=None, current_baudrate=None, no_reset_wait=F
 
 def _wait_for_board(self, printer_port=None, no_restart_wait=False):
     assert(printer_port is not None)
-    
-    self._logger.info(u"Waiting for printer at '{port}' to reset".format(port=printer_port))
+
+    m997_reset_wait = self.get_profile_setting("marlinbft_m997_reset_wait")
+    if m997_reset_wait is None:
+        m997_reset_wait = 10
+
+    self._logger.info(u"Waiting {seconds}s for printer at '{port}' to reset".format(seconds=m997_reset_wait, port=printer_port))
 
     check_command = 'ls ' + printer_port + ' > /dev/null 2>&1'
     start = time.time()
-    timeout = 10
+    timeout = m997_reset_wait
     interval = 0.2
     count = 1
     connected = True
@@ -216,8 +220,13 @@ def _wait_for_board(self, printer_port=None, no_restart_wait=False):
         return True
     else:
         time.sleep(3)
+        m997_restart_wait = self.get_profile_setting("marlinbft_m997_restart_wait")
+        if m997_restart_wait is None:
+            m997_restart_wait = 20
+        
+        self._logger.info(u"Waiting {seconds}s for printer at '{port}' to restart".format(seconds=m997_restart_wait, port=printer_port))
 
-        timeout = 20
+        timeout = m997_restart_wait
         interval = 0.2
         count = 1
         connected = False

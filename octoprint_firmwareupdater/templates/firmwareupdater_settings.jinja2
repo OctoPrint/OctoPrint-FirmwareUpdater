@@ -540,12 +540,32 @@
                                 </div>
                             </div>
                             <div class="control-group">
+                                <label class="control-label">{{ _('Reset timeout') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="1" max="60" data-bind="value: configMarlinBftResetWait, disable: configMarlinBftNoResetWait">
+                                        <span class="add-on">seconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('Amount of time to wait for the board to reset after sending the reset command.  Default: 10s') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
                                 <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
                                 <div class="controls">
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configMarlinBftNoRestartWait, disable: configMarlinBftNoResetWait">
                                     </div>
                                     <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Restart timeout') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="1" max="90" data-bind="value: configMarlinBftRestartWait, disable: marlinBftRestartWaitDisabled">
+                                        <span class="add-on">seconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('Amount of time to wait for the board to restart after it resets.  Default: 20s') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">

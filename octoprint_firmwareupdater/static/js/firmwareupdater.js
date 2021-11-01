@@ -116,6 +116,8 @@ $(function() {
         self.configMarlinBftWaitAfterConnect = ko.observable();
         self.configMarlinBftTimeout = ko.observable();
         self.configMarlinBftProgressLogging = ko.observable();
+        self.configMarlinBftResetWait = ko.observable();
+        self.configMarlinBftRestartWait = ko.observable();
         self.configMarlinBftNoResetWait = ko.observable();
         self.configMarlinBftNoRestartWait = ko.observable();
         self.configMarlinBftTimestampFilenames = ko.observable();
@@ -123,6 +125,9 @@ $(function() {
         self.configMarlinBftCustomFilename = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
+        self.marlinBftRestartWaitDisabled = ko.computed(function() {
+            return self.configMarlinBftNoResetWait() || self.configMarlinBftNoRestartWait() 
+        });
         self.marlinBftCustomFileNameOk = ko.computed(function() {
             var filename = self.configMarlinBftCustomFilename();
             var filenamePattern = new RegExp("^[A-z0-9_-]{1,8}\\.[A-z0-9]{1,3}$");
@@ -929,6 +934,8 @@ $(function() {
             self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
             self.configMarlinBftTimeout(self.getProfileSetting("marlinbft_timeout"));
             self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"));
+            self.configMarlinBftResetWait(self.getProfileSetting("marlinbft_m997_reset_wait"));
+            self.configMarlinBftRestartWait(self.getProfileSetting("marlinbft_m997_restart_wait"));
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
             self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
             self.configMarlinBftTimestampFilenames(self.getProfileSetting("marlinbft_timestamp_filenames"));
@@ -1054,6 +1061,8 @@ $(function() {
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
             profiles[index]["marlinbft_timeout"] = self.configMarlinBftTimeout();
             profiles[index]["marlinbft_progresslogging"] = self.configMarlinBftProgressLogging();
+            profiles[index]["marlinbft_m997_reset_wait"] = self.configMarlinBftResetWait();
+            profiles[index]["marlinbft_m997_restart_wait"] = self.configMarlinBftRestartWait();
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
             profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
             profiles[index]["marlinbft_timestamp_filenames"] = self.configMarlinBftTimestampFilenames();
