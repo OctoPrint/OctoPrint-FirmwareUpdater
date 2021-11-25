@@ -8,7 +8,9 @@ try:
 except:
     binproto2_installed = False
 
+current_port = None
 current_baudrate = None
+current_profile = None
 
 def _check_binproto2(self):
     global binproto2_installed
@@ -33,6 +35,8 @@ def _check_marlinbft(self):
         return False
     else:
         global current_baudrate
+        global current_port
+        global current_profile
         _, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
         return True
 
@@ -49,6 +53,9 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
     timestamp_filenames = self.get_profile_setting_boolean("marlinbft_timestamp_filenames")
     use_custom_filename = self.get_profile_setting_boolean("marlinbft_use_custom_filename")
     custom_filename = self.get_profile_setting("marlinbft_custom_filename").strip()
+
+    self.set_profile_setting_boolean("marlinbft_waiting_for_reset", False)
+    self.set_profile_setting_boolean("marlinbft_got_start", False)
 
     # Loggging
     if bft_verbose:
@@ -140,6 +147,7 @@ def _reset_board(self, printer_port=None, current_baudrate=None, no_reset_wait=F
     assert(current_baudrate is not None)
 
     no_m997_restart_wait = self.get_profile_setting_boolean("marlinbft_no_m997_restart_wait")
+    alt_reset_method = self.get_profile_setting_boolean("marlinbft_alt_reset")
     self._logger.info(u"Resetting printer at '{port}'".format(port=printer_port))
 
     # Configure the port
@@ -159,25 +167,87 @@ def _reset_board(self, printer_port=None, current_baudrate=None, no_reset_wait=F
         return False
 
     # Marlin reset command
-    try:
-        os.system('echo M997 >> ' + printer_port)
-    except:
-        self._logger.exception(u"Error sending Marlin 'M997' command.")
-        self._send_status("flasherror", message="Board reset failed")
-        return False
+    if alt_reset_method:
+        try:
+            global current_port
+            global current_profile
+            self._logger.info(u"Reconnecting to printer at port '{port}' to initiate reset".format(port=current_port))
+            self._printer.connect(port=current_port, baudrate=current_baudrate, profile=current_profile)
+            time.sleep(2)
 
-    if no_reset_wait:
-        # Give the board time to reset so that OctoPrint does not try to reconnect before the reset
-        time.sleep(1)
-        self._logger.info(u"Not waiting for reset")
-        return True
-    else:
-        if _wait_for_board(self, printer_port, no_m997_restart_wait):
-            return True
-        else:
-            self._logger.error(u"Board reset failed")
+            self._logger.info(u"Sending M997 reset command to printer")
+            self.set_profile_setting_boolean("marlinbft_waiting_for_reset", True)
+            self._printer.commands("M997")
+            
+            if _wait_for_start(self, current_port):
+                self._logger.info(u"Disconnecting printer")
+                self._printer.disconnect()
+                return True
+            else:
+                self._logger.error(u"Board reset failed")
+                self._send_status("flasherror", message="Board reset failed")
+                return False
+
+        except:
+            self._logger.exception(u"Error sending Marlin 'M997' command.")
             self._send_status("flasherror", message="Board reset failed")
             return False
+    else:
+        try:
+            self._logger.info(u"Sending out-of-band reset command to '{port}'".format(port=printer_port))
+            os.system('echo M997 >> ' + printer_port)
+        except:
+            self._logger.exception(u"Error sending Marlin 'M997' command.")
+            self._send_status("flasherror", message="Board reset failed")
+            return False
+
+        if no_reset_wait:
+            # Give the board time to reset so that OctoPrint does not try to reconnect before the reset
+            time.sleep(1)
+            self._logger.info(u"Not waiting for reset")
+            return True
+        else:
+            if _wait_for_board(self, printer_port, no_m997_restart_wait):
+                return True
+            else:
+                self._logger.error(u"Board reset failed")
+                self._send_status("flasherror", message="Board reset failed")
+                return False
+
+def _wait_for_start(self, printer_port=None):
+    assert(printer_port is not None)
+    timeout = 20
+    self._logger.info(u"Waiting {seconds}s for printer at '{port}' to reset".format(seconds=timeout, port=printer_port))
+
+    start = time.time()
+    timeout = 20
+    interval = 0.2
+    count = 1
+    restarted = False
+
+    loopstarttime = time.time()
+
+    while (time.time() < (loopstarttime + timeout) and not restarted):
+        self._logger.debug(u"Waiting for reset [{}/{}]".format(count, int(timeout / interval)))
+        count = count + 1
+
+        if not self.get_profile_setting_boolean("marlinbft_got_start"):
+            restarted = False
+            time.sleep(interval)
+
+        else:
+            time.sleep(interval)
+            restarted = True
+
+    if not restarted:
+        self._logger.error(u"Timeout waiting for board to reset")
+        self.set_profile_setting_boolean("marlinbft_waiting_for_reset", False)
+        return False
+    
+    end = time.time()
+    self._logger.info(u"Printer at '{port}' reset in {duration} seconds".format(port=printer_port, duration=(round((end - start),2))))
+    self.set_profile_setting_boolean("marlinbft_waiting_for_reset", False)
+    return True
 
 def _wait_for_board(self, printer_port=None, no_restart_wait=False):
     assert(printer_port is not None)

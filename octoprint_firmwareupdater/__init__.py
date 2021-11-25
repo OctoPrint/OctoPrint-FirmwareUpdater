@@ -79,6 +79,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         self._console_logger.propagate = False
 
         self._logger.info("Python binproto2 package installed: {}".format(marlinbft._check_binproto2(self)))
+        
+        self.set_profile_setting_boolean("marlinbft_waiting_for_reset", False)
+        self.set_profile_setting_boolean("marlinbft_got_start", False)
 
     #~~ BluePrint API
 
@@ -581,6 +584,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_waitafterconnect": 0,
                 "marlinbft_timeout": 1000,
                 "marlinbft_progresslogging": False,
+                "marlinbft_alt_reset": False,
                 "marlinbft_m997_reset_wait": 10,
                 "marlinbft_m997_restart_wait": 20,
                 "marlinbft_no_m997_reset_wait": False,
@@ -589,6 +593,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_custom_filename": "firmware.bin",
                 "marlinbft_timestamp_filenames": False,
                 "marlinbft_last_filename": None,
+                "marlinbft_waiting_for_reset": False,
+                "marlinbft_got_start": False,
                 "postflash_delay": 0,
                 "preflash_delay": 3,
                 "postflash_gcode": None,
@@ -738,6 +744,15 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         else:
             return False
 
+    ##~~ Comm Hook
+    def check_for_start(self, comm, line, *args, **kwargs):
+        if line.strip().strip("\0") == "start" and self.get_profile_setting_boolean("marlinbft_waiting_for_reset"):
+            self._logger.info("Got start event while flashing in progress")
+            self.set_profile_setting_boolean("marlinbft_got_start", True)
+            #return line
+        else:
+            return line
+
     ##~~ Update hook
     def update_hook(self):
         return dict(
@@ -795,5 +810,6 @@ def __plugin_load__():
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
         "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook,
-        "octoprint.printer.handle_connect": __plugin_implementation__.handle_connect_hook
+        "octoprint.printer.handle_connect": __plugin_implementation__.handle_connect_hook,
+        "octoprint.comm.protocol.gcode.received": __plugin_implementation__.check_for_start,
     }
