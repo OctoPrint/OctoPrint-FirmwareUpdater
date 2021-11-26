@@ -272,6 +272,9 @@ $(function() {
         self.profileDefaults = undefined;
         self.inSettingsDialog = false;
 
+        self.maxProfileId = undefined;
+        self.nextProfileId = undefined;
+
         self.onStartup = function() {
             self.selectFilePath = $("#settings_plugin_firmwareupdater_selectFilePath");
             self.selectSerialPort = $("#settings_plugin_firmwareupdater_selectSerialPort");
@@ -305,6 +308,14 @@ $(function() {
 
             // Get the index of the selected profile
             self.selectedProfileIndex(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
+
+            // Get the next profile ID
+            self.profiles().forEach(function(profile) {
+                if (self.maxProfileId = undefined || profile._id() > self.maxProfileId) {
+                    self.maxProfileId = profile._id();
+                }
+            });
+            self.nextProfileId = self.maxProfileId + 1;
 
             // Make sure the selected profile is valid, reset it to 0 if not
             if (self.selectedProfileIndex() >= self.profiles().length) {
@@ -413,7 +424,7 @@ $(function() {
         self.addNewProfile = function() {
             self.adding(true);
             var profiles = ko.toJS(self.profiles());
-            var newProfile = {_name: self.newProfileName()};
+            var newProfile = {_id: self.nextProfileId, _name: self.newProfileName()};
             profiles.push(newProfile);
             var data = {
                 plugins: {
@@ -430,6 +441,7 @@ $(function() {
                 self.profiles(profiles);
                 self.selectedProfileIndex(profiles.length - 1);
                 self.newProfileName(null);
+                self.nextProfileId++;
             });
         }
 
@@ -446,6 +458,7 @@ $(function() {
             var profiles = ko.toJS(self.profiles());
             var newProfile = ko.toJS(self.selectedProfile());
             newProfile._name = self.newProfileName();
+            newProfile._id = self.nextProfileId;
             profiles.push(newProfile);
             var data = {
                 plugins: {
@@ -462,6 +475,7 @@ $(function() {
                 self.profiles(profiles);
                 self.selectedProfileIndex(profiles.length - 1);
                 self.newProfileName(null);
+                self.nextProfileId++;
             });
         }
 
@@ -527,6 +541,7 @@ $(function() {
                 self.showBossacConfig(true);
             } else if(value == 'lpc1768'){
                 self.showLpc1768Config(true);
+                self.showAdvanced2Tab(true);
             } else if(value == 'dfuprogrammer'){
                 self.showDfuConfig(true);
             } else if(value == 'dfuutil'){

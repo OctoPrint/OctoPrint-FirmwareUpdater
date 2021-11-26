@@ -458,24 +458,6 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
-                                <div class="controls">
-                                    <div class="input">
-                                        <input type="checkbox" data-bind="checked: configLpc1768NoResetWait">
-                                    </div>
-                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
-                                <div class="controls">
-                                    <div class="input">
-                                        <input type="checkbox" data-bind="checked: configLpc1768NoRestartWait, disable: configLpc1768NoResetWait">
-                                    </div>
-                                    <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
                                 <label class="control-label">{{ _('Use timestamp filenames') }}</label>
                                 <div class="controls">
                                     <div class="input">
@@ -521,12 +503,12 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label class="control-label">{{ _('Verbose progress logging') }}</label>
+                                <label class="control-label">{{ _('Use alternative reset') }}</label>
                                 <div class="controls">
                                     <div class="input">
-                                        <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
+                                        <input type="checkbox" data-bind="checked: configMarlinAltResetMethod">
                                     </div>
-                                    <span class="help-block">{{ _('Log verbose transfer progress to the OctoPrint log file.') }}</span>
+                                    <span class="help-block">{{ _('Enable for boards which don\'t reset the serial port on restart.  Needed for Ender 3 V2.') }}</span>
                                 </div>
                             </div>
                             <div class="control-group">
@@ -661,17 +643,31 @@
                 <!-- Advanced 2 Tab -->
                 <div role="tabpanel" class="tab-pane" id="settings_plugin_firmwareupdater_advanced_2" data-bind ="visible: showProfileSettingsInOptions">
                     <form class="form-horizontal">
-                        <!-- Advanced marlinbft options -->
-                        <div data-bind="visible: showMarlinBftConfig">
+
+                        <!-- Advanced lpc1768 options -->
+                        <div data-bind="visible: showLpc1768Config">
                             <div class="control-group">
-                                <label class="control-label">{{ _('Use alternative reset') }}</label>
+                                <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
                                 <div class="controls">
                                     <div class="input">
-                                        <input type="checkbox" data-bind="checked: configMarlinAltResetMethod">
+                                        <input type="checkbox" data-bind="checked: configLpc1768NoResetWait">
                                     </div>
-                                    <span class="help-block">{{ _('Enable for boards which don\'t reset the serial port on restart.  Needed for Ender 3 V2.') }}</span>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
                                 </div>
                             </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configLpc1768NoRestartWait, disable: configLpc1768NoResetWait">
+                                    </div>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced marlinbft options -->
+                        <div data-bind="visible: showMarlinBftConfig">
                             <div class="control-group">
                                 <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
                                 <div class="controls">
@@ -708,6 +704,15 @@
                                         <span class="add-on">seconds</span>
                                     </div>
                                     <span class="help-block">{{ _('Amount of time to wait for the board to restart after it resets.  Default: 20s') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Verbose file transfer progress logging') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftProgressLogging">
+                                    </div>
+                                    <span class="help-block">{{ _('Log verbose file transfer progress to the OctoPrint log file.') }}</span>
                                 </div>
                             </div>
                         </div>
