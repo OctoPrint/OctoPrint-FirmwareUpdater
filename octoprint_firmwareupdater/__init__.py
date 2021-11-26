@@ -707,7 +707,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
         elif current == 2:
             profiles_new = []
-            last_bft_filenames_new = []
+            last_bft_filenames_new = {}
             # Loop through the profiles
             for index, profile in enumerate(self._settings.get(['profiles'])):
                 self._logger.info("Migrating settings for profile {}: {}".format(index, profile["_name"]))
@@ -716,7 +716,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                 # Migrate the last BFT filesnames
                 if "marlinbft_last_filename" in profile and profile["marlinbft_last_filename"] is not None:
-                    last_bft_filenames_new.append({index: profile["marlinbft_last_filename"]})
+                    last_bft_filenames_new.update({index: profile["marlinbft_last_filename"]})
                     del profile["marlinbft_last_filename"]
                 
                 profiles_new.append(profile)
