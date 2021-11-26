@@ -102,6 +102,7 @@
               <ul class="nav nav-tabs" role="tablist" data-bind ="visible: showProfileSettingsInOptions">
                 <li role="presentation" class="active"><a href="#settings_plugin_firmwareupdater_flash_method" aria-controls="settings_plugin_firmwareupdater_required" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Flash Method') }}</a></li>
                 <li role="presentation"><a href="#settings_plugin_firmwareupdater_advanced" aria-controls="settings_plugin_firmwareupdater_advanced" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Advanced') }}</a></li>
+                <li role="presentation"><a href="#settings_plugin_firmwareupdater_advanced_2" aria-controls="settings_plugin_firmwareupdater_advanced_2" role="tab" data-toggle="tab" data-bind ="visible: showAdvanced2Tab">{{ _('Advanced 2') }}</a></li>
                 <li role="presentation"><a href="#settings_plugin_firmwareupdater_preflash" aria-controls="settings_plugin_firmwareupdater_preflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Pre-Flash') }}</a></li>
                 <li role="presentation"><a href="#settings_plugin_firmwareupdater_postflash" aria-controls="settings_plugin_firmwareupdater_postflash" role="tab" data-toggle="tab" data-bind ="visible: showProfileSettingsInOptions">{{ _('Post-Flash') }}</a>
                 <li role="presentation"><a href="#settings_plugin_firmwareupdater_plugin" aria-controls="settings_plugin_firmwareupdater_plugin" role="tab" data-toggle="tab" data-bind ="visible: showPluginSettingsInOptions">{{ _('Plugin') }}</a></li>
@@ -299,9 +300,7 @@
                             </div>
                         </div>
                         <!-- end stm32flash options -->
-
                     </form>
-
                 </div>
 
                 <!-- Advanced Tab -->
@@ -531,44 +530,6 @@
                                 </div>
                             </div>
                             <div class="control-group">
-                                <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
-                                <div class="controls">
-                                    <div class="input">
-                                        <input type="checkbox" data-bind="checked: configMarlinBftNoResetWait">
-                                    </div>
-                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label">{{ _('Reset timeout') }}</label>
-                                <div class="controls">
-                                    <div class="input-append">
-                                        <input type="number" class="input-mini text-right" step=any min="1" max="60" data-bind="value: configMarlinBftResetWait, disable: configMarlinBftNoResetWait">
-                                        <span class="add-on">seconds</span>
-                                    </div>
-                                    <span class="help-block">{{ _('Amount of time to wait for the board to reset after sending the reset command.  Default: 10s') }}</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
-                                <div class="controls">
-                                    <div class="input">
-                                        <input type="checkbox" data-bind="checked: configMarlinBftNoRestartWait, disable: configMarlinBftNoResetWait">
-                                    </div>
-                                    <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label">{{ _('Restart timeout') }}</label>
-                                <div class="controls">
-                                    <div class="input-append">
-                                        <input type="number" class="input-mini text-right" step=any min="1" max="90" data-bind="value: configMarlinBftRestartWait, disable: marlinBftRestartWaitDisabled">
-                                        <span class="add-on">seconds</span>
-                                    </div>
-                                    <span class="help-block">{{ _('Amount of time to wait for the board to restart after it resets.  Default: 20s') }}</span>
-                                </div>
-                            </div>
-                            <div class="control-group">
                                 <label class="control-label">{{ _('Use timestamp filenames') }}</label>
                                 <div class="controls">
                                     <div class="input">
@@ -696,6 +657,62 @@
                     </form>
                 </div>
                 <!-- End Advanced Tab -->
+
+                <!-- Advanced 2 Tab -->
+                <div role="tabpanel" class="tab-pane" id="settings_plugin_firmwareupdater_advanced_2" data-bind ="visible: showProfileSettingsInOptions">
+                    <form class="form-horizontal">
+                        <!-- Advanced marlinbft options -->
+                        <div data-bind="visible: showMarlinBftConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Use alternative reset') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinAltResetMethod">
+                                    </div>
+                                    <span class="help-block">{{ _('Enable for boards which don\'t reset the serial port on restart.  Needed for Ender 3 V2.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Don\'t wait for reset') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftNoResetWait, disable: configMarlinAltResetMethod">
+                                    </div>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for board to reset after sending the reset command (or check that it has actually restarted).') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Reset timeout') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="1" max="60" data-bind="value: configMarlinBftResetWait, disable: marlinBftResetWaitDisabled">
+                                        <span class="add-on">seconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('Amount of time to wait for the board to reset after sending the reset command.  Default: 10s') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Don\'t wait for restart') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configMarlinBftNoRestartWait, disable: configMarlinBftNoResetWait">
+                                    </div>
+                                    <span class="help-block">{{ _('Plugin won\'t wait for printer to come back online after the reset has initiated.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Restart timeout') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="number" class="input-mini text-right" step=any min="1" max="90" data-bind="value: configMarlinBftRestartWait, disable: marlinBftRestartWaitDisabled">
+                                        <span class="add-on">seconds</span>
+                                    </div>
+                                    <span class="help-block">{{ _('Amount of time to wait for the board to restart after it resets.  Default: 20s') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
 
                 <!-- Pre-Flash Tab -->
                 <div role="tabpanel" class="tab-pane" id="settings_plugin_firmwareupdater_preflash" data-bind ="visible: showProfileSettingsInOptions">

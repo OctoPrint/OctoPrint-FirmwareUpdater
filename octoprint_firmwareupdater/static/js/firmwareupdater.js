@@ -116,6 +116,7 @@ $(function() {
         self.configMarlinBftWaitAfterConnect = ko.observable();
         self.configMarlinBftTimeout = ko.observable();
         self.configMarlinBftProgressLogging = ko.observable();
+        self.configMarlinAltResetMethod = ko.observable();
         self.configMarlinBftResetWait = ko.observable();
         self.configMarlinBftRestartWait = ko.observable();
         self.configMarlinBftNoResetWait = ko.observable();
@@ -126,7 +127,10 @@ $(function() {
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
         self.marlinBftRestartWaitDisabled = ko.computed(function() {
-            return self.configMarlinBftNoResetWait() || self.configMarlinBftNoRestartWait() 
+            return self.configMarlinBftNoResetWait() || self.configMarlinBftNoRestartWait()
+        });
+        self.marlinBftResetWaitDisabled = ko.computed(function() {
+            return self.configMarlinBftNoResetWait() || self.configMarlinAltResetMethod()
         });
         self.marlinBftCustomFileNameOk = ko.computed(function() {
             var filename = self.configMarlinBftCustomFilename();
@@ -216,6 +220,7 @@ $(function() {
 
         self.showPluginSettingsInOptions = ko.observable();
         self.showProfileSettingsInOptions = ko.observable();
+        self.showAdvanced2Tab = ko.observable();
         self.optionsDialogTitle = ko.observable("Firmware Updater Configuration");
 
         // Returns a list of file types to accept for upload based on whether or not file type filter is enabled or disabled
@@ -511,6 +516,7 @@ $(function() {
             self.showDfuUtilConfig(false);
             self.showStm32flashConfig(false);
             self.showMarlinBftConfig(false);
+            self.showAdvanced2Tab(false);
 
             // Show only the selected method's settings
             if(value == 'avrdude') {
@@ -529,6 +535,7 @@ $(function() {
                 self.showStm32flashConfig(true);
             } else if(value == 'marlinbft'){
                 self.showMarlinBftConfig(true);
+                self.showAdvanced2Tab(true);
             }
         });
 
@@ -934,6 +941,7 @@ $(function() {
             self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
             self.configMarlinBftTimeout(self.getProfileSetting("marlinbft_timeout"));
             self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"));
+            self.configMarlinAltResetMethod(self.getProfileSetting("marlinbft_alt_reset"));
             self.configMarlinBftResetWait(self.getProfileSetting("marlinbft_m997_reset_wait"));
             self.configMarlinBftRestartWait(self.getProfileSetting("marlinbft_m997_restart_wait"));
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
@@ -1061,6 +1069,7 @@ $(function() {
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
             profiles[index]["marlinbft_timeout"] = self.configMarlinBftTimeout();
             profiles[index]["marlinbft_progresslogging"] = self.configMarlinBftProgressLogging();
+            profiles[index]["marlinbft_alt_reset"] = self.configMarlinAltResetMethod();
             profiles[index]["marlinbft_m997_reset_wait"] = self.configMarlinBftResetWait();
             profiles[index]["marlinbft_m997_restart_wait"] = self.configMarlinBftRestartWait();
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();

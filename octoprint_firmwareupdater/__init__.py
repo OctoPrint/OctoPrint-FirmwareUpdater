@@ -79,8 +79,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         self._console_logger.propagate = False
 
         self._logger.info("Python binproto2 package installed: {}".format(marlinbft._check_binproto2(self)))
-        
-        self.set_profile_setting_boolean("marlinbft_waiting_for_reset", False)
         self.set_profile_setting_boolean("marlinbft_got_start", False)
 
     #~~ BluePrint API
@@ -593,7 +591,6 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_custom_filename": "firmware.bin",
                 "marlinbft_timestamp_filenames": False,
                 "marlinbft_last_filename": None,
-                "marlinbft_waiting_for_reset": False,
                 "marlinbft_got_start": False,
                 "postflash_delay": 0,
                 "preflash_delay": 3,
@@ -746,10 +743,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
     ##~~ Comm Hook
     def check_for_start(self, comm, line, *args, **kwargs):
-        if line.strip().strip("\0") == "start" and self.get_profile_setting_boolean("marlinbft_waiting_for_reset"):
+        if line.strip().strip("\0") == "start" and self._flash_thread:
             self._logger.info("Got start event while flashing in progress")
             self.set_profile_setting_boolean("marlinbft_got_start", True)
-            #return line
         else:
             return line
 
