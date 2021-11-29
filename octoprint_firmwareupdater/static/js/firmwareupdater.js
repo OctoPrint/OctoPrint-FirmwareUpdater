@@ -656,6 +656,7 @@ $(function() {
                 return;
             }
 
+            self.closePopup();
             self.progressBarText("Flashing firmware...");
             self.isBusy(true);
             self.showAlert(false);
@@ -672,6 +673,7 @@ $(function() {
                 return;
             }
 
+            self.closePopup();
             if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
                 self.configLastUrl(self.firmwareFileURL());
                 self._saveLastUrl();
