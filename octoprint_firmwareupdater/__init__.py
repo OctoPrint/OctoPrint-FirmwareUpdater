@@ -511,7 +511,27 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         else:
             self.set_profile_setting(key, False)
 
+    # Gets the last BFT filename for the current profile
+    def get_lastbft_filename(self):
+        profile_id = self.get_profile_setting_int("_id")
+        if profile_id != None:
+            filenames = self._settings.get(["last_bft_filenames"])
+            if filenames == None:
+                return None
+            if profile_id in filenames.keys():
+                return filenames[profile_id]
+            else:
+                return None
+        else:
+            return None
 
+    # Sets the last BFT filename for the current profile
+    def set_lastbft_filename(self, value):
+        profile_id = self.get_profile_setting_int("_id")
+        last_bft_filenames = self._settings.get(["last_bft_filenames"])
+        last_bft_filenames[profile_id] = value
+        self._settings.set(["last_bft_filenames"], last_bft_filenames)
+    
     # Send capability information to the UI
     def _send_capability(self, capability, enabled):
         self._plugin_manager.send_plugin_message(self._identifier, dict(type="capability", capability=capability, enabled=enabled))
@@ -533,8 +553,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             "disable_filefilter": False,
             "prevent_connection_when_flashing": True,
             "maximum_fw_size_kb": 5120,
+            "last_bft_filenames": {},
             "profiles": {},
             "_profiles": {
+                "_id": None,
                 "_name": None,
                 "flash_method": None,
                 "disable_bootloadercheck": False,
@@ -581,12 +603,16 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "marlinbft_waitafterconnect": 0,
                 "marlinbft_timeout": 1000,
                 "marlinbft_progresslogging": False,
+                "marlinbft_alt_reset": False,
+                "marlinbft_m997_reset_wait": 10,
+                "marlinbft_m997_restart_wait": 20,
                 "marlinbft_no_m997_reset_wait": False,
                 "marlinbft_no_m997_restart_wait": False,
                 "marlinbft_use_custom_filename": False,
                 "marlinbft_custom_filename": "firmware.bin",
                 "marlinbft_timestamp_filenames": False,
                 "marlinbft_last_filename": None,
+                "marlinbft_got_start": False,
                 "postflash_delay": 0,
                 "preflash_delay": 3,
                 "postflash_gcode": None,
@@ -607,7 +633,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         }
 
     def get_settings_version(self):
-        return 2
+        return 3
 
     def on_settings_migrate(self, target, current=None):
         if current is None or current < 2:
@@ -668,7 +694,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
                 self._settings.set([key], None)
 
-            # Give the new profile a default name
+            # Give the new profile a default ID and name
+            settings_dict["_id"] = 0
             settings_dict["_name"] = "Default"
 
             # Append the new profile and save the settings
@@ -677,6 +704,25 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
             # Set the profile to the new one
             self._settings.set_int(['_selected_profile'], 0)
+
+        elif current == 2:
+            profiles_new = []
+            last_bft_filenames_new = {}
+            # Loop through the profiles
+            for index, profile in enumerate(self._settings.get(['profiles'])):
+                self._logger.info("Migrating settings for profile {}: {}".format(index, profile["_name"]))
+                # Set the id to the index
+                profile["_id"] = index
+
+                # Migrate the last BFT filesnames
+                if "marlinbft_last_filename" in profile and profile["marlinbft_last_filename"] is not None:
+                    last_bft_filenames_new.update({index: profile["marlinbft_last_filename"]})
+                    del profile["marlinbft_last_filename"]
+                
+                profiles_new.append(profile)
+
+            self._settings.set(['last_bft_filenames'],last_bft_filenames_new)
+            self._settings.set(['profiles'],profiles_new)
 
     #~~ EventHandlerPlugin API
     def on_event(self, event, payload):
@@ -736,6 +782,14 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         else:
             return False
 
+    ##~~ Comm Hook
+    def check_for_start(self, comm, line, *args, **kwargs):
+        if line.strip().strip("\0") == "start" and self._flash_thread:
+            self._logger.info("Got start event while flashing in progress")
+            self.set_profile_setting_boolean("marlinbft_got_start", True)
+        else:
+            return line
+
     ##~~ Update hook
     def update_hook(self):
         return dict(
@@ -793,5 +847,6 @@ def __plugin_load__():
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.update_hook,
         "octoprint.comm.protocol.firmware.capabilities": __plugin_implementation__.firmware_capability_hook,
-        "octoprint.printer.handle_connect": __plugin_implementation__.handle_connect_hook
+        "octoprint.printer.handle_connect": __plugin_implementation__.handle_connect_hook,
+        "octoprint.comm.protocol.gcode.received": __plugin_implementation__.check_for_start,
     }

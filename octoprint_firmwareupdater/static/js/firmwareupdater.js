@@ -116,6 +116,9 @@ $(function() {
         self.configMarlinBftWaitAfterConnect = ko.observable();
         self.configMarlinBftTimeout = ko.observable();
         self.configMarlinBftProgressLogging = ko.observable();
+        self.configMarlinAltResetMethod = ko.observable();
+        self.configMarlinBftResetWait = ko.observable();
+        self.configMarlinBftRestartWait = ko.observable();
         self.configMarlinBftNoResetWait = ko.observable();
         self.configMarlinBftNoRestartWait = ko.observable();
         self.configMarlinBftTimestampFilenames = ko.observable();
@@ -123,6 +126,12 @@ $(function() {
         self.configMarlinBftCustomFilename = ko.observable();
         self.marlinbftHasCapability = ko.observable();
         self.marlinbftHasBinProto2Package = ko.observable();
+        self.marlinBftRestartWaitDisabled = ko.computed(function() {
+            return self.configMarlinBftNoResetWait() || self.configMarlinBftNoRestartWait()
+        });
+        self.marlinBftResetWaitDisabled = ko.computed(function() {
+            return self.configMarlinBftNoResetWait() || self.configMarlinAltResetMethod()
+        });
         self.marlinBftCustomFileNameOk = ko.computed(function() {
             var filename = self.configMarlinBftCustomFilename();
             var filenamePattern = new RegExp("^[A-z0-9_-]{1,8}\\.[A-z0-9]{1,3}$");
@@ -211,6 +220,7 @@ $(function() {
 
         self.showPluginSettingsInOptions = ko.observable();
         self.showProfileSettingsInOptions = ko.observable();
+        self.showAdvanced2Tab = ko.observable();
         self.optionsDialogTitle = ko.observable("Firmware Updater Configuration");
 
         // Returns a list of file types to accept for upload based on whether or not file type filter is enabled or disabled
@@ -262,6 +272,9 @@ $(function() {
         self.profileDefaults = undefined;
         self.inSettingsDialog = false;
 
+        self.maxProfileId = undefined;
+        self.nextProfileId = undefined;
+
         self.onStartup = function() {
             self.selectFilePath = $("#settings_plugin_firmwareupdater_selectFilePath");
             self.selectSerialPort = $("#settings_plugin_firmwareupdater_selectSerialPort");
@@ -295,6 +308,14 @@ $(function() {
 
             // Get the index of the selected profile
             self.selectedProfileIndex(self.settingsViewModel.settings.plugins.firmwareupdater._selected_profile());
+
+            // Get the next profile ID
+            self.profiles().forEach(function(profile) {
+                if (self.maxProfileId = undefined || profile._id() > self.maxProfileId) {
+                    self.maxProfileId = profile._id();
+                }
+            });
+            self.nextProfileId = self.maxProfileId + 1;
 
             // Make sure the selected profile is valid, reset it to 0 if not
             if (self.selectedProfileIndex() >= self.profiles().length) {
@@ -403,7 +424,7 @@ $(function() {
         self.addNewProfile = function() {
             self.adding(true);
             var profiles = ko.toJS(self.profiles());
-            var newProfile = {_name: self.newProfileName()};
+            var newProfile = {_id: self.nextProfileId, _name: self.newProfileName()};
             profiles.push(newProfile);
             var data = {
                 plugins: {
@@ -420,6 +441,7 @@ $(function() {
                 self.profiles(profiles);
                 self.selectedProfileIndex(profiles.length - 1);
                 self.newProfileName(null);
+                self.nextProfileId++;
             });
         }
 
@@ -436,6 +458,7 @@ $(function() {
             var profiles = ko.toJS(self.profiles());
             var newProfile = ko.toJS(self.selectedProfile());
             newProfile._name = self.newProfileName();
+            newProfile._id = self.nextProfileId;
             profiles.push(newProfile);
             var data = {
                 plugins: {
@@ -452,6 +475,7 @@ $(function() {
                 self.profiles(profiles);
                 self.selectedProfileIndex(profiles.length - 1);
                 self.newProfileName(null);
+                self.nextProfileId++;
             });
         }
 
@@ -506,6 +530,7 @@ $(function() {
             self.showDfuUtilConfig(false);
             self.showStm32flashConfig(false);
             self.showMarlinBftConfig(false);
+            self.showAdvanced2Tab(false);
 
             // Show only the selected method's settings
             if(value == 'avrdude') {
@@ -516,6 +541,7 @@ $(function() {
                 self.showBossacConfig(true);
             } else if(value == 'lpc1768'){
                 self.showLpc1768Config(true);
+                self.showAdvanced2Tab(true);
             } else if(value == 'dfuprogrammer'){
                 self.showDfuConfig(true);
             } else if(value == 'dfuutil'){
@@ -524,6 +550,7 @@ $(function() {
                 self.showStm32flashConfig(true);
             } else if(value == 'marlinbft'){
                 self.showMarlinBftConfig(true);
+                self.showAdvanced2Tab(true);
             }
         });
 
@@ -629,6 +656,7 @@ $(function() {
                 return;
             }
 
+            self.closePopup();
             self.progressBarText("Flashing firmware...");
             self.isBusy(true);
             self.showAlert(false);
@@ -645,6 +673,7 @@ $(function() {
                 return;
             }
 
+            self.closePopup();
             if (self.settingsViewModel.settings.plugins.firmwareupdater.save_url()) {
                 self.configLastUrl(self.firmwareFileURL());
                 self._saveLastUrl();
@@ -929,6 +958,9 @@ $(function() {
             self.configMarlinBftWaitAfterConnect(self.getProfileSetting("marlinbft_waitafterconnect"));
             self.configMarlinBftTimeout(self.getProfileSetting("marlinbft_timeout"));
             self.configMarlinBftProgressLogging(self.getProfileSetting("marlinbft_progresslogging"));
+            self.configMarlinAltResetMethod(self.getProfileSetting("marlinbft_alt_reset"));
+            self.configMarlinBftResetWait(self.getProfileSetting("marlinbft_m997_reset_wait"));
+            self.configMarlinBftRestartWait(self.getProfileSetting("marlinbft_m997_restart_wait"));
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
             self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
             self.configMarlinBftTimestampFilenames(self.getProfileSetting("marlinbft_timestamp_filenames"));
@@ -1054,6 +1086,9 @@ $(function() {
             profiles[index]["marlinbft_waitafterconnect"] = self.configMarlinBftWaitAfterConnect();
             profiles[index]["marlinbft_timeout"] = self.configMarlinBftTimeout();
             profiles[index]["marlinbft_progresslogging"] = self.configMarlinBftProgressLogging();
+            profiles[index]["marlinbft_alt_reset"] = self.configMarlinAltResetMethod();
+            profiles[index]["marlinbft_m997_reset_wait"] = self.configMarlinBftResetWait();
+            profiles[index]["marlinbft_m997_restart_wait"] = self.configMarlinBftRestartWait();
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
             profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
             profiles[index]["marlinbft_timestamp_filenames"] = self.configMarlinBftTimestampFilenames();
