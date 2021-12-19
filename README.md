@@ -1,5 +1,5 @@
 # OctoPrint Firmware Updater Plugin
-The Firmware Updater plugin can be used to flash pre-compiled firmware images to your printer from a local file or URL.
+The Firmware Updater plugin can be used to flash pre-compiled firmware images to your printer from a local file or URL. Many different printer types are supported and profiles can be configured to allow easy updating of multiple different devices which are all attached to the same OctoPrint instance.
 
 <p align="center">
   <img alt="Firmware Updater" width="600" src="extras/img/firmware-updater.png">
@@ -8,6 +8,7 @@ The Firmware Updater plugin can be used to flash pre-compiled firmware images to
 ## Documentation Index
 1. [Supported Boards](#supported-boards)
 1. [Plugin Installation](#plugin-installation)
+1. [Printer Profies](#printer-profiles)
 1. [Plugin Configuration](#plugin-configuration)
 1. [Flashing Firmware](#flashing-firmware)
 1. [Advanced Options](#advanced-options)
@@ -26,7 +27,7 @@ The plugin supports a variety of boards, based on the MCU (processor) they have:
 | Atmel AT90USB 8-bit MCUs | Printrboard | [dfuprog](doc/dfuprog.md) |
 | NXP LPC176x 32-bit MCUs | MKS SBASE, SKR v1.1, v1.3, v1.4, v1.4 Turbo etc. | [lpc176x](doc/lpc176x.md) or [marlinbft](doc/marlinbft.md) |
 | Atmel SAM 32-bit MCUs | Arduino DUE, etc. | [bossac](doc/bossac.md) |
-| STM32 32-bit MCUs (via SD card) | SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) or [marlinbft](doc/marlinbft.md) |
+| STM32 32-bit MCUs (via SD card) | Creality Ender 3 V2, SKR Pro v1.1, SKR Mini E3 v2, etc. | [lpc176x](doc/lpc176x.md) or [marlinbft](doc/marlinbft.md) |
 | STM32 32-bit MCUs (ST Bootloader) | FYSETC Cheetah | [stm32flash](doc/stm32flash.md) |
 | STM32 32-bit MCUs (DFU Mode) | MKS Rumba 32 | [dfu-util](doc/dfu-util.md) |
 | OpenBLT Bootloader | Any board with the OpenBLT bootloader | [lpc176x](doc/lpc176x.md) or [bootcommander](doc/bootcommander.md) |
@@ -46,7 +47,17 @@ Using OctoPrint's Software Update plugin you can choose one of three Release Cha
 | Release Candidate | Updated when new features are ready for testing |
 | Development | Updated frequently, may be unstable, used for beta-testing new features |
 
-If you report a bug or request a new feature you will probalby be asked to test development or RC builds.
+If you report a bug or request a new feature you will probably be asked to test development or RC builds.
+
+## Printer Profiles
+By default, the plugin will allow update settngs to be configured for a single printer/board.  If you have multiple printers or devices attached to your OctoPrint instance, or you want to be able to easily change between configurations, you can enable **Printer Profiles**, which will allow you to create an unlimited number of different settings for different devices.
+
+To enable Printer Profiles:
+1. Click the **wrench** button in the top right corner of the plugin
+1. Check the **Enable profiles** check box
+1. Click the **Save** button to save the change
+
+With printer profiles enabled, any settings which may have already been configured become the first profile.  This profile can be renamed or edited but cannot be deleted.  If printer profiles are disabled, this profile's settings will be used
 
 ## Plugin Configuration
 The appropriate flashing tool for the board type needs to be selected.  See the table in the [supported boards](#supported-boards) section to choose the appropriate method.
