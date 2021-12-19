@@ -91,7 +91,7 @@ When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` fil
 
 ## Plugin Configuration
 <p align="center">
-  <img alt="Firmware Updater" src="../extras/img/marlinbft.png">
+  <img height="550px" alt="Firmware Updater" src="../extras/img/marlinbft.png">
 </p>
 
 ### Required Settings
@@ -118,7 +118,7 @@ Two advanced settings must be enabled for Ender 3 V2 boards:
 * Use timestamp filenames
 
 <p align="center">
-  <img alt="Firmware Updater" src="../extras/img/ender3v2.png">
+  <img height="550px" alt="Ender 3 V2 Settings" src="../extras/img/ender3v2.png">
 </p>
 
 **NB:** Before attempting to flash the board from the plugin for the first time, put the SD card in a computer and remove any `.bin` files which are on it.  
