@@ -9,13 +9,13 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 1. [Installation](#installation)
    1. [Marlin Binary Protocol Package](#marlin-binary-protocol-package)
 1. [Marlin Configuration](#marlin-configuration)
-   1. [Enable Binary File Transfer](#enable-the-binary-bile-transfer-protocol)
+   1. [Enable Binary File Transfer](#enable-the-binary-file-transfer-protocol)
    1. [Set SDCARD_CONNECTION to ONBOARD](#set-sdcard_connection-to-onboard)
 1. [Plugin Configuration](#plugin-configuration)
    1. [Required Settings](#required-settings)
    1. [Optional Settings](#optional-settings)
 1. [Hardware Notes](#hardware-notes)
-   1. [Creality Ender 3](#creality-ender-3)
+   1. [Creality Ender 3 V2](#creality-ender-3-v2)
 
 ## Warnings and Caveats
 1. **The binary file transfer protocol is still work in progress**
@@ -91,7 +91,7 @@ When both prerequisites are satisfied, the `~/.octoprint/logs/octoprint.log` fil
 
 ## Plugin Configuration
 <p align="center">
-  <img alt="Firmware Updater" src="../extras/img/marlinbft.png">
+  <img height="550px" alt="Firmware Updater" src="../extras/img/marlinbft.png">
 </p>
 
 ### Required Settings
@@ -102,10 +102,25 @@ There are no required settings.
 | --- | --- |
 | Wait after connect | Some boards reset after getting the command to start binary transfer mode. A value of 3 seconds is normal for when this wait is required. Default is 0. |
 | Communication timeout | Protocol communication timeout. Default is 1000ms. |
+| Use alternative reset | Plugin will reconnect OctoPrint to the printer, send the `M997` reset command, and then wait for a `start` message to indicate the reset has occured.  Used on boards which do not reset the COM port on restart, such as Ender 3V2 and BTT GTR v1. |
+| Use timestamp filesnames | Instead of `firmware.bin`, the uploaded firmware will be named `fwHHMMSS.bin` (where HHMMSS is the current time).  Used on boards which expect unique firmware filenames for sequential uploads, such as Ender 3 V2.|
+| Customize firmware filename | Instead of `firmware.bin`, the uploaded firmware will be named whatever is set here. |
+| Don't wait for reset | The plugin won't wait for the board to initiate the reset and will return 'success' as soon as the `M997` command is sent. |
+| Reset timeout | How long to wait for the board to reset after sending `M997`. Default is 10s.|
+| Don't wait for restart | Plugin won't wait for the board to restart after the reset has begun. |
+| Restart timeout | How long to wait for the board to restart. Default is 20s. |
 | Verbose progress logging | Log verbose transfer progress to the OctoPrint log file |
 
 ## Hardware Notes
-### Creality Ender 3
-Ender 3 V2 printers with 4.2.x boards don't seem to reset the COM port when an `M997` command is sent, making the plugin unable to detect the board resetting.  To avoid receiving an error after a successful flash, the **Don't wait for reset** option in the advanced flash method settings must be enabled.
+### Creality Ender 3 V2
+Two advanced settings must be enabled for Ender 3 V2 boards:
+* Use alternative reset
+* Use timestamp filenames
 
-Ender 3 V2 boards also require that the firmware filename for each firmware update is different than the filename for the previous update, and the previous firmware file must no longer be present on the SD card.  To enable unique filenames, and removal of previous firmware files, enable the **Use timestamp filenames** option in the advanced flash method settings.
+<p align="center">
+  <img height="550px" alt="Ender 3 V2 Settings" src="../extras/img/ender3v2.png">
+</p>
+
+**NB:** Before attempting to flash the board from the plugin for the first time, put the SD card in a computer and remove any `.bin` files which are on it.  
+
+If flashing from the plugin fails and the plugin displays an error stating that the board reset too quickly check the SD card for `.bin` files and remove any which are present.
