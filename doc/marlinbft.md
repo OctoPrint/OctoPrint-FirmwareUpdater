@@ -9,7 +9,7 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 1. [Installation](#installation)
    1. [Marlin Binary Protocol Package](#marlin-binary-protocol-package)
 1. [Marlin Configuration](#marlin-configuration)
-   1. [Enable Binary File Transfer](#enable-the-binary-bile-transfer-protocol)
+   1. [Enable Binary File Transfer](#enable-the-binary-file-transfer-protocol)
    1. [Set SDCARD_CONNECTION to ONBOARD](#set-sdcard_connection-to-onboard)
 1. [Plugin Configuration](#plugin-configuration)
    1. [Required Settings](#required-settings)
