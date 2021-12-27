@@ -22,6 +22,8 @@ Flashing a board from the SD requires that the host can mount the board's on-boa
    1. [SD Card Mounting](#sd-card-mounting)
 
 ## Marlin Firmware Configuration
+Prerequisite: Make sure your firmware's environment includes "_USB" in the name. If you are compiling with PlatformIO, you can open your `platformio.ini` file and check the variable `default_envs`. You want to use something like `STM32F103RC_btt_512K_USB` and NOT `STM32F103RC_btt_512K`, otherwise USB host will not be enabled.
+
 The following options should be enabled in the Marlin firmware configuration in order for the board's SD card to be accessible by the OctoPrint host:
 
 Configuration.h:
