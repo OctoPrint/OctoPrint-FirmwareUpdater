@@ -6,6 +6,8 @@ Flashing a board from the SD requires that the host can mount the board's on-boa
 
 ## Table of Contents
 1. [Marlin Firmware Configuration](#marlin-firmware-configuration)
+   1. [PlatformIO Build Environment](#platformio-build-environment)
+   1. [Testing Host Storage](#testing-host-storage)
 1. [SD Card Mounting](#sd-card-mounting)
    1. [Usbmount](#usbmount)
       1. [Install Usbmount](#install-usbmount)
@@ -17,7 +19,7 @@ Flashing a board from the SD requires that the host can mount the board's on-boa
 1. [lpc176x Configuration](#lpc176x-configuration)
 1. [Hardware Notes](#hardware-notes)
    1. [Creality Ender 3](#creality-ender-3)
-3. [Troubleshooting](#troubleshooting)
+1. [Troubleshooting](#troubleshooting)
    1. [Board Reset Failed](#board-reset-failed)
    1. [SD Card Mounting](#sd-card-mounting)
 
@@ -40,6 +42,12 @@ Configuration_adv.h:
 ```
 #define SD_IGNORE_AT_STARTUP 
 ```
+
+### PlatformIO Build Environment
+Some boards (e.g., SKR Mini E3 V2) need to have a specfic build environment specified in order to include USB storage support in the firmware.  If you are compiling with PlatformIO, you can open your `platformio.ini` file and check the variable `default_envs` - environments with USB host storage will end in `_USB` or `_USB_maple`.
+
+### Testing Host Storage
+If you plug your board into a PC the computer should see the SD card as a storage device.  If this is not the case you need to check and adjust your firmware configuration.
 
 ## SD Card Mounting
 There are several ways to have the SD card mounted by the host.  Depending on your level of experience and knowledge with Linux you are free to use whatever method you prefer.
