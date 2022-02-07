@@ -1035,7 +1035,7 @@ $(function() {
             profiles[index]["enable_preflash_commandline"] = self.configEnablePreflashCommandline();
             profiles[index]["preflash_commandline"] = self.configPreflashCommandline();
             profiles[index]["enable_postflash_commandline"] = self.configEnablePostflashCommandline();
-            profiles[index]["preflash_commandline"] = self.configPreflashCommandline();
+            profiles[index]["postflash_commandline"] = self.configPostflashCommandline();
             profiles[index]["enable_preflash_gcode"] = self.configEnablePreflashGcode();
             profiles[index]["preflash_gcode"] = self.configPreflashGcode();
             profiles[index]["enable_postflash_gcode"] = self.configEnablePostflashGcode();
