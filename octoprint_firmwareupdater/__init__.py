@@ -73,7 +73,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         console_logging_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
         console_logging_handler.setLevel(logging.DEBUG)
 
-        self._console_logger = logging.getLogger("octoprint.plugins.softwareupdate.console")
+        self._console_logger = logging.getLogger("octoprint.plugins." + __name__ + ".console")
         self._console_logger.addHandler(console_logging_handler)
         self._console_logger.setLevel(logging.DEBUG)
         self._console_logger.propagate = False
