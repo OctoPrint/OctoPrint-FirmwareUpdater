@@ -51,6 +51,7 @@ $(function() {
         self.configAvrdudeBaudRate = ko.observable();
         self.configAvrdudeDisableVerification = ko.observable();
         self.configAvrdudeCommandLine = ko.observable();
+        self.configAvrdudePrusaMk3sLangFlash = ko.observable();
 
         // Observables for avrdude UI messages
         self.avrdudePathBroken = ko.observable(false);
@@ -921,6 +922,7 @@ $(function() {
             self.configAvrdudeProgrammer(self.getProfileSetting("avrdude_programmer"));
             self.configAvrdudeBaudRate(self.getProfileSetting("avrdude_baudrate"));
             self.configAvrdudeDisableVerification(self.getProfileSetting("avrdude_disableverify"));
+            self.configAvrdudePrusaMk3sLangFlash(self.getProfileSetting("avrdude_prusamk3s_lang"));
 
             // Load the BootCommander settings
             self.configBootCmdrPath(self.getProfileSetting("bootcmdr_path"));
@@ -1049,6 +1051,7 @@ $(function() {
             profiles[index]["avrdude_baudrate"] = self.configAvrdudeBaudRate();
             profiles[index]["avrdude_disableverify"] = self.configAvrdudeDisableVerification();
             profiles[index]["avrdude_commandline"] = self.configAvrdudeCommandLine();
+            profiles[index]["avrdude_prusamk3s_lang"] = self.configAvrdudePrusaMk3sLangFlash();
 
             // BootCommander settings
             profiles[index]["bootcmdr_path"] = self.configBootCmdrPath();

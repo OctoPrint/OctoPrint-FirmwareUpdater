@@ -75,28 +75,40 @@ def _flash_avrdude(self, firmware=None, printer_port=None, **kwargs):
     avrdude_programmer = self.get_profile_setting("avrdude_programmer")
     avrdude_baudrate = self.get_profile_setting("avrdude_baudrate")
     avrdude_disableverify = self.get_profile_setting_boolean("avrdude_disableverify")
-
+    avrdude_prusamk3s_lang = self.get_profile_setting_boolean("avrdude_prusamk3s_lang")
+    
     working_dir = os.path.dirname(avrdude_path)
 
     avrdude_command = self.get_profile_setting("avrdude_commandline")
+    avrdude_command_mk3slang = self.get_profile_setting("avrdude_prusamk3s_lang_commandline")
+
     avrdude_command = avrdude_command.replace("{avrdude}", avrdude_path)
     avrdude_command = avrdude_command.replace("{mcu}", avrdude_avrmcu)
     avrdude_command = avrdude_command.replace("{programmer}", avrdude_programmer)
 
+    avrdude_command_mk3slang = avrdude_command_mk3slang.replace("{avrdude}", avrdude_path)
+    avrdude_command_mk3slang = avrdude_command_mk3slang.replace("{mcu}", avrdude_avrmcu)
+
     if avrdude_conf is not None and avrdude_conf != "":
         avrdude_command = avrdude_command.replace("{conffile}", avrdude_conf)
+        avrdude_command_mk3slang = avrdude_command_mk3slang.replace("{conffile}", avrdude_conf)
     else:
         avrdude_command = avrdude_command.replace(" -C {conffile} ", " ")
+        avrdude_command_mk3slang = avrdude_command_mk3slang.replace(" -C {conffile} ", " ")
 
     if avrdude_baudrate is not None and avrdude_baudrate != "":
         avrdude_command = avrdude_command.replace("{baudrate}", str(avrdude_baudrate))
+        avrdude_command_mk3slang = avrdude_command_mk3slang.replace("{baudrate}", str(avrdude_baudrate))
     else:
         avrdude_command = avrdude_command.replace(" -b {baudrate} ", " ")
+        avrdude_command_mk3slang = avrdude_command_mk3slang.replace(" -b {baudrate} ", " ")
 
     if avrdude_disableverify:
         avrdude_command = avrdude_command.replace("{disableverify}", "-V")
+        avrdude_command_mk3slang = avrdude_command_mk3slang.replace("{disableverify}", "-V")
     else:
         avrdude_command = avrdude_command.replace(" {disableverify} ", " ")
+        avrdude_command_mk3slang = avrdude_command_mk3slang.replace(" {disableverify} ", " ")
 
     if avrdude_programmer is not None and avrdude_programmer == "avr109":
         self._logger.info(u"Avrdude_programmer is avr109, check if Prusa MMU or CW1 to be flashed")
@@ -179,6 +191,9 @@ def _flash_avrdude(self, firmware=None, printer_port=None, **kwargs):
     avrdude_command = avrdude_command.replace("{port}", printer_port)
     avrdude_command = avrdude_command.replace("{firmware}", firmware)
 
+    avrdude_command_mk3slang = avrdude_command_mk3slang.replace("{port}", printer_port)
+    avrdude_command_mk3slang = avrdude_command_mk3slang.replace("{firmware}", firmware)
+
     self._logger.info(u"Running '{}' in {}".format(avrdude_command, working_dir))
     self._console_logger.info(u"")
     self._console_logger.info(avrdude_command)
@@ -223,10 +238,57 @@ def _flash_avrdude(self, firmware=None, printer_port=None, **kwargs):
             elif AVRDUDE_ERROR in output:
                 raise FlashException("Avrdude error: " + output[output.find(AVRDUDE_ERROR) + len(AVRDUDE_ERROR):].strip())
 
-        if p.returncode == 0:
-            return True
-        else:
+        if p.returncode != 0:
             raise FlashException("Avrdude returned code {returncode}".format(returncode=p.returncode))
+
+        if avrdude_prusamk3s_lang:
+            self._logger.info(u"Running '{}' in {}".format(avrdude_command_mk3slang, working_dir))
+            self._console_logger.info(u"")
+            self._console_logger.info(avrdude_command_mk3slang)
+            
+            p = sarge.run(avrdude_command_mk3slang, cwd=working_dir, async_=True, stdout=sarge.Capture(), stderr=sarge.Capture())
+            p.wait_events()
+
+            while p.returncode is None:
+                output = p.stderr.read(timeout=0.5).decode('utf-8')
+                if not output:
+                    p.commands[0].poll()
+                    continue
+
+                for line in output.split("\n"):
+                    if line.endswith("\r"):
+                        line = line[:-1]
+                    self._console_logger.info(u"> {}".format(line))
+
+                if AVRDUDE_WRITING in output:
+                    self._logger.info(u"Writing memory...")
+                    self._send_status("progress", subtype="writing")
+                elif AVRDUDE_VERIFYING in output:
+                    self._logger.info(u"Verifying memory...")
+                    self._send_status("progress", subtype="verifying")
+                elif AVRDUDE_TIMEOUT in output:
+                    p.commands[0].kill()
+                    p.close()
+                    raise FlashException("Timeout communicating with programmer")
+                elif AVRDUDE_ERROR_DEVICE in output:
+                    p.commands[0].kill()
+                    p.close()
+                    raise FlashException("Error opening serial device")
+                elif AVRDUDE_ERROR_VERIFICATION in output:
+                    p.commands[0].kill()
+                    p.close()
+                    raise FlashException("Error verifying flash")
+                elif AVRDUDE_ERROR_SYNC in output:
+                    p.commands[0].kill()
+                    p.close()
+                    raise FlashException("Avrdude says: 'not in sync" + output[output.find(AVRDUDE_ERROR_SYNC) + len(AVRDUDE_ERROR_SYNC):].strip() + "'")
+                elif AVRDUDE_ERROR in output:
+                    raise FlashException("Avrdude error: " + output[output.find(AVRDUDE_ERROR) + len(AVRDUDE_ERROR):].strip())
+
+            if p.returncode == 0:
+                return True
+            else:
+                raise FlashException("Avrdude returned code {returncode}".format(returncode=p.returncode))
 
     except FlashException as ex:
         self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))

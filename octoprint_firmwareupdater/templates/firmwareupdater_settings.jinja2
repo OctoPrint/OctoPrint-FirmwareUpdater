@@ -361,6 +361,15 @@
                                     <span class="help-block">{{ _('If checked the bootloader warning will be suppressed.') }}</span>
                                 </div>
                             </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Prusa MK3S language update') }}</label>
+                                <div class="controls">
+                                    <div class="input">
+                                        <input type="checkbox" data-bind="checked: configAvrdudePrusaMk3sLangFlash">
+                                    </div>
+                                    <span class="help-block">{{ _('Check to flash a non-English firmware to a Prusa MK3S.') }}</span>
+                                </div>
+                            </div>
                         </div>
                         <!-- End advanced avrdude options -->
 
