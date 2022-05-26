@@ -77,8 +77,8 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
             time.sleep(bft_waitafterconnect)
 
         # Try to delete the last-flashed file
-        if timestamp_filenames and self.get_lastbft_filename() is not None:
-            last_filename = self.get_lastbft_filename()
+        last_filename = self.get_lastbft_filename()
+        if timestamp_filenames and last_filename is not None:
             self._logger.info(u"Attempting to delete previous firmware file /{}".format(last_filename))
             protocol.send_ascii("M21")
             protocol.send_ascii("M30 {}".format(last_filename))
@@ -245,7 +245,7 @@ def _wait_for_start(self, printer_port=None):
     if not restarted:
         self._logger.error(u"Timeout waiting for board to reset")
         return False
-    
+
     end = time.time()
     duration = round((end - start),2)
 
@@ -303,7 +303,7 @@ def _wait_for_board(self, printer_port=None, no_restart_wait=False):
         m997_restart_wait = self.get_profile_setting("marlinbft_m997_restart_wait")
         if m997_restart_wait is None:
             m997_restart_wait = 20
-        
+
         self._logger.info(u"Waiting {seconds}s for printer at '{port}' to restart".format(seconds=m997_restart_wait, port=printer_port))
 
         timeout = m997_restart_wait

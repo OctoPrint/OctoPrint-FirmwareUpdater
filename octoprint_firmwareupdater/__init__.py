@@ -520,6 +520,8 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 return None
             if profile_id in filenames.keys():
                 return filenames[profile_id]
+            elif str(profile_id) in filenames.keys():
+                return filenames[str(profile_id)]
             else:
                 return None
         else:
@@ -531,7 +533,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         last_bft_filenames = self._settings.get(["last_bft_filenames"])
         last_bft_filenames[profile_id] = value
         self._settings.set(["last_bft_filenames"], last_bft_filenames)
-    
+
     # Send capability information to the UI
     def _send_capability(self, capability, enabled):
         self._plugin_manager.send_plugin_message(self._identifier, dict(type="capability", capability=capability, enabled=enabled))
@@ -718,7 +720,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 if "marlinbft_last_filename" in profile and profile["marlinbft_last_filename"] is not None:
                     last_bft_filenames_new.update({index: profile["marlinbft_last_filename"]})
                     del profile["marlinbft_last_filename"]
-                
+
                 profiles_new.append(profile)
 
             self._settings.set(['last_bft_filenames'],last_bft_filenames_new)
