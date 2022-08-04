@@ -59,6 +59,8 @@ Depending on your system, the command you use to restart OctoPrint may also be d
 
    `sudo service octoprint restart`
    
+Note that if OctoPrint is running from a python virtual environment (such is the case for OctoPi) you will need to run pip from the same virtual environment as OctoPrint. For example: `~/oprint/bin/pip install marlin-binary-protocol`
+   
 ## Marlin Configuration
 ### Enable the Binary File Transfer protocol
 Your printer must have the binary file protocol enabled in order to be able to use the protocol to copy firmware files to your printer.
