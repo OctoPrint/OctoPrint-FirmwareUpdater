@@ -82,6 +82,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
     #~~ BluePrint API
 
+    # Log all unhandled exceptions.
+    @octoprint.plugin.BlueprintPlugin.errorhandler(Exception)
+    def errorhandler(self, error):
+        self._logger.exception(error)
+        return error
+
     @octoprint.plugin.BlueprintPlugin.route("/status", methods=["GET"])
     @octoprint.server.util.flask.restricted_access
     def status(self):
