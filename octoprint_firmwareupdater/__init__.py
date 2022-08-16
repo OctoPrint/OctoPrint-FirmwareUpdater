@@ -96,7 +96,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._send_status("flasherror", subtype="busy", message=error_message)
             return flask.make_response(error_message, 409)
 
-        value_source = flask.request.json if flask.request.json else flask.request.values
+        value_source = flask.request.json if flask.request.is_json else flask.request.values
 
         if not "port" in value_source:
             error_message = "Cannot flash firmware, printer port was not specified"
