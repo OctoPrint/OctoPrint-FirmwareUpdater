@@ -225,7 +225,8 @@ def _flash_avrdude(self, firmware=None, printer_port=None, **kwargs):
                     raise FlashException("Reboot CW1 to bootloader failed")
 
     mk3_fw = None
-    if avrdude_programmer is not None and avrdude_programmer == "wiring":
+    if (avrdude_path is not None and "prusa" in avrdude_path and
+        avrdude_programmer is not None and avrdude_programmer == "wiring"):
         try:
             list_ports.comports()
             app_port_name = list(list_ports.grep(USB_VID_PID_MK3))[0][0]
