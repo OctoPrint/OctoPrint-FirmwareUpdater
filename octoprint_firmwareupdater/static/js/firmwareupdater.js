@@ -1026,7 +1026,7 @@ $(function() {
                 keyValue = ((defaultValue === true || defaultValue === false) && keyValue == null) ? false : keyValue;
                 keyValue = (Number.isInteger(defaultValue) && keyValue == null) ? 0 : keyValue;
 
-                if (Number.isInteger(parseInt(keyValue))) {
+                if (typeof keyValue === 'string' && keyValue.substring(0,2).toLowerCase() != '0x' && Number.isInteger(parseInt(keyValue))) {
                     profile[key] = parseInt(keyValue);
                 }
 
