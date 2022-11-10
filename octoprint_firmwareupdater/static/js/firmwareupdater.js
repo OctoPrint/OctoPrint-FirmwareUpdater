@@ -643,7 +643,7 @@ $(function() {
             }
 
             if (self.getProfileSetting("flash_method") == "marlinbft" && self.getProfileSetting("marlinbft_use_custom_filename") && !self.checkMarlinBftCustomFileName()) {
-                alert = gettext("The target filename is invalid. Filename must be 8dot3 format.");
+                alert = gettext("The target filename is invalid.");
             }
 
             if (!self.flashPort() &! self.getProfileSetting("flash_method") == "dfuprogrammer") {
@@ -1326,7 +1326,7 @@ $(function() {
 
         self.checkMarlinBftCustomFileName = function() {
             var filename = self.getProfileSetting("marlinbft_custom_filename")
-            var filenamePattern = new RegExp("^[A-z0-9_-]{1,8}\\.[A-z0-9]{1,3}$");
+            var filenamePattern = new RegExp("^[A-z0-9_-]{1,}\\.[A-z0-9]{1,3}$");
             return filenamePattern.test(filename);
         }
 
