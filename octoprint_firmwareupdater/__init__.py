@@ -25,6 +25,7 @@ from octoprint_firmwareupdater.methods import bootcmdr
 from octoprint_firmwareupdater.methods import bossac
 from octoprint_firmwareupdater.methods import dfuprog
 from octoprint_firmwareupdater.methods import dfuutil
+from octoprint_firmwareupdater.methods import esptool
 from octoprint_firmwareupdater.methods import lpc1768
 from octoprint_firmwareupdater.methods import stm32flash
 from octoprint_firmwareupdater.methods import marlinbft
@@ -54,6 +55,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             bossac=bossac._check_bossac,
             dfuprogrammer=dfuprog._check_dfuprog,
             dfuutil=dfuutil._check_dfuutil,
+            esptool=esptool._check_esptool,
             lpc1768=lpc1768._check_lpc1768,
             stm32flash=stm32flash._check_stm32flash,
             marlinbft=marlinbft._check_marlinbft
@@ -64,6 +66,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             bossac=bossac._flash_bossac,
             dfuprogrammer=dfuprog._flash_dfuprog,
             dfuutil=dfuutil._flash_dfuutil,
+            esptool=esptool._flash_esptool,
             lpc1768=lpc1768._flash_lpc1768,
             stm32flash=stm32flash._flash_stm32flash,
             marlinbft=marlinbft._flash_marlinbft
@@ -584,6 +587,10 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
                 "dfuprog_erasecommandline": "sudo {dfuprogrammer} {mcu} erase --debug-level 10 --force",
                 "dfuutil_path": None,
                 "dfuutil_commandline": "sudo {dfuutil} -a 0 -s 0x8000000:leave -D {firmware}",
+                "esptool_path": None,
+                "esptool_chip": "auto",
+                "esptool_address": "0x0",
+                "esptool_commandline": "{esptool} -p {port} -c {chip} write_flash {address} {firmware}",
                 "stm32flash_path": None,
                 "stm32flash_verify": True,
                 "stm32flash_boot0pin": "rts",

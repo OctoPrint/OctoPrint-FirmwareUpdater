@@ -128,6 +128,7 @@
                                     <option value=bossac>bossac (Atmel SAM Family)</option>
                                     <option value=dfuprogrammer>dfu-programmer (Atmel AVR with DFU)</option>
                                     <option value=dfuutil>dfu-util (STM32 with DFU)</option>
+                                    <option value=esptool>esptool (ESP32)</option>
                                     <option value=lpc1768>lpc176x (LPC176x Boards)</option>
                                     <option value=marlinbft>marlinbft (Marlin Binary File Transfer)</option>
                                     <option value=stm32flash>stm32flash (STM32 built-in bootloader)</option>
@@ -285,6 +286,22 @@
                             <hr>
                         </div>
                         <!-- end dfu-util options -->
+
+                        <!-- esptool options -->
+                        <div data-bind="visible: showEsptoolConfig">
+                            <div class="control-group" data-bind="css: {error: esptoolPathBroken, success: esptoolPathOk}">
+                                <label class="control-label">{{ _('Path to esptool.py') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configEsptoolPath, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: testEsptoolPath, enable: configEsptoolPath, css: {disabled: !configEsptoolPath()}">{{ _('Test') }}</button>
+                                    </div>
+                                    <span class="help-block" data-bind="visible: esptoolPathBroken() || esptoolPathOk, text: esptoolPathText"></span>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                        <!-- end esptool options -->
 
                         <!-- stm32flash options for STM32 MCUs -->
                         <div data-bind="visible: showStm32flashConfig">
@@ -575,6 +592,41 @@
                             </div>
                         </div>
                         <!-- End advanced dfu-util options-->
+
+                        <!-- Advanced esptool options -->
+                        <div data-bind="visible: showEsptoolConfig">
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Chip type') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configEsptoolChip">
+                                        <button class="btn" type="button" data-bind="click: resetEsptoolChip">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Explicitly set the ESP chip type.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Flash address') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configEsptoolAddress">
+                                        <button class="btn" type="button" data-bind="click: resetEsptoolAddress">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Set the flash start address.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label">{{ _('Command line') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind="value: configEsptoolCommandLine">
+                                        <button class="btn" type="button" data-bind="click: resetEsptoolCommandLine">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Customize the esptool command line.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End advanced esptool options-->
 
                         <!-- Advanced stm32flash options -->
                         <div data-bind="visible: showStm32flashConfig">
