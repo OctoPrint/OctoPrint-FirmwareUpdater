@@ -171,6 +171,7 @@ $(function() {
         self.configEsptoolPath = ko.observable();
         self.configEsptoolChip = ko.observable()
         self.configEsptoolAddress = ko.observable()
+        self.configEsptoolBaud = ko.observable()
         self.configEsptoolCommandLine = ko.observable();
 
         // Observables for bossac UI messages
@@ -973,6 +974,7 @@ $(function() {
             self.configEsptoolPath(self.getProfileSetting("esptool_path"));
             self.configEsptoolChip(self.getProfileSetting("esptool_chip"));
             self.configEsptoolAddress(self.getProfileSetting("esptool_address"));
+            self.configEsptoolBaud(self.getProfileSetting("esptool_baudrate"));
             self.configEsptoolCommandLine(self.getProfileSetting("esptool_commandline"));
 
             // Load the lpc1768 settings
@@ -1105,6 +1107,7 @@ $(function() {
 
             // Esptool settings
             profiles[index]["esptool_path"] = self.configEsptoolPath();
+            profiles[index]["esptool_baudrate"] = self.configEsptoolBaud();
             profiles[index]["esptool_chip"] = self.configEsptoolChip();
             profiles[index]["esptool_address"] = self.configEsptoolAddress();
             profiles[index]["esptool_commandline"] = self.configEsptoolCommandLine();

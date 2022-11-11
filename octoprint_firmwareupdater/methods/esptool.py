@@ -9,6 +9,7 @@ ESPTOOL_CONNECTING = "Connecting"
 ESPTOOL_WRITING = "Writing at"
 ESPTOOL_RESETTING = "resetting"
 ESPTOOL_NODEVICE = "Failed to connect to Espressif device"
+ESPTOOL_WRONGCHIP = "Wrong --chip argument?"
 
 def _check_esptool(self):
     esptool_path = self.get_profile_setting("esptool_path")
@@ -39,6 +40,7 @@ def _flash_esptool(self, firmware=None, printer_port=None, **kwargs):
     esptool_path = self.get_profile_setting("esptool_path")
     esptool_chip = self.get_profile_setting("esptool_chip")
     esptool_address = self.get_profile_setting("esptool_address")
+    esptool_baudrate = self.get_profile_setting("esptool_baudrate")
 
     working_dir = os.path.dirname(esptool_path)
 
@@ -47,6 +49,7 @@ def _flash_esptool(self, firmware=None, printer_port=None, **kwargs):
     esptool_command = esptool_command.replace("{port}", printer_port)
     esptool_command = esptool_command.replace("{chip}", esptool_chip)
     esptool_command = esptool_command.replace("{address}", esptool_address)
+    esptool_command = esptool_command.replace("{baud}", str(esptool_baudrate))
     esptool_command = esptool_command.replace("{firmware}", firmware)
 
     self._logger.info(u"Running '{}' in {}".format(esptool_command, working_dir))
@@ -79,6 +82,8 @@ def _flash_esptool(self, firmware=None, printer_port=None, **kwargs):
                     self._send_status("progress", subtype="boardreset")
                 elif ESPTOOL_NODEVICE in line:
                     raise FlashException("No ESP device found.")
+                elif ESPTOOL_WRONGCHIP in line:
+                    raise FlashException("Incompatible ESP chip specified.")
 
         if p.returncode == 0:
             time.sleep(1)
