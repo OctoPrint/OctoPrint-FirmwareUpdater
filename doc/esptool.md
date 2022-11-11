@@ -18,7 +18,7 @@ Esptool can be installed in the OctoPrint virtual environment, if one is being u
 
 ## Esptool Configuration
 <p align="center">
-  <img alt="Firmware Updater" src="../extras/img/esptool.png">
+  <img alt="Firmware Updater" width="450" src="../extras/img/esptool.png">
 </p>
 
 ### Required Settings
