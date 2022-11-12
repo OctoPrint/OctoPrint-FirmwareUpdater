@@ -47,7 +47,7 @@ def _flash_esptool(self, firmware=None, printer_port=None, **kwargs):
     esptool_command = self.get_profile_setting("esptool_commandline")
     esptool_command = esptool_command.replace("{esptool}", esptool_path)
     esptool_command = esptool_command.replace("{port}", printer_port)
-    esptool_command = esptool_command.replace("{chip}", esptool_chip)
+    esptool_command = esptool_command.replace("{chip}", esptool_chip.lower())
     esptool_command = esptool_command.replace("{address}", esptool_address)
     esptool_command = esptool_command.replace("{baud}", str(esptool_baudrate))
     esptool_command = esptool_command.replace("{firmware}", firmware)

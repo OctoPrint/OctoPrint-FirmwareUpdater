@@ -1108,7 +1108,7 @@ $(function() {
             // Esptool settings
             profiles[index]["esptool_path"] = self.configEsptoolPath();
             profiles[index]["esptool_baudrate"] = self.configEsptoolBaud();
-            profiles[index]["esptool_chip"] = self.configEsptoolChip();
+            profiles[index]["esptool_chip"] = self.configEsptoolChip().toLowerCase();
             profiles[index]["esptool_address"] = self.configEsptoolAddress();
             profiles[index]["esptool_commandline"] = self.configEsptoolCommandLine();
 
