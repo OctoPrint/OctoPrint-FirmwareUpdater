@@ -27,7 +27,7 @@ The only required setting is the path to esptool.py.
 ### Optional Settings
 | Option | Description |
 | --- | --- |
-| Chip Type | Can be used to override the ESP chip type. Default is `esp32`. |
+| Chip Type | Can be used to override the ESP chip type. Default is `auto`. |
 | Baud Rate | Specify the baud rate for esptool to use when writing to the board. Default is `921600`. |
 | Flash Address | The address in hex to write the firmware to. Default is `0x10000`. |
 | Command Line | Allows full customization of the `esptool.py` command line. |
