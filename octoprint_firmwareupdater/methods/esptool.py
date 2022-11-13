@@ -8,8 +8,12 @@ from serial import SerialException
 ESPTOOL_CONNECTING = "Connecting"
 ESPTOOL_WRITING = "Writing at"
 ESPTOOL_RESETTING = "resetting"
-ESPTOOL_NODEVICE = "Failed to connect to Espressif device"
+ESPTOOL_NODATA = "No serial data received"
+ESPTOOL_NOBOARD = "Could not open"
 ESPTOOL_WRONGCHIP = "Wrong --chip argument?"
+ESPTOOL_WRONGMODE = "Wrong boot mode detected"
+ESPTOOL_ERROR = "esptool: error:"
+ESPTOOL_BADARG = "argument"
 
 def _check_esptool(self):
     esptool_path = self.get_profile_setting("esptool_path")
@@ -59,7 +63,6 @@ def _flash_esptool(self, firmware=None, printer_port=None, **kwargs):
         p = sarge.run(esptool_command, cwd=working_dir, async_=True, stdout=sarge.Capture(buffer_size=1), stderr=sarge.Capture(buffer_size=1))
         p.wait_events()
 
-        nodevice = False
         while p.returncode is None:
             output = p.stdout.read(timeout=0.1).decode('utf-8')
             if not output:
@@ -80,22 +83,39 @@ def _flash_esptool(self, firmware=None, printer_port=None, **kwargs):
                 elif ESPTOOL_RESETTING in line:
                     self._logger.info(u"Resetting...")
                     self._send_status("progress", subtype="boardreset")
-                elif ESPTOOL_NODEVICE in line:
-                    raise FlashException("No ESP device found.")
+                elif ESPTOOL_NODATA in line:
+                    raise FlashException("No serial data received.")
+                elif ESPTOOL_NOBOARD in line:
+                    raise FlashException("Could not open the port.")
                 elif ESPTOOL_WRONGCHIP in line:
-                    raise FlashException("Incompatible ESP chip specified.")
+                    message = "Incompatible ESP chip specified."
+                    try:
+                        message = message + u" {}.".format(re.split(r"[\:\.]", line)[1].strip())
+                    except:
+                        self._logger.info(u"Could not parse chip error")
+                    raise FlashException(message)
+                elif ESPTOOL_WRONGMODE in line:
+                    raise FlashException("Wrong boot mode detected. The chip needs to be in download mode.")
 
         if p.returncode == 0:
             time.sleep(1)
             return True
         else:
-            output = p.stderr.read(timeout=0.5).decode('utf-8')
+            output = p.stderr.read(timeout=0.1).decode('utf-8')
             for line in output.split("\n"):
                 if line.endswith("\r"):
                     line = line[:-1]
                 self._console_logger.info(u"> {}".format(line))
 
-            raise FlashException("esptool returned code {returncode}".format(returncode=p.returncode))
+                if ESPTOOL_ERROR in line and ESPTOOL_BADARG in line:
+                    raise FlashException(u"Unrecognized or invalid Esptool argument(s).\n\n{}".format(line))
+                elif ESPTOOL_ERROR in line:
+                    errline = line
+
+            if errline:
+                raise FlashException("Esptool returned code {returncode}.\n{error}".format(returncode=p.returncode, error=errline))
+            else:
+                raise FlashException("Esptool returned code {returncode}.".format(returncode=p.returncode))
 
     except FlashException as ex:
         self._logger.error(u"Flashing failed. {error}.".format(error=ex.reason))
