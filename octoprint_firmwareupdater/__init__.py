@@ -85,6 +85,12 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
     #~~ BluePrint API
 
+    # Log all unhandled exceptions.
+    @octoprint.plugin.BlueprintPlugin.errorhandler(Exception)
+    def errorhandler(self, error):
+        self._logger.exception(error)
+        return error
+
     @octoprint.plugin.BlueprintPlugin.route("/status", methods=["GET"])
     @octoprint.server.util.flask.restricted_access
     def status(self):
@@ -99,7 +105,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
             self._send_status("flasherror", subtype="busy", message=error_message)
             return flask.make_response(error_message, 409)
 
-        value_source = flask.request.json if flask.request.json else flask.request.values
+        value_source = flask.request.json if flask.request.is_json else flask.request.values
 
         if not "port" in value_source:
             error_message = "Cannot flash firmware, printer port was not specified"
@@ -214,116 +220,122 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
         return True
 
     def _flash_worker(self, method, firmware, printer_port):
-        # Run pre-flash system command
-        preflash_command = self.get_profile_setting("preflash_commandline")
-        if preflash_command is not None and self.get_profile_setting_boolean("enable_preflash_commandline"):
-            self._logger.info("Executing pre-flash commandline '{}'".format(preflash_command))
-            try:
-                r = os.system(preflash_command)
-            except:
-                e = sys.exc_info()[0]
-                self._logger.error("Error executing pre-flash commandline '{}'".format(preflash_command))
-
-            self._logger.info("Pre-flash command '{}' returned: {}".format(preflash_command, r))
-
-        # Run pre-flash gcode
-        preflash_gcode = self.get_profile_setting("preflash_gcode")
-        if preflash_gcode is not None and self.get_profile_setting_boolean("enable_preflash_gcode"):
-            if self._printer.is_operational():
-                self._logger.info("Sending pre-flash gcode commands: {}".format(preflash_gcode))
-                self._printer.commands(preflash_gcode.split(";"))
-
-                preflash_delay = self.get_profile_setting_int("preflash_delay") or 3
-                if float(preflash_delay) > 0 and self.get_profile_setting_boolean("enable_preflash_delay"):
-                    self._logger.info("Pre-flash delay: {}s".format(preflash_delay))
-                    time.sleep(float(preflash_delay))
-
-            else:
-                self._logger.info("Printer not connected, not sending pre-flash gcode commands")
-
         try:
-            self._logger.info("Firmware update started")
+            # Run pre-flash system command
+            preflash_command = self.get_profile_setting("preflash_commandline")
+            if preflash_command is not None and self.get_profile_setting_boolean("enable_preflash_commandline"):
+                self._logger.info("Executing pre-flash commandline '{}'".format(preflash_command))
+                try:
+                    r = os.system(preflash_command)
+                except:
+                    e = sys.exc_info()[0]
+                    self._logger.error("Error executing pre-flash commandline '{}'".format(preflash_command))
 
-            if not method in self._flash_methods:
-                error_message = "Unsupported flashing method: {}".format(method)
-                self._logger.error(error_message)
-                self._send_status("flasherror", message=error_message)
-                return
+                self._logger.info("Pre-flash command '{}' returned: {}".format(preflash_command, r))
 
-            flash_callable = self._flash_methods[method]
-            if not callable(flash_callable):
-                error_message = "Don't have a callable for flashing method {}: {!r}".format(method, flash_callable)
-                self._logger.error(error_message)
-                self._send_status("flasherror", message=error_message)
-                return
+            # Run pre-flash gcode
+            preflash_gcode = self.get_profile_setting("preflash_gcode")
+            if preflash_gcode is not None and self.get_profile_setting_boolean("enable_preflash_gcode"):
+                if self._printer.is_operational():
+                    self._logger.info("Sending pre-flash gcode commands: {}".format(preflash_gcode))
+                    self._printer.commands(preflash_gcode.split(";"))
 
-            reconnect = None
-            if self._printer.is_operational():
-                _, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
-                reconnect = (current_port, current_baudrate, current_profile)
-                self._logger.info("Disconnecting from printer")
-                self._send_status("progress", subtype="disconnecting")
-                self._printer.disconnect()
+                    preflash_delay = self.get_profile_setting_int("preflash_delay") or 3
+                    if float(preflash_delay) > 0 and self.get_profile_setting_boolean("enable_preflash_delay"):
+                        self._logger.info("Pre-flash delay: {}s".format(preflash_delay))
+                        time.sleep(float(preflash_delay))
 
-            self._send_status("progress", subtype="startingflash")
+                else:
+                    self._logger.info("Printer not connected, not sending pre-flash gcode commands")
 
             try:
-                if flash_callable(self, firmware=firmware, printer_port=printer_port):
-                    postflash_delay = self.get_profile_setting_int("postflash_delay") or 0
-                    if float(postflash_delay) > 0 and self.get_profile_setting_boolean("enable_postflash_delay"):
-                        self._logger.info("Post-flash delay: {}s".format(postflash_delay))
-                        self._send_status("progress", subtype="postflashdelay")
-                        time.sleep(float(postflash_delay))
+                self._logger.info("Firmware update started")
 
-                    message = u"Flashing successful."
-                    self._logger.info(message)
-                    self._console_logger.info(message)
-                    self._send_status("success")
+                if not method in self._flash_methods:
+                    error_message = "Unsupported flashing method: {}".format(method)
+                    self._logger.error(error_message)
+                    self._send_status("flasherror", message=error_message)
+                    return
 
-                    # Run post-flash commandline
-                    postflash_command = self.get_profile_setting("postflash_commandline")
-                    if postflash_command is not None and self.get_profile_setting_boolean("enable_postflash_commandline"):
-                        self._logger.info("Executing post-flash commandline '{}'".format(postflash_command))
-                        try:
-                            r = os.system(postflash_command)
-                        except:
-                            e = sys.exc_info()[0]
-                            self._logger.error("Error executing post-flash commandline '{}'".format(postflash_command))
+                flash_callable = self._flash_methods[method]
+                if not callable(flash_callable):
+                    error_message = "Don't have a callable for flashing method {}: {!r}".format(method, flash_callable)
+                    self._logger.error(error_message)
+                    self._send_status("flasherror", message=error_message)
+                    return
 
-                        self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
+                reconnect = None
+                if self._printer.is_operational():
+                    _, current_port, current_baudrate, current_profile = self._printer.get_current_connection()
+                    reconnect = (current_port, current_baudrate, current_profile)
+                    self._logger.info("Disconnecting from printer")
+                    self._send_status("progress", subtype="disconnecting")
+                    self._printer.disconnect()
 
-                    # Set run post-flash gcode flag
-                    postflash_gcode = self.get_profile_setting("postflash_gcode")
-                    if postflash_gcode is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
-                        self._logger.info(u"Setting run_postflash_gcode flag to true")
-                        self.set_profile_setting_boolean("run_postflash_gcode", True)
+                self._send_status("progress", subtype="startingflash")
 
-                    else:
-                        self._logger.info(u"No postflash gcode or postflash is disabled, setting run_postflash_gcode to false")
-                        self.set_profile_setting_boolean("run_postflash_gcode", False)
-
-                    self._settings.save()
-
-            except:
-                self._logger.exception(u"Error while attempting to flash")
-                self._send_status("flasherror")
-            finally:
                 try:
-                    os.remove(firmware)
+                    if flash_callable(self, firmware=firmware, printer_port=printer_port):
+                        postflash_delay = self.get_profile_setting_int("postflash_delay") or 0
+                        if float(postflash_delay) > 0 and self.get_profile_setting_boolean("enable_postflash_delay"):
+                            self._logger.info("Post-flash delay: {}s".format(postflash_delay))
+                            self._send_status("progress", subtype="postflashdelay")
+                            time.sleep(float(postflash_delay))
+
+                        message = u"Flashing successful."
+                        self._logger.info(message)
+                        self._console_logger.info(message)
+                        self._send_status("success")
+
+                        # Run post-flash commandline
+                        postflash_command = self.get_profile_setting("postflash_commandline")
+                        if postflash_command is not None and self.get_profile_setting_boolean("enable_postflash_commandline"):
+                            self._logger.info("Executing post-flash commandline '{}'".format(postflash_command))
+                            try:
+                                r = os.system(postflash_command)
+                            except:
+                                e = sys.exc_info()[0]
+                                self._logger.error("Error executing post-flash commandline '{}'".format(postflash_command))
+
+                            self._logger.info("Post-flash command '{}' returned: {}".format(postflash_command, r))
+
+                        # Set run post-flash gcode flag
+                        postflash_gcode = self.get_profile_setting("postflash_gcode")
+                        if postflash_gcode is not None and self.get_profile_setting_boolean("enable_postflash_gcode"):
+                            self._logger.info(u"Setting run_postflash_gcode flag to true")
+                            self.set_profile_setting_boolean("run_postflash_gcode", True)
+
+                        else:
+                            self._logger.info(u"No postflash gcode or postflash is disabled, setting run_postflash_gcode to false")
+                            self.set_profile_setting_boolean("run_postflash_gcode", False)
+
+                        self._settings.save()
+
                 except:
-                    self._logger.exception(u"Could not delete temporary hex file at {}".format(firmware))
+                    self._logger.exception(u"Error while attempting to flash")
+                    self._send_status("flasherror")
+                finally:
+                    try:
+                        os.remove(firmware)
+                    except:
+                        self._logger.exception(u"Could not delete temporary hex file at {}".format(firmware))
 
-        finally:
-            self._flash_thread = None
+            finally:
+                self._flash_thread = None
 
-            if self.get_profile_setting_boolean("no_reconnect_after_flash"):
-                self._logger.info("Automatic reconnection is disabled")
-            else:
-                if reconnect is not None:
-                    port, baudrate, profile = reconnect
-                    self._logger.info("Reconnecting to printer: port={}, baudrate={}, profile={}".format(port, baudrate, profile))
-                    self._send_status("progress", subtype="reconnecting")
-                    self._printer.connect(port=port, baudrate=baudrate, profile=profile)
+                if self.get_profile_setting_boolean("no_reconnect_after_flash"):
+                    self._logger.info("Automatic reconnection is disabled")
+                else:
+                    if reconnect is not None:
+                        port, baudrate, profile = reconnect
+                        self._logger.info("Reconnecting to printer: port={}, baudrate={}, profile={}".format(port, baudrate, profile))
+                        self._send_status("progress", subtype="reconnecting")
+                        self._printer.connect(port=port, baudrate=baudrate, profile=profile)
+
+        except Exception as e:
+            # Catch and log anything that might happen as we are in separate thread
+            # and octoprint won't log our failures
+            self._logger.exception(e)
 
     # Checks for a valid profile in the plugin's settings
     #   Returns True if the settings contain one or more profiles, otherwise false
