@@ -65,6 +65,8 @@ Your printer must have the binary file protocol enabled in order to be able to u
 
 In other words, before you can use the Firmware Updater plugin, you must compile firmware with this feature enabled and flash it to your printer using your current update process.  You only need to do this once.
 
+**Note:** The `MEATPACK` and `BINARY_FILE_TRANSFER` features cannot both be enabled. If `MEATPACK` is enabled, it must be disabled prior to enabling `BINARY_FILE_TRANSFER`.
+
 To compile firmware with the binary file protocol enabled, uncomment this line in `Configuration_adv.h`:
 
 `#define BINARY_FILE_TRANSFER`
