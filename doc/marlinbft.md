@@ -60,13 +60,20 @@ Depending on your system, the command you use to restart OctoPrint may also be d
    `sudo service octoprint restart`
 
 #### Python 3.9
-1. Python 3.9 breaks Python 3's heatshrink.  Please use the following provided here: (https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/321)
+1. Python 3.9 breaks Python 3's heatshrink.  Using updated tarball provided here: (https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/321)
 
    ```
    cd ~
    wget https://alfter.us/wp-content/uploads/2022/08/pyheatshrink-92ffa4e.tar.xz
-   ~/oprint/bin/pip3.9 install pyheatshrink-92ffa4e.tar.xz
-   ~/oprint/bin/pip3.9 install marlin-binary-protocol
+   ```
+2. Have to run from inside venv...not just using venv binary
+
+   ```
+   cd ~/oprint/bin
+   source ./activate
+   ./pip3.9 install ~/pyheatshrink-92ffa4e.tar.xz
+   ./pip3.9 install marlin-binary-protocol
+   deactivate
    sudo service octoprint restart
    ```
    
