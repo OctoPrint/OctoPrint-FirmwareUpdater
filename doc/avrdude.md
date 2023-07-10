@@ -50,7 +50,7 @@ Typical MCU/programmer combinations are:
 | AVR MCU | Programmer | Example Board |
 | --- | --- | --- |
 | Atmega1284p | arduino | Anet A series, most Creality boards, Ender, etc. |
-| Atmega2560 | wiring | Creality CR-10 Max, RAMPS, RAMbo, etc. |
+| Atmega2560 | wiring | Creality CR-10 Max, RAMPS, Prusa MK3 (RAMbo), etc. |
 | Atmega644p | arduino | Sanguinololu, Melzi |
 | Atmega32u4 | avr109 | Prusa MMU, Prusa CW1 |
 
