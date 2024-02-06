@@ -14,6 +14,7 @@ Binary File ransfer is an alternative method to transfer the `firmware.bin` file
 1. [Plugin Configuration](#plugin-configuration)
    1. [Required Settings](#required-settings)
    1. [Optional Settings](#optional-settings)
+1. [SD Card Preparation](#sd-card-preparation)
 1. [Hardware Notes](#hardware-notes)
    1. [Creality Ender 3 V2](#creality-ender-3-v2)
 
@@ -113,6 +114,11 @@ There are no required settings.
 | Restart timeout | How long to wait for the board to restart. Default is 20s. |
 | Verbose progress logging | Log verbose transfer progress to the OctoPrint log file |
 
+## SD Card Preparation
+Before attempting to flash the board from the plugin for the first time, put the SD card in a computer and remove any `.bin` files which are on it.  
+
+NB: If flashing from the plugin fails and the plugin displays an error stating that the board reset too quickly check the SD card for `.bin` files and remove any which are present.
+
 ## Hardware Notes
 ### Creality Ender 3 V2
 Two advanced settings must be enabled for Ender 3 V2 boards:
@@ -123,6 +129,3 @@ Two advanced settings must be enabled for Ender 3 V2 boards:
   <img height="550px" alt="Ender 3 V2 Settings" src="../extras/img/ender3v2.png">
 </p>
 
-**NB:** Before attempting to flash the board from the plugin for the first time, put the SD card in a computer and remove any `.bin` files which are on it.  
-
-If flashing from the plugin fails and the plugin displays an error stating that the board reset too quickly check the SD card for `.bin` files and remove any which are present.
