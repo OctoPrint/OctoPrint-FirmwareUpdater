@@ -49,12 +49,11 @@ Depending on your system, the command you use to restart OctoPrint may also be d
    `sudo service octoprint restart`
    
 #### Python 3
-1. Install a Python 3 compatible version of `heatshrink` to satisfy `marlin-binary-protocol`
+The version of `marlin-binary-protocol` available on pypi has an unresolved dependency on a deprecated veraion of `heatshrink`. A patched version has been made available instead. See [issue #321](https://github.com/OctoPrint/OctoPrint-FirmwareUpdater/issues/321) for more details.
 
-    `pip3 install https://github.com/p3p/pyheatshrink/releases/download/0.3.3/pyheatshrink-pip.zip`
-1. Install `marlin-binary-protocol`
+1. Install `marlin-binary-protocol` from patched package
 
-    `pip3 install marlin-binary-protocol`
+   `pip install https://github.com/The-EG/marlin-binary-protocol/archive/refs/heads/master.zip`
 1. Restart OctoPrint
 
    `sudo service octoprint restart`
