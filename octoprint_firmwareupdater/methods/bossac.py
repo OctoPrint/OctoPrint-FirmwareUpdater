@@ -48,9 +48,9 @@ def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
     bossac_command = bossac_command.replace("{firmware}", firmware)
 
     if bossac_disableverify:
-        bossac_command = bossac_command.replace(" {disableverify} ", " ")
+        bossac_command = bossac_command.replace("{disableverify}", "")
     else:
-        bossac_command = bossac_command.replace(" {disableverify} ", " -v ")
+        bossac_command = bossac_command.replace("{disableverify}", "-v")
 
     self._logger.info(u"Attempting to reset the board to SAM-BA")
     self._send_status("progress", subtype="samreset")
@@ -70,7 +70,7 @@ def _flash_bossac(self, firmware=None, printer_port=None, **kwargs):
             if not output:
                 p.commands[0].poll()
                 continue
-            
+
             for line in output.split("\n"):
                 if line.endswith("\r"):
                     line = line[:-1]
