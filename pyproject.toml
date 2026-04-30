@@ -1,0 +1,45 @@
+[build-system]
+requires = [
+    "setuptools>=68",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OctoPrint-FirmwareUpdater"
+version = "1.15.0"
+description = "Printer Firmware Updater"
+requires-python = ">=2.7,<4"
+dependencies = [
+    "pyserial>=3.4",
+]
+dynamic = [
+    "license",
+]
+
+[[project.authors]]
+name = "Ben Lye and Gina Häußge, based on work by Nicanor Romero Venier"
+email = "ben@lye.co.nz"
+
+[project.entry-points."octoprint.plugin"]
+firmwareupdater = "octoprint_firmwareupdater"
+
+[project.urls]
+Homepage = "https://github.com/OctoPrint/OctoPrint-FirmwareUpdater"
+
+[project.optional-dependencies]
+develop = [
+    "go-task-bin",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [
+    "octoprint_firmwareupdater",
+    "octoprint_firmwareupdater.*",
+]
