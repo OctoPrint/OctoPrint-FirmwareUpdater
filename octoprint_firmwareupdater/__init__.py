@@ -13,7 +13,8 @@ import time
 import octoprint.plugin
 
 import octoprint.server.util.flask
-from octoprint.server import admin_permission, NO_CONTENT
+from octoprint.server import NO_CONTENT
+from octoprint.access.permissions import Permissions
 from octoprint.events import Events
 from octoprint.util import CaseInsensitiveSet, dict_merge
 
@@ -98,7 +99,7 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/flash", methods=["POST"])
     @octoprint.server.util.flask.restricted_access
-    @octoprint.server.admin_permission.require(403)
+    @Permissions.ADMIN.require(403)
     def flash_firmware(self):
         if self._printer.is_printing():
             error_message = "Cannot flash firmware, printer is busy"
