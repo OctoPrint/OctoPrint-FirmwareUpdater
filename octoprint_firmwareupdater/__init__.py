@@ -855,6 +855,9 @@ class FirmwareupdaterPlugin(octoprint.plugin.BlueprintPlugin,
     def is_blueprint_csrf_protected(self):
         return True
 
+    def is_template_autoescaped(self):
+        return True
+
 class FlashException(Exception):
     def __init__(self, reason, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)

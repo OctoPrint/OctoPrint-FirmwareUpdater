@@ -480,7 +480,7 @@
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configLpc1768TimestampFilenames, disable: configLpc1768UseCustomFilename, click: toggleLpc1768Filenames">
                                     </div>
-                                    <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>.') }}</span>
+                                    <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>.') | safe }}</span>
                                 </div>
                                 <label class="control-label">{{ _('Customize firmware filename') }}</label>
                                 <div class="controls">
@@ -534,7 +534,7 @@
                                     <div class="input">
                                         <input type="checkbox" data-bind="checked: configMarlinBftTimestampFilenames, disable: configMarlinBftUseCustomFilename, click: toggleMarlinBftFilenames">
                                     </div>
-                                    <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>. Needed for Ender 3 V2.') }}</span>
+                                    <span class="help-block">{{ _('Firmware file will be saved on the printer as <code>fwHHMMSS.bin</code> (where HHMMSS is the current time) instead of <code>firmware.bin</code>. Needed for Ender 3 V2.') | safe }}</span>
                                 </div>
                             </div>
                             <div class="control-group" data-bind="css: {error: marlinBftCustomFileNameBroken}">
@@ -814,7 +814,7 @@
                                 <div class="input">
                                     <input type="text" class="input-block-level" data-bind="value: configPreflashGcode, enable: configEnablePreflashGcode">
                                 </div>
-                                <span class="help-block">{{ _('Gcode commands to run before flashing. <b>Pre-flash gcode commands will only run if the printer is connected.</b> Separate multiple commands with a semi colon.') }}</span>
+                                <span class="help-block">{{ _('Gcode commands to run before flashing. <b>Pre-flash gcode commands will only run if the printer is connected.</b> Separate multiple commands with a semi colon.') | safe }}</span>
                             </div>
                         </div>
                         <!-- End pre-flash gcode -->
