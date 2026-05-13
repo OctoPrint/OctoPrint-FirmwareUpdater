@@ -52,6 +52,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
     bft_verbose = self.get_profile_setting_boolean("marlinbft_progresslogging")
     no_m997_reset_wait = self.get_profile_setting_boolean("marlinbft_no_m997_reset_wait")
     timestamp_filenames = self.get_profile_setting_boolean("marlinbft_timestamp_filenames")
+    custom_folder = self.get_profile_setting("marlinbft_custom_folder").strip()
     use_custom_filename = self.get_profile_setting_boolean("marlinbft_use_custom_filename")
     custom_filename = self.get_profile_setting("marlinbft_custom_filename").strip()
 
@@ -99,6 +100,7 @@ def _flash_marlinbft(self, firmware=None, printer_port=None, **kwargs):
         else:
             target = "firmware.bin"
 
+        target = os.path.join(custom_folder, os.path.basename(target))
         self._logger.info(u"Transfering file to printer using Marlin BFT '{}' -> /{}".format(firmware, target))
         self._send_status("progress", subtype="sending")
         filetransfer = mbp.FileTransferProtocol(protocol, logger=transfer_logger)

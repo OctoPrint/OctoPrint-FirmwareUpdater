@@ -529,6 +529,16 @@
                                 </div>
                             </div>
                             <div class="control-group">
+                                <label class="control-label">{{ _('Customize firmware folder') }}</label>
+                                <div class="controls">
+                                    <div class="input-append">
+                                        <input type="text" class="input-block-level" data-bind='value: configMarlinBftCustomFolder, valueUpdate: "afterkeydown"'>
+                                        <button class="btn" type="button" data-bind="click: resetMarlinBftCustomFolder">{{ _('Reset') }}</button>
+                                    </div>
+                                    <span class="help-block">{{ _('Firmware file will be saved on the printer inside of the specified folder.') }}</span>
+                                </div>
+                            </div>
+                            <div class="control-group">
                                 <label class="control-label">{{ _('Use timestamp filenames') }}</label>
                                 <div class="controls">
                                     <div class="input">

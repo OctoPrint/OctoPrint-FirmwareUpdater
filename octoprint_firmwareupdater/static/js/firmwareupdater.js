@@ -121,6 +121,7 @@ $(function() {
         self.configMarlinBftRestartWait = ko.observable();
         self.configMarlinBftNoResetWait = ko.observable();
         self.configMarlinBftNoRestartWait = ko.observable();
+        self.configMarlinBftCustomFolder = ko.observable();
         self.configMarlinBftTimestampFilenames = ko.observable();
         self.configMarlinBftUseCustomFilename = ko.observable();
         self.configMarlinBftCustomFilename = ko.observable();
@@ -996,6 +997,7 @@ $(function() {
             self.configMarlinBftRestartWait(self.getProfileSetting("marlinbft_m997_restart_wait"));
             self.configMarlinBftNoResetWait(self.getProfileSetting("marlinbft_no_m997_reset_wait"));
             self.configMarlinBftNoRestartWait(self.getProfileSetting("marlinbft_no_m997_restart_wait"));
+            self.configMarlinBftCustomFolder(self.getProfileSetting("marlinbft_custom_folder"));
             self.configMarlinBftTimestampFilenames(self.getProfileSetting("marlinbft_timestamp_filenames"));
             self.configMarlinBftUseCustomFilename(self.getProfileSetting("marlinbft_use_custom_filename"));
             self.configMarlinBftCustomFilename(self.getProfileSetting("marlinbft_custom_filename"));
@@ -1131,6 +1133,7 @@ $(function() {
             profiles[index]["marlinbft_m997_restart_wait"] = self.configMarlinBftRestartWait();
             profiles[index]["marlinbft_no_m997_reset_wait"] = self.configMarlinBftNoResetWait();
             profiles[index]["marlinbft_no_m997_restart_wait"] = self.configMarlinBftNoRestartWait();
+            profiles[index]["marlinbft_custom_folder"] = self.configMarlinBftCustomFolder();
             profiles[index]["marlinbft_timestamp_filenames"] = self.configMarlinBftTimestampFilenames();
             profiles[index]["marlinbft_use_custom_filename"] = self.configMarlinBftUseCustomFilename();
             profiles[index]["marlinbft_custom_filename"] = self.configMarlinBftCustomFilename();
@@ -1286,7 +1289,7 @@ $(function() {
         self.resetEsptoolChip = function() {
             self.configEsptoolChip(self.profileDefaults["esptool_chip"]);
         };
-        
+
         self.resetEsptoolAddress = function() {
             self.configEsptoolAddress(self.profileDefaults["esptool_address"]);
         };
@@ -1312,7 +1315,9 @@ $(function() {
             }
             return true;
         }
-
+        self.resetMarlinBftCustomFolder = function() {
+            self.configMarlinBftCustomFolder(self.profileDefaults["marlinbft_custom_folder"]);
+        }
         self.resetMarlinBftCustomFilename = function() {
             self.configMarlinBftCustomFilename(self.profileDefaults["marlinbft_custom_filename"]);
         }
@@ -1369,7 +1374,7 @@ $(function() {
                         self.bootCmdrPathBroken(!response.result);
                     }
                 })
-            }            
+            }
         };
 
         self.testAvrdudePath = function() {
