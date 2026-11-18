@@ -214,7 +214,7 @@ $(function() {
 
         // Observables for UI elements
         self.flashPort = ko.observable(undefined);
-        self.serialPorts = ko.observable(undefined);
+        self.serialPorts = ko.observableArray([]);
         self.pluginVersion = ko.observable(undefined);
         self.firmwareFileName = ko.observable(undefined);
         self.firmwareFileURL = ko.observable(undefined);
@@ -387,10 +387,17 @@ $(function() {
             self.connection.requestData();
         }
 
-        self.connection.portOptions.subscribe(function(value) {
-            if (self.isBusy || value === undefined) return;
-            self.selectSerialPort.val(ko.toJS(self.selectedProfile()).serial_port);
-        });
+        if (ko.isObservable(self.connection.portOptions)) {
+            self.serialPorts(self.connection.portOptions() || []);
+            self.connection.portOptions.subscribe(function(value) {
+                self.serialPorts(value || []);
+            });
+        }
+        self.onConnectionDataReceived = function(parameters, current, last, preferred) {
+            if (parameters && parameters.serial && Array.isArray(parameters.serial.port)) {
+                self.serialPorts(parameters.serial.port);
+            }
+        };
 
         /*
         * Opens the plugin UI from the Navbar
