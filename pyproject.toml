@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "OctoPrint-FirmwareUpdater"
-version = "1.15.0"
+version = "1.16.0"
 description = "Printer Firmware Updater"
 requires-python = ">=2.7,<4"
 dependencies = [
